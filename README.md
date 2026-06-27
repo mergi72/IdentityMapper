@@ -447,6 +447,33 @@ Identity
 The WebAuthn / FIDO2 implementation also leaves the core domain model and
 capability contracts unchanged.
 
+## Passkeys Implementation
+
+`identity_mapper_passkeys` is the eleventh real implementation.
+
+It maps a passkey shape:
+
+```text
+passkey_id/assertion
+```
+
+to the same existing core model:
+
+```text
+Identification(passkey_id)
+Credential(assertion)
+        |
+        v
+PasskeyIdentityResolver
+PasskeyCredentialVerifier
+        |
+        v
+Identity
+```
+
+The Passkeys implementation also leaves the core domain model and capability
+contracts unchanged.
+
 ## Project Scope
 
 IdentityMapper focuses on identity:
