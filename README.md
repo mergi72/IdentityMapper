@@ -309,6 +309,33 @@ Identity
 The JWT / Bearer Token implementation also leaves the core domain model and
 capability contracts unchanged.
 
+## Client Certificate / mTLS Implementation
+
+`identity_mapper_certificate` is the sixth real implementation.
+
+It maps a client certificate shape:
+
+```text
+fingerprint/certificate_proof
+```
+
+to the same existing core model:
+
+```text
+Identification(fingerprint)
+Credential(certificate_proof)
+        |
+        v
+ClientCertificateIdentityResolver
+ClientCertificateCredentialVerifier
+        |
+        v
+Identity
+```
+
+The Client Certificate / mTLS implementation also leaves the core domain model
+and capability contracts unchanged.
+
 ## Project Scope
 
 IdentityMapper focuses on identity:
