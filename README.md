@@ -21,8 +21,8 @@ A mapper does not validate, authenticate, authorize, persist, or decide.
 A mapper is deterministic. The same input always produces the same domain
 model.
 
-IdentityMapper defines the identity domain model and the contracts required to
-authenticate it. It does not perform authentication itself.
+IdentityMapper defines the identity domain model and the capabilities required
+to authenticate an identity. It does not perform authentication itself.
 
 ## Core Idea
 
