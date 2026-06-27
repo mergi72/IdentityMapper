@@ -255,6 +255,33 @@ Identity
 The OAuth implementation also leaves the core domain model and capability
 contracts unchanged.
 
+## API Key Implementation
+
+`identity_mapper_api_key` is the fourth real implementation.
+
+It maps an API key shape:
+
+```text
+key_id/api_key
+```
+
+to the same existing core model:
+
+```text
+Identification(key_id)
+Credential(api_key)
+        |
+        v
+ApiKeyIdentityResolver
+ApiKeyCredentialVerifier
+        |
+        v
+Identity
+```
+
+The API Key implementation also leaves the core domain model and capability
+contracts unchanged.
+
 ## Project Scope
 
 IdentityMapper focuses on identity:
