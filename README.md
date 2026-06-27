@@ -282,6 +282,33 @@ Identity
 The API Key implementation also leaves the core domain model and capability
 contracts unchanged.
 
+## JWT / Bearer Token Implementation
+
+`identity_mapper_jwt` is the fifth real implementation.
+
+It maps a JWT / Bearer Token shape:
+
+```text
+subject/bearer_token
+```
+
+to the same existing core model:
+
+```text
+Identification(subject)
+Credential(bearer_token)
+        |
+        v
+JwtIdentityResolver
+JwtCredentialVerifier
+        |
+        v
+Identity
+```
+
+The JWT / Bearer Token implementation also leaves the core domain model and
+capability contracts unchanged.
+
 ## Project Scope
 
 IdentityMapper focuses on identity:
