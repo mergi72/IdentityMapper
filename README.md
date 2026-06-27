@@ -390,6 +390,33 @@ Identity
 The SAML implementation also leaves the core domain model and capability
 contracts unchanged.
 
+## Windows / AD SID Implementation
+
+`identity_mapper_windows` is the ninth real implementation.
+
+It maps a Windows identity shape:
+
+```text
+sid/logon_proof
+```
+
+to the same existing core model:
+
+```text
+Identification(sid)
+Credential(logon_proof)
+        |
+        v
+WindowsIdentityResolver
+WindowsCredentialVerifier
+        |
+        v
+Identity
+```
+
+The Windows / AD SID implementation also leaves the core domain model and
+capability contracts unchanged.
+
 ## Project Scope
 
 IdentityMapper focuses on identity:
