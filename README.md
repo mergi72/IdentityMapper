@@ -228,6 +228,33 @@ Identity
 The LDAP implementation also leaves the core domain model and capability
 contracts unchanged.
 
+## OAuth Implementation
+
+`identity_mapper_oauth` is the third real implementation.
+
+It maps an OAuth token shape:
+
+```text
+subject/access_token
+```
+
+to the same existing core model:
+
+```text
+Identification(subject)
+Credential(access_token)
+        |
+        v
+OAuthIdentityResolver
+OAuthCredentialVerifier
+        |
+        v
+Identity
+```
+
+The OAuth implementation also leaves the core domain model and capability
+contracts unchanged.
+
 ## Project Scope
 
 IdentityMapper focuses on identity:
