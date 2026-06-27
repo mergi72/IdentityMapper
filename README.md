@@ -336,6 +336,33 @@ Identity
 The Client Certificate / mTLS implementation also leaves the core domain model
 and capability contracts unchanged.
 
+## Kerberos Implementation
+
+`identity_mapper_kerberos` is the seventh real implementation.
+
+It maps a Kerberos shape:
+
+```text
+principal/ticket
+```
+
+to the same existing core model:
+
+```text
+Identification(principal)
+Credential(ticket)
+        |
+        v
+KerberosIdentityResolver
+KerberosCredentialVerifier
+        |
+        v
+Identity
+```
+
+The Kerberos implementation also leaves the core domain model and capability
+contracts unchanged.
+
 ## Project Scope
 
 IdentityMapper focuses on identity:
