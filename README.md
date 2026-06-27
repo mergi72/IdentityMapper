@@ -420,6 +420,33 @@ Identity
 The Windows / AD SID implementation also leaves the core domain model and
 capability contracts unchanged.
 
+## WebAuthn / FIDO2 Implementation
+
+`identity_mapper_webauthn` is the tenth real implementation.
+
+It maps a WebAuthn / FIDO2 shape:
+
+```text
+credential_id/assertion
+```
+
+to the same existing core model:
+
+```text
+Identification(credential_id)
+Credential(assertion)
+        |
+        v
+WebAuthnIdentityResolver
+WebAuthnCredentialVerifier
+        |
+        v
+Identity
+```
+
+The WebAuthn / FIDO2 implementation also leaves the core domain model and
+capability contracts unchanged.
+
 ## Project Scope
 
 IdentityMapper focuses on identity:
