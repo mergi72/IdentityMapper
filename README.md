@@ -108,7 +108,7 @@ Identity
 ```text
 Identification
 --------------
-identifier = "meri"
+identifier = "subject"
 
 Credential
 ----------
@@ -125,7 +125,7 @@ verification
 Identity
 --------
 id = "42"
-display_name = "Radomir Merhaut"
+display_name = "Example Subject"
 roles = [...]
 claims = {...}
 attributes = {...}
