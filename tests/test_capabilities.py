@@ -37,7 +37,7 @@ class ExampleIdentityResolver(ResolveIdentity):
             return None
 
         return IdentityCandidate(
-            id="identity-1",
+            implementation_id="candidate-1",
             identification=identification,
         )
 
@@ -48,7 +48,10 @@ class ExampleCredentialVerifier(VerifyCredential):
         candidate: IdentityCandidate,
         credential: Credential,
     ) -> bool:
-        return candidate.id == "identity-1" and credential.value == "accepted"
+        return (
+            candidate.implementation_id == "candidate-1"
+            and credential.value == "accepted"
+        )
 
 
 def test_authenticate_returns_verified_identity() -> None:
@@ -68,14 +71,14 @@ def test_resolve_identity_returns_unverified_candidate() -> None:
     candidate = ExampleIdentityResolver().resolve_identity(identification)
 
     assert candidate == IdentityCandidate(
-        id="identity-1",
+        implementation_id="candidate-1",
         identification=identification,
     )
 
 
 def test_verify_credential_checks_candidate() -> None:
     candidate = IdentityCandidate(
-        id="identity-1",
+        implementation_id="candidate-1",
         identification=Identification(identifier="subject"),
     )
 

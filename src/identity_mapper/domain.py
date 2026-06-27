@@ -27,7 +27,7 @@ class Identification:
 class IdentityCandidate:
     """Unverified identity candidate found by identification."""
 
-    id: str
+    implementation_id: str
     identification: Identification
     attributes: dict[str, Any] = field(default_factory=dict)
 
