@@ -174,6 +174,29 @@ implementation A -> Identity -> implementation B
 This keeps implementation details isolated and lets all integrations communicate
 through a stable domain invariant.
 
+## Reference Implementation
+
+`BasicAuthenticationMapper` is the first implementation mapper.
+
+It maps an implementation-shaped input:
+
+```text
+BasicAuthenticationRequest
+--------------------------
+identifier
+secret
+realm
+metadata
+```
+
+to existing domain inputs:
+
+```text
+Identification + Credential
+```
+
+It does not change the domain model or capability contracts.
+
 ## Project Scope
 
 IdentityMapper focuses on identity:
