@@ -201,6 +201,33 @@ Identity
 The BasicAuth implementation does not change the core domain model or
 capability contracts.
 
+## LDAP Implementation
+
+`identity_mapper_ldap` is the second real implementation.
+
+It maps an LDAP bind shape:
+
+```text
+uid/password
+```
+
+to the same existing core model:
+
+```text
+Identification(uid)
+Credential(password)
+        |
+        v
+LdapIdentityResolver
+LdapCredentialVerifier
+        |
+        v
+Identity
+```
+
+The LDAP implementation also leaves the core domain model and capability
+contracts unchanged.
+
 ## Project Scope
 
 IdentityMapper focuses on identity:
