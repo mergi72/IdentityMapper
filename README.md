@@ -115,12 +115,15 @@ Credential
 type = "opaque"
 value = "..."
 
+Example credential types include `PASSWORD`, `TOKEN`, `CERTIFICATE`, and
+`OPAQUE`. They are examples, not a fixed enum.
+
 Authenticate
 ------------
 verification
 
-Verified Identity
------------------
+Identity
+--------
 id = "42"
 display_name = "Radomir Merhaut"
 roles = [...]
