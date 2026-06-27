@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "identity-mapper"
+version = "0.1.0"
+description = "Mapper Pattern implementation for identity domain invariants."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+  { name = "IdentityMapper contributors" }
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
