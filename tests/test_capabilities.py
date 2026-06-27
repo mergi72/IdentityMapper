@@ -1,5 +1,14 @@
-from identity_mapper.capabilities import Authenticate
-from identity_mapper.domain import Credential, Identification, Identity
+from identity_mapper.capabilities import (
+    Authenticate,
+    ResolveIdentity,
+    VerifyCredential,
+)
+from identity_mapper.domain import (
+    Credential,
+    Identification,
+    Identity,
+    IdentityCandidate,
+)
 
 
 class ExampleAuthenticator(Authenticate):
@@ -14,10 +23,32 @@ class ExampleAuthenticator(Authenticate):
         ):
             return Identity(
                 id="identity-1",
-                identifier=identification.identifier,
             )
 
         raise ValueError("invalid credential")
+
+
+class ExampleIdentityResolver(ResolveIdentity):
+    def resolve_identity(
+        self,
+        identification: Identification,
+    ) -> IdentityCandidate | None:
+        if identification.identifier != "subject":
+            return None
+
+        return IdentityCandidate(
+            id="identity-1",
+            identification=identification,
+        )
+
+
+class ExampleCredentialVerifier(VerifyCredential):
+    def verify_credential(
+        self,
+        candidate: IdentityCandidate,
+        credential: Credential,
+    ) -> bool:
+        return candidate.id == "identity-1" and credential.value == "accepted"
 
 
 def test_authenticate_returns_verified_identity() -> None:
@@ -28,5 +59,27 @@ def test_authenticate_returns_verified_identity() -> None:
 
     assert identity == Identity(
         id="identity-1",
-        identifier="subject",
+    )
+
+
+def test_resolve_identity_returns_unverified_candidate() -> None:
+    identification = Identification(identifier="subject")
+
+    candidate = ExampleIdentityResolver().resolve_identity(identification)
+
+    assert candidate == IdentityCandidate(
+        id="identity-1",
+        identification=identification,
+    )
+
+
+def test_verify_credential_checks_candidate() -> None:
+    candidate = IdentityCandidate(
+        id="identity-1",
+        identification=Identification(identifier="subject"),
+    )
+
+    assert ExampleCredentialVerifier().verify_credential(
+        candidate,
+        Credential(type="opaque", value="accepted"),
     )

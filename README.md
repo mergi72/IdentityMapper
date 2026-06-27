@@ -2,6 +2,12 @@
 
 IdentityMapper defines a minimal identity abstraction.
 
+## The IdentityMapper Rule
+
+Implementations are never mapped to each other.
+
+Every implementation maps only to the domain invariant.
+
 > IdentityMapper does not log a system in. IdentityMapper converts different
 > ways of representing identity into one shared contract.
 
@@ -57,7 +63,6 @@ verification
 Verified Identity
 -----------------
 id = "42"
-identifier = "meri"
 display_name = "Radomir Merhaut"
 roles = [...]
 claims = {...}
@@ -71,16 +76,12 @@ Authenticate
     |
     +-- ResolveIdentity(identification)
     |
-    +-- VerifyCredential(identity, credential)
+    +-- VerifyCredential(candidate, credential)
 ```
 
 `Authenticate` is the orchestration. `ResolveIdentity` finds the identity
 candidate. `VerifyCredential` proves that the credential belongs to that
-identity.
-
-## Rule
-
-Never map implementations directly to each other.
+candidate. Only then does the system produce a verified `Identity`.
 
 Incorrect:
 
@@ -118,6 +119,9 @@ core invariant:
 
 identification:
   Identification
+
+candidate:
+  IdentityCandidate
 
 credential:
   Credential

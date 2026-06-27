@@ -1,6 +1,11 @@
 from abc import ABC, abstractmethod
 
-from identity_mapper.domain import Credential, Identification, Identity
+from identity_mapper.domain import (
+    Credential,
+    Identification,
+    Identity,
+    IdentityCandidate,
+)
 
 
 class Authenticate(ABC):
@@ -19,17 +24,20 @@ class ResolveIdentity(ABC):
     """Finds an identity candidate by identification."""
 
     @abstractmethod
-    def resolve_identity(self, identification: Identification) -> Identity | None:
-        """Return the identity for an identification, if one exists."""
+    def resolve_identity(
+        self,
+        identification: Identification,
+    ) -> IdentityCandidate | None:
+        """Return the candidate for an identification, if one exists."""
 
 
 class VerifyCredential(ABC):
-    """Verifies that a credential belongs to an identity."""
+    """Verifies that a credential belongs to an identity candidate."""
 
     @abstractmethod
     def verify_credential(
         self,
-        identity: Identity,
+        candidate: IdentityCandidate,
         credential: Credential,
     ) -> bool:
-        """Return whether the credential verifies the identity."""
+        """Return whether the credential verifies the candidate."""

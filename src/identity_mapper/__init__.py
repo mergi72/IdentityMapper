@@ -5,7 +5,12 @@ from identity_mapper.capabilities import (
     ResolveIdentity,
     VerifyCredential,
 )
-from identity_mapper.domain import Credential, Identification, Identity
+from identity_mapper.domain import (
+    Credential,
+    Identification,
+    Identity,
+    IdentityCandidate,
+)
 from identity_mapper.mapper import Mapper
 
 __all__ = [
@@ -13,6 +18,7 @@ __all__ = [
     "Credential",
     "Identification",
     "Identity",
+    "IdentityCandidate",
     "Mapper",
     "ResolveIdentity",
     "VerifyCredential",

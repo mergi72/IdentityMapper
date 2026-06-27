@@ -7,8 +7,6 @@ class Identity:
     """Verified identity domain invariant."""
 
     id: str
-    identifier: str
-    realm: str | None = None
     display_name: str | None = None
     email: str | None = None
     roles: tuple[str, ...] = ()
@@ -22,6 +20,15 @@ class Identification:
 
     identifier: str
     realm: str | None = None
+    attributes: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class IdentityCandidate:
+    """Unverified identity candidate found by identification."""
+
+    id: str
+    identification: Identification
     attributes: dict[str, Any] = field(default_factory=dict)
 
 
