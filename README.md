@@ -363,6 +363,33 @@ Identity
 The Kerberos implementation also leaves the core domain model and capability
 contracts unchanged.
 
+## SAML Implementation
+
+`identity_mapper_saml` is the eighth real implementation.
+
+It maps a SAML shape:
+
+```text
+name_id/assertion
+```
+
+to the same existing core model:
+
+```text
+Identification(name_id)
+Credential(assertion)
+        |
+        v
+SamlIdentityResolver
+SamlCredentialVerifier
+        |
+        v
+Identity
+```
+
+The SAML implementation also leaves the core domain model and capability
+contracts unchanged.
+
 ## Project Scope
 
 IdentityMapper focuses on identity:
