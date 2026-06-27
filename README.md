@@ -501,6 +501,33 @@ Identity
 The MFA implementation also leaves the core domain model and capability
 contracts unchanged.
 
+## Federated Identity Implementation
+
+`identity_mapper_federated` is the thirteenth real implementation.
+
+It maps a federated identity shape:
+
+```text
+issuer + external_subject / federation_assertion
+```
+
+to the same existing core model:
+
+```text
+Identification(external_subject, realm=issuer)
+Credential(federation_assertion)
+        |
+        v
+FederatedIdentityResolver
+FederatedCredentialVerifier
+        |
+        v
+Identity
+```
+
+The Federated Identity implementation also leaves the core domain model and
+capability contracts unchanged.
+
 ## Project Scope
 
 IdentityMapper focuses on identity:
