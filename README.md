@@ -1,7 +1,7 @@
 # IdentityMapper
 
-IdentityMapper defines a minimal identity abstraction and serves as a reference
-implementation of the Invariant Mapping Pattern.
+IdentityMapper is the reference implementation of the Invariant Mapping Pattern
+for the identity domain.
 
 ## The IdentityMapper Rule
 
