@@ -9,6 +9,15 @@ Implementations are never mapped to each other.
 
 Every implementation maps only to the domain invariant.
 
+## The Mapper Rule
+
+Mappers never contain business logic.
+
+Their only responsibility is translating implementation models into domain
+models.
+
+A mapper does not validate, authenticate, authorize, persist, or decide.
+
 > IdentityMapper does not log a system in. IdentityMapper converts identity
 > implementations into one shared domain invariant.
 
@@ -35,6 +44,15 @@ Domain Invariant
        v
 Capabilities
 ```
+
+The pattern can be summarized as:
+
+1. Find the domain invariant.
+2. Define the minimal domain contract.
+3. Map every implementation to the invariant.
+4. Business logic depends only on the invariant.
+5. Capabilities extend the invariant.
+6. Implementations never communicate directly.
 
 ```text
 Identification
