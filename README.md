@@ -1,6 +1,7 @@
 # IdentityMapper
 
-IdentityMapper defines a minimal identity abstraction.
+IdentityMapper defines a minimal identity abstraction and serves as a reference
+implementation of invariant mapping.
 
 ## The IdentityMapper Rule
 
@@ -8,13 +9,8 @@ Implementations are never mapped to each other.
 
 Every implementation maps only to the domain invariant.
 
-> IdentityMapper does not log a system in. IdentityMapper converts different
-> ways of representing identity into one shared contract.
-
-The broader architectural principle is invariant mapping:
-
-> Implementations are never mapped to each other. They are mapped only to the
-> domain invariant.
+> IdentityMapper does not log a system in. IdentityMapper converts identity
+> implementations into one shared domain invariant.
 
 ## Core Idea
 
@@ -22,21 +18,38 @@ External systems, protocols, products, and APIs have their own implementation
 models. A mapper translates one implementation model into a stable domain model.
 Business logic works with the domain invariant, not with the implementation.
 
+The general pattern is:
+
+```text
+Implementation
+       |
+       v
+Mapper
+       |
+       v
+Domain Invariant
+       |
+       v
+Capabilities
+```
+
 ```text
 Identification
 --------------
-Identification
+identifier
 
 Credential
 ----------
-Credential
+credential
 
         |
         v
 
 Authenticate
-ResolveIdentity
-VerifyCredential
+    |
+    +-- ResolveIdentity
+    |
+    +-- VerifyCredential
 
         |
         v
