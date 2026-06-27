@@ -174,6 +174,33 @@ implementation A -> Identity -> implementation B
 This keeps implementation details isolated and lets all integrations communicate
 through a stable domain invariant.
 
+## BasicAuth Implementation
+
+`identity_mapper_basic` is the first real implementation.
+
+It accepts the smallest useful authentication shape:
+
+```text
+user/passwd
+```
+
+and maps it to the existing core model:
+
+```text
+Identification(username)
+Credential(password)
+        |
+        v
+BasicIdentityResolver
+BasicCredentialVerifier
+        |
+        v
+Identity
+```
+
+The BasicAuth implementation does not change the core domain model or
+capability contracts.
+
 ## Project Scope
 
 IdentityMapper focuses on identity:
