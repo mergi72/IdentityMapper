@@ -18,11 +18,11 @@ models.
 
 A mapper does not validate, authenticate, authorize, persist, or decide.
 
-> IdentityMapper does not log a system in. IdentityMapper converts identity
-> implementations into one shared domain invariant.
+A mapper is deterministic. The same input always produces the same domain
+model.
 
-IdentityMapper does not authenticate users. It defines the domain model of
-identity and the contracts required to authenticate it.
+IdentityMapper defines the identity domain model and the contracts required to
+authenticate it. It does not perform authentication itself.
 
 ## Core Idea
 
@@ -53,6 +53,31 @@ The pattern can be summarized as:
 4. Business logic depends only on the invariant.
 5. Capabilities extend the invariant.
 6. Implementations never communicate directly.
+
+## Why
+
+Without a domain invariant, every implementation must know every other
+implementation.
+
+```text
+implementation A <-> implementation B
+implementation A <-> implementation C
+implementation B <-> implementation C
+...
+```
+
+N implementations require N x (N - 1) direct mappings.
+
+With a domain invariant, every implementation maps only once.
+
+```text
+implementation A --+
+implementation B --+--> Domain Invariant
+implementation C --+
+...
+```
+
+N implementations require N mappings.
 
 ```text
 Identification
