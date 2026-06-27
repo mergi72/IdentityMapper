@@ -210,4 +210,5 @@ capabilities:
 
 ## Status
 
-Early project skeleton.
+Reference implementation of the Invariant Mapping Pattern under active
+development.
