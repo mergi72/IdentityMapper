@@ -474,6 +474,33 @@ Identity
 The Passkeys implementation also leaves the core domain model and capability
 contracts unchanged.
 
+## MFA Implementation
+
+`identity_mapper_mfa` is the twelfth real implementation.
+
+It maps a multi-factor authentication shape:
+
+```text
+identifier/(factor + factor + ...)
+```
+
+to the same existing core model:
+
+```text
+Identification(identifier)
+Credential(encoded_factors)
+        |
+        v
+MfaIdentityResolver
+MfaCredentialVerifier
+        |
+        v
+Identity
+```
+
+The MFA implementation also leaves the core domain model and capability
+contracts unchanged.
+
 ## Project Scope
 
 IdentityMapper focuses on identity:
