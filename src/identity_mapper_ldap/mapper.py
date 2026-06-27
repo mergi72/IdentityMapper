@@ -61,5 +61,6 @@ class LdapEntryIdentityMapper(Mapper[LdapEntry, Identity]):
             display_name=source.cn,
             email=source.mail,
             roles=source.groups,
+            claims=dict(source.claims),
             attributes=dict(source.attributes),
         )

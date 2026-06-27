@@ -28,7 +28,9 @@ class LdapEntry:
     uid: str
     user_password: str = field(repr=False)
     identity_id: str
+    active: bool = True
     cn: str | None = None
     mail: str | None = None
     groups: tuple[str, ...] = ()
+    claims: dict[str, Any] = field(default_factory=dict)
     attributes: dict[str, Any] = field(default_factory=dict)

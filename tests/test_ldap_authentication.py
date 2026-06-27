@@ -29,8 +29,16 @@ def make_directory() -> InMemoryLdapDirectory:
                 cn="Example Subject",
                 mail="subject@example.org",
                 groups=("readers",),
+                claims={"directory": "ldap"},
                 attributes={"source": "ldap"},
-            )
+            ),
+            LdapEntry(
+                dn="uid=inactive,ou=people,dc=example,dc=org",
+                uid="inactive",
+                user_password="inactive",
+                identity_id="identity-inactive-ldap",
+                active=False,
+            ),
         ]
     )
 
@@ -53,6 +61,7 @@ def test_valid_ldap_bind_returns_identity() -> None:
         display_name="Example Subject",
         email="subject@example.org",
         roles=("readers",),
+        claims={"directory": "ldap"},
         attributes={"source": "ldap"},
     )
 
@@ -80,6 +89,14 @@ def test_unknown_ldap_user_resolves_to_none() -> None:
     assert candidate is None
 
 
+def test_inactive_ldap_user_resolves_to_none() -> None:
+    candidate = LdapIdentityResolver(make_directory()).resolve_identity(
+        Identification(identifier="inactive")
+    )
+
+    assert candidate is None
+
+
 def test_ldap_resolver_returns_candidate_not_identity() -> None:
     candidate = LdapIdentityResolver(make_directory()).resolve_identity(
         Identification(identifier="subject")
@@ -101,6 +118,18 @@ def test_ldap_verifier_checks_candidate_and_credential() -> None:
     assert LdapCredentialVerifier(make_directory()).verify_credential(
         candidate,
         Credential(type="PASSWORD", value="accepted"),
+    )
+
+
+def test_ldap_verifier_rejects_inactive_candidate() -> None:
+    candidate = IdentityCandidate(
+        implementation_id="uid=inactive,ou=people,dc=example,dc=org",
+        identification=Identification(identifier="inactive"),
+    )
+
+    assert not LdapCredentialVerifier(make_directory()).verify_credential(
+        candidate,
+        Credential(type="PASSWORD", value="inactive"),
     )
 
 

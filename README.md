@@ -228,6 +228,9 @@ Identity
 The LDAP implementation also leaves the core domain model and capability
 contracts unchanged.
 
+`v0.11.0` aligns the LDAP implementation with later providers by supporting
+inactive entries and LDAP-derived claims without changing the core model.
+
 ## OAuth Implementation
 
 `identity_mapper_oauth` is the third real implementation.

@@ -40,7 +40,7 @@ class LdapIdentityResolver(ResolveIdentity):
         identification: Identification,
     ) -> IdentityCandidate | None:
         entry = self._directory.get_by_uid(identification.identifier)
-        if entry is None:
+        if entry is None or not entry.active:
             return None
 
         return self._mapper.to_domain(
@@ -71,7 +71,7 @@ class LdapCredentialVerifier(VerifyCredential):
             return False
 
         entry = self._directory.get_by_dn(candidate.implementation_id)
-        if entry is None:
+        if entry is None or not entry.active:
             return False
 
         return compare_digest(entry.user_password, credential.value)
@@ -105,7 +105,7 @@ class LdapAuthenticator(Authenticate):
             raise LdapAuthenticationError("invalid credential")
 
         entry = self._directory.get_by_dn(candidate.implementation_id)
-        if entry is None:
+        if entry is None or not entry.active:
             raise LdapAuthenticationError("unknown identity")
 
         return self._identity_mapper.to_domain(entry)
