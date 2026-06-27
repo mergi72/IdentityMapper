@@ -528,6 +528,33 @@ Identity
 The Federated Identity implementation also leaves the core domain model and
 capability contracts unchanged.
 
+## Guest / Anonymous Identity Implementation
+
+`identity_mapper_guest` is the fourteenth real implementation.
+
+It maps a guest session shape:
+
+```text
+session_id/session_token
+```
+
+to the same existing core model:
+
+```text
+Identification(session_id)
+Credential(session_token)
+        |
+        v
+GuestIdentityResolver
+GuestCredentialVerifier
+        |
+        v
+Identity
+```
+
+The Guest / Anonymous Identity implementation also leaves the core domain model
+and capability contracts unchanged.
+
 ## Project Scope
 
 IdentityMapper focuses on identity:
