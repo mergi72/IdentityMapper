@@ -63,9 +63,24 @@ Response:
   "identity": {
     "id": "identity-1",
     "display_name": "Example Subject"
-  }
+  },
+  "error": null
 }
 ```
+
+Rejected response:
+
+```json
+{
+  "authenticated": false,
+  "identity": null,
+  "error": null
+}
+```
+
+Providers signal rejected authentication with `AuthenticationRejected`. The
+Host Service converts that signal into `AuthenticateResponse(authenticated=False)`.
+Unexpected errors are not treated as authentication rejection.
 
 ## Authenticate Logs
 
@@ -180,10 +195,17 @@ By default, the service reads `config/config.json` from the current directory:
 {
   "server": "127.0.0.1",
   "port": 8066,
+  "max_request_body_bytes": 65536,
   "authenticate_log_enabled": true,
-  "authenticate_log": "logs/authenticate.log"
+  "authenticate_log": "logs/authenticate.log",
+  "authenticate_log_max_entries": 1000
 }
 ```
+
+`max_request_body_bytes` limits HTTP request body size for JSON requests.
+
+`authenticate_log_max_entries` keeps the append-only authenticate audit log
+bounded by trimming older entries after writes.
 
 The server and port can still be overridden from the command line:
 
@@ -207,6 +229,13 @@ Providers can be listed through the running service:
 
 ```text
 python -m identity_mapper_service providers
+```
+
+Authentication can be requested through the running service:
+
+```text
+python -m identity_mapper_service authenticate --provider basic --identifier subject --credential-value accepted
+python -m identity_mapper_service authenticate --provider basic --identifier subject --credential-value accepted --format json
 ```
 
 Audit logs can be read through the running service:

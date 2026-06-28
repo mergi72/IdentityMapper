@@ -43,6 +43,9 @@ class RequestLog:
     """Append-only JSONL request log for hosted capabilities."""
 
     def __init__(self, path: str | Path, max_entries: int = 1000) -> None:
+        if max_entries < 1:
+            raise ValueError("max_entries must be greater than zero")
+
         self._path = Path(path)
         self._max_entries = max_entries
         self._lock = threading.Lock()

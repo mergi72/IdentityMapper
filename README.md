@@ -119,6 +119,7 @@ The implementation details are intentionally kept out of this README.
 src/identity_mapper/
   domain.py
   capabilities.py
+  capability_protocol.py
   mapper.py
   matrix.py
   providers/
@@ -133,6 +134,7 @@ src/identity_mapper/
 src/identity_mapper_service/
   app.py
   registry.py
+  responses.py
   schemas.py
   service.py
 

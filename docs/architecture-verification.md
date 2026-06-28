@@ -41,7 +41,8 @@ The test suite verifies:
 - verifier accepts a valid credential
 - verifier rejects an invalid credential
 - authenticator returns `Identity`
-- authenticator rejects an invalid credential
+- authenticator rejects an invalid credential with `AuthenticationRejected`
+- host service does not treat unexpected `ValueError` as authentication rejection
 
 This is an architectural test. It does not prove that a concrete external
 system is integrated correctly. It proves that every provider implementation in

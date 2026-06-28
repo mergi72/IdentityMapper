@@ -47,6 +47,15 @@ AuthenticationRejected
 Host services should treat `AuthenticationRejected` as an authentication
 result, not as infrastructure failure.
 
+The public capability response remains:
+
+```text
+AuthenticateResponse(authenticated=False)
+```
+
+Unexpected provider failures should not be converted into authentication
+rejection.
+
 ## Resolve Identity
 
 ```text

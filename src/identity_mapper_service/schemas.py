@@ -4,7 +4,10 @@ from collections.abc import Mapping
 from typing import Any
 
 from identity_mapper.domain import Credential, Identification, Identity
-from identity_mapper.capability_protocol import AuthenticateRequest, AuthenticateResponse
+from identity_mapper.capability_protocol import (
+    AuthenticateRequest,
+    AuthenticateResponse,
+)
 from identity_mapper_service.responses import (
     AuditResponse,
     HealthResponse,

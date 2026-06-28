@@ -204,8 +204,10 @@ def test_service_loads_host_config(tmp_path) -> None:
             {
                 "server": "127.0.0.1",
                 "port": 8066,
+                "max_request_body_bytes": 4096,
                 "authenticate_log_enabled": False,
                 "authenticate_log": "logs/authenticate.log",
+                "authenticate_log_max_entries": 50,
             }
         ),
         encoding="utf-8",
@@ -214,8 +216,10 @@ def test_service_loads_host_config(tmp_path) -> None:
     assert load_config(config_path) == HostServiceConfig(
         server="127.0.0.1",
         port=8066,
+        max_request_body_bytes=4096,
         authenticate_log_enabled=False,
         authenticate_log="logs/authenticate.log",
+        authenticate_log_max_entries=50,
     )
 
 
@@ -236,6 +240,61 @@ def test_service_rejects_invalid_authenticate_log_enabled_config(tmp_path) -> No
 
     with pytest.raises(ValueError, match="authenticate_log_enabled"):
         load_config(config_path)
+
+
+def test_service_rejects_invalid_port_config(tmp_path) -> None:
+    config_path = tmp_path / "config.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "port": 70000,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="port"):
+        load_config(config_path)
+
+
+def test_service_rejects_invalid_max_request_body_config(tmp_path) -> None:
+    config_path = tmp_path / "config.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "max_request_body_bytes": 0,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="max_request_body_bytes"):
+        load_config(config_path)
+
+
+def test_service_rejects_invalid_authenticate_log_max_entries_config(tmp_path) -> None:
+    config_path = tmp_path / "config.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "authenticate_log_max_entries": 0,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="authenticate_log_max_entries"):
+        load_config(config_path)
+
+
+def test_cli_serve_rejects_invalid_max_request_body_override() -> None:
+    with pytest.raises(ValueError, match="max_request_body_bytes"):
+        main(["serve", "--max-request-body-bytes", "0"])
+
+
+def test_cli_serve_rejects_invalid_authenticate_log_max_entries_override() -> None:
+    with pytest.raises(ValueError, match="authenticate_log_max_entries"):
+        main(["serve", "--authenticate-log-max-entries", "0"])
 
 
 def test_service_can_run_without_authenticate_log(tmp_path) -> None:
@@ -275,6 +334,25 @@ def test_service_writes_authenticate_log_without_credential_value(tmp_path) -> N
 
     log_text = (tmp_path / "authenticate.log").read_text(encoding="utf-8")
     assert "never-log-this-secret" not in log_text
+
+
+def test_request_log_trims_to_max_entries(tmp_path) -> None:
+    request_log = RequestLog(tmp_path / "authenticate.log", max_entries=2)
+
+    for index in range(3):
+        request_log.append_authenticate(
+            request_id=f"req-{index}",
+            provider="basic",
+            identifier=f"subject-{index}",
+            credential_type="PASSWORD",
+            authenticated=True,
+            status="accepted",
+            duration_ms=1,
+            identity_id=f"identity-{index}",
+        )
+
+    entries = request_log.entries(10)
+    assert [entry["request_id"] for entry in entries] == ["req-1", "req-2"]
 
 
 def test_service_writes_authenticate_log_with_local_timezone(tmp_path) -> None:
@@ -318,6 +396,35 @@ def test_http_host_exposes_health_providers_and_authenticate() -> None:
         assert payload["authenticated"]
         assert payload["identity"]["id"] == "identity-1"
         assert payload["error"] is None
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_http_host_rejects_too_large_json_body() -> None:
+    service = make_service()
+    server = create_server(
+        "127.0.0.1",
+        0,
+        service,
+        max_request_body_bytes=10,
+    )
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    try:
+        status, payload = request_json(
+            "POST",
+            host,
+            port,
+            "/authenticate",
+            valid_payload(),
+        )
+
+        assert status == 413
+        assert payload["error"] == "payload_too_large"
     finally:
         server.shutdown()
         server.server_close()
@@ -578,6 +685,110 @@ def test_cli_prints_logs(tmp_path, capsys) -> None:
         assert "request_id" in output
         assert "duration_ms" in output
         assert "basic" in output
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_cli_authenticates(tmp_path, capsys) -> None:
+    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    try:
+        assert main(
+            [
+                "authenticate",
+                "--host",
+                host,
+                "--port",
+                str(port),
+                "--provider",
+                "basic",
+                "--identifier",
+                "subject",
+                "--credential-type",
+                "PASSWORD",
+                "--credential-value",
+                "accepted",
+            ]
+        ) == 0
+
+        output = capsys.readouterr().out
+        assert "authenticated=True" in output
+        assert "identity_id=identity-1" in output
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_cli_authenticate_rejects_invalid_credential(tmp_path, capsys) -> None:
+    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    try:
+        assert main(
+            [
+                "authenticate",
+                "--host",
+                host,
+                "--port",
+                str(port),
+                "--provider",
+                "basic",
+                "--identifier",
+                "subject",
+                "--credential-type",
+                "PASSWORD",
+                "--credential-value",
+                "wrong",
+            ]
+        ) == 1
+
+        assert "authenticated=False" in capsys.readouterr().out
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_cli_authenticate_prints_json(tmp_path, capsys) -> None:
+    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    try:
+        assert main(
+            [
+                "authenticate",
+                "--host",
+                host,
+                "--port",
+                str(port),
+                "--provider",
+                "basic",
+                "--identifier",
+                "subject",
+                "--credential-value",
+                "accepted",
+                "--format",
+                "json",
+            ]
+        ) == 0
+
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["authenticated"] is True
+        assert payload["identity"]["id"] == "identity-1"
+        assert payload["error"] is None
     finally:
         server.shutdown()
         server.server_close()

@@ -17,25 +17,43 @@ from identity_mapper_service.schemas import (
 )
 from identity_mapper_service.service import IdentityMapperHostService
 
+DEFAULT_MAX_REQUEST_BODY_BYTES = 65536
+
 
 class JsonRequestError(ValueError):
     """Raised when an HTTP request cannot be decoded as JSON."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        error: str = "bad_json",
+        status_code: int = 400,
+    ) -> None:
+        super().__init__(message)
+        self.error = error
+        self.status_code = status_code
 
 
 def create_server(
     host: str,
     port: int,
     service: IdentityMapperHostService,
+    max_request_body_bytes: int = DEFAULT_MAX_REQUEST_BODY_BYTES,
 ) -> ThreadingHTTPServer:
-    return ThreadingHTTPServer((host, port), create_handler(service))
+    return ThreadingHTTPServer(
+        (host, port),
+        create_handler(service, max_request_body_bytes),
+    )
 
 
 def serve(
     host: str,
     port: int,
     service: IdentityMapperHostService,
+    max_request_body_bytes: int = DEFAULT_MAX_REQUEST_BODY_BYTES,
 ) -> None:
-    server = create_server(host, port, service)
+    server = create_server(host, port, service, max_request_body_bytes)
     try:
         server.serve_forever()
     finally:
@@ -44,6 +62,7 @@ def serve(
 
 def create_handler(
     service: IdentityMapperHostService,
+    max_request_body_bytes: int = DEFAULT_MAX_REQUEST_BODY_BYTES,
 ) -> type[BaseHTTPRequestHandler]:
     class IdentityMapperRequestHandler(BaseHTTPRequestHandler):
         server_version = "IdentityMapperHostService"
@@ -65,14 +84,14 @@ def create_handler(
                 try:
                     self._send_authenticate_logs(url.query)
                 except RequestValidationError as exc:
-                    self._send_json(400, {"error": "bad_request", "message": str(exc)})
+                    self._send_error(400, "bad_request", str(exc))
                 return
 
-            self._send_json(404, {"error": "not_found"})
+            self._send_error(404, "not_found", "endpoint not found")
 
         def do_POST(self) -> None:
             if self.path != "/authenticate":
-                self._send_json(404, {"error": "not_found"})
+                self._send_error(404, "not_found", "endpoint not found")
                 return
 
             try:
@@ -81,14 +100,28 @@ def create_handler(
                 response = service.authenticate_request(request)
                 self._send_json(200, authenticate_response_to_mapping(response))
             except RequestValidationError as exc:
-                self._send_json(400, {"error": "bad_request", "message": str(exc)})
+                self._send_error(400, "bad_request", str(exc))
             except UnknownProviderError as exc:
-                self._send_json(404, {"error": "unknown_provider", "message": str(exc)})
+                self._send_error(404, "unknown_provider", str(exc))
             except JsonRequestError as exc:
-                self._send_json(400, {"error": "bad_json", "message": str(exc)})
+                self._send_error(exc.status_code, exc.error, str(exc))
 
         def _read_json(self) -> dict[str, Any]:
-            length = int(self.headers.get("Content-Length", "0"))
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+            except ValueError as exc:
+                raise JsonRequestError(
+                    "content length must be an integer",
+                    error="bad_content_length",
+                ) from exc
+
+            if length > max_request_body_bytes:
+                raise JsonRequestError(
+                    "request body is too large",
+                    error="payload_too_large",
+                    status_code=413,
+                )
+
             raw_body = self.rfile.read(length)
             try:
                 value = json.loads(raw_body.decode("utf-8"))
@@ -119,6 +152,20 @@ def create_handler(
         def _send_json(self, status_code: int, payload: dict[str, Any]) -> None:
             body = (json.dumps(payload, sort_keys=True) + "\r\n").encode("utf-8")
             self._send_response(status_code, body)
+
+        def _send_error(
+            self,
+            status_code: int,
+            error: str,
+            message: str,
+        ) -> None:
+            self._send_json(
+                status_code,
+                {
+                    "error": error,
+                    "message": message,
+                },
+            )
 
         def _send_authenticate_logs(self, query: str) -> None:
             limit = self._read_limit(query)

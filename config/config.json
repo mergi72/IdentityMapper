@@ -1,6 +1,8 @@
 {
   "server": "127.0.0.1",
   "port": 8066,
+  "max_request_body_bytes": 65536,
   "authenticate_log_enabled": true,
-  "authenticate_log": "logs/authenticate.log"
+  "authenticate_log": "logs/authenticate.log",
+  "authenticate_log_max_entries": 1000
 }

@@ -13,7 +13,7 @@ from identity_mapper.providers.basic import (
     BasicUserRecord,
     InMemoryBasicUserStore,
 )
-from identity_mapper_service.app import serve
+from identity_mapper_service.app import DEFAULT_MAX_REQUEST_BODY_BYTES, serve
 from identity_mapper_service.registry import ProviderRegistry
 from identity_mapper_service.request_log import RequestLog
 from identity_mapper_service.service import IdentityMapperHostService
@@ -23,8 +23,10 @@ from identity_mapper_service.service import IdentityMapperHostService
 class HostServiceConfig:
     server: str = "127.0.0.1"
     port: int = 8066
+    max_request_body_bytes: int = DEFAULT_MAX_REQUEST_BODY_BYTES
     authenticate_log_enabled: bool = True
     authenticate_log: str = "logs/authenticate.log"
+    authenticate_log_max_entries: int = 1000
 
 
 def load_config(path: str | Path = "config/config.json") -> HostServiceConfig:
@@ -40,7 +42,12 @@ def load_config(path: str | Path = "config/config.json") -> HostServiceConfig:
 
     return HostServiceConfig(
         server=_optional_string(value, "server", HostServiceConfig().server),
-        port=_optional_int(value, "port", HostServiceConfig().port),
+        port=_optional_port(value, "port", HostServiceConfig().port),
+        max_request_body_bytes=_optional_positive_int(
+            value,
+            "max_request_body_bytes",
+            HostServiceConfig().max_request_body_bytes,
+        ),
         authenticate_log_enabled=_optional_bool(
             value,
             "authenticate_log_enabled",
@@ -50,6 +57,11 @@ def load_config(path: str | Path = "config/config.json") -> HostServiceConfig:
             value,
             "authenticate_log",
             HostServiceConfig().authenticate_log,
+        ),
+        authenticate_log_max_entries=_optional_positive_int(
+            value,
+            "authenticate_log_max_entries",
+            HostServiceConfig().authenticate_log_max_entries,
         ),
     )
 
@@ -65,6 +77,20 @@ def _optional_int(data: dict[str, Any], key: str, default: int) -> int:
     value = data.get(key, default)
     if not isinstance(value, int):
         raise ValueError(f"{key} must be an integer")
+    return value
+
+
+def _optional_positive_int(data: dict[str, Any], key: str, default: int) -> int:
+    value = _optional_int(data, key, default)
+    if value < 1:
+        raise ValueError(f"{key} must be greater than zero")
+    return value
+
+
+def _optional_port(data: dict[str, Any], key: str, default: int) -> int:
+    value = _optional_int(data, key, default)
+    if value < 1 or value > 65535:
+        raise ValueError(f"{key} must be between 1 and 65535")
     return value
 
 
@@ -105,7 +131,9 @@ def main(argv: list[str] | None = None) -> int:
     serve_parser.add_argument("--config", default="config/config.json")
     serve_parser.add_argument("--host")
     serve_parser.add_argument("--port", type=int)
+    serve_parser.add_argument("--max-request-body-bytes", type=int)
     serve_parser.add_argument("--authenticate-log")
+    serve_parser.add_argument("--authenticate-log-max-entries", type=int)
     serve_parser.add_argument(
         "--disable-authenticate-log",
         action="store_true",
@@ -127,6 +155,20 @@ def main(argv: list[str] | None = None) -> int:
     providers_parser.add_argument("--host")
     providers_parser.add_argument("--port", type=int)
 
+    authenticate_parser = subparsers.add_parser("authenticate")
+    authenticate_parser.add_argument("--config", default="config/config.json")
+    authenticate_parser.add_argument("--host")
+    authenticate_parser.add_argument("--port", type=int)
+    authenticate_parser.add_argument("--provider", required=True)
+    authenticate_parser.add_argument("--identifier", required=True)
+    authenticate_parser.add_argument("--credential-type", default="PASSWORD")
+    authenticate_parser.add_argument("--credential-value", required=True)
+    authenticate_parser.add_argument(
+        "--format",
+        choices=("text", "json"),
+        default="text",
+    )
+
     logs_parser = subparsers.add_parser("logs")
     logs_parser.add_argument("--config", default="config/config.json")
     logs_parser.add_argument("--host")
@@ -144,18 +186,34 @@ def main(argv: list[str] | None = None) -> int:
         config = load_config(args.config)
         host = args.host or config.server
         port = args.port or config.port
+        max_request_body_bytes = (
+            args.max_request_body_bytes
+            if args.max_request_body_bytes is not None
+            else config.max_request_body_bytes
+        )
+        if max_request_body_bytes < 1:
+            raise ValueError("max_request_body_bytes must be greater than zero")
+
         authenticate_log = args.authenticate_log or config.authenticate_log
+        authenticate_log_max_entries = (
+            args.authenticate_log_max_entries
+            if args.authenticate_log_max_entries is not None
+            else config.authenticate_log_max_entries
+        )
+        if authenticate_log_max_entries < 1:
+            raise ValueError("authenticate_log_max_entries must be greater than zero")
+
         authenticate_log_enabled = (
             config.authenticate_log_enabled and not args.disable_authenticate_log
         )
         registry = build_demo_registry() if args.demo_basic else ProviderRegistry()
         request_log = (
-            RequestLog(authenticate_log)
+            RequestLog(authenticate_log, max_entries=authenticate_log_max_entries)
             if authenticate_log_enabled
             else None
         )
         service = IdentityMapperHostService(registry, request_log)
-        serve(host, port, service)
+        serve(host, port, service, max_request_body_bytes)
         return 0
 
     if args.command == "status":
@@ -169,6 +227,20 @@ def main(argv: list[str] | None = None) -> int:
         host = args.host or config.server
         port = args.port or config.port
         return _providers(host, port)
+
+    if args.command == "authenticate":
+        config = load_config(args.config)
+        host = args.host or config.server
+        port = args.port or config.port
+        return _authenticate(
+            host,
+            port,
+            args.provider,
+            args.identifier,
+            args.credential_type,
+            args.credential_value,
+            args.format,
+        )
 
     if args.command == "logs":
         config = load_config(args.config)
@@ -212,6 +284,59 @@ def _providers(host: str, port: int) -> int:
     return 0
 
 
+def _authenticate(
+    host: str,
+    port: int,
+    provider: str,
+    identifier: str,
+    credential_type: str,
+    credential_value: str,
+    output_format: str,
+) -> int:
+    payload = {
+        "provider": provider,
+        "identification": {
+            "identifier": identifier,
+        },
+        "credential": {
+            "type": credential_type,
+            "value": credential_value,
+        },
+    }
+    status, body, headers = _request(
+        host,
+        port,
+        "POST",
+        "/authenticate",
+        payload,
+    )
+    if status != 200:
+        print(f"IdentityMapper Host Service returned HTTP {status}: {body}")
+        return 1
+
+    response = json.loads(body)
+    if output_format == "json" and headers.get("Content-Type", "").startswith(
+        "application/json"
+    ):
+        print(json.dumps(response, indent=2, sort_keys=True))
+        return 0
+
+    if response.get("authenticated"):
+        identity = response.get("identity") or {}
+        identity_id = identity.get("id", "")
+        display_name = identity.get("display_name", "")
+        print(
+            "authenticated=True "
+            f"identity_id={identity_id} "
+            f"display_name={display_name}"
+        )
+        return 0
+
+    error = response.get("error") or ""
+    print(f"authenticated=False error={error}")
+    return 1
+
+
 def _logs(host: str, port: int, limit: int, output_format: str) -> int:
     status, body, headers = _request(
         host,
@@ -236,10 +361,13 @@ def _request(
     port: int,
     method: str,
     path: str,
+    payload: dict[str, Any] | None = None,
 ) -> tuple[int, str, dict[str, str]]:
     connection = http.client.HTTPConnection(host, port, timeout=3)
     try:
-        connection.request(method, path)
+        body = None if payload is None else json.dumps(payload)
+        headers = {"Content-Type": "application/json"} if body is not None else {}
+        connection.request(method, path, body=body, headers=headers)
         response = connection.getresponse()
         body = response.read().decode("utf-8")
         headers = {name: value for name, value in response.getheaders()}

@@ -53,7 +53,12 @@ POST /verify-credential
 ```
 
 The host receives transport-shaped input, selects a provider, calls a
-capability, and returns a transport-shaped response.
+capability through the Capability Protocol, and returns a transport-shaped
+response.
+
+Authentication rejection is represented inside the Capability Protocol by
+`AuthenticationRejected`. A host converts that protocol signal into a normal
+`AuthenticateResponse(authenticated=False)` result.
 
 ## First Runtime Step
 
