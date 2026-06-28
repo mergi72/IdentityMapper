@@ -25,6 +25,10 @@ The provider capability contract is tested in:
 
 - `tests/test_provider_capability_contracts.py`
 
+The automated CI workflow is defined in:
+
+- `.github/workflows/ci.yml`
+
 ## Architecture Contract Verification
 
 Every provider must satisfy the same capability contract.
@@ -113,6 +117,10 @@ All providers satisfy the same capability contract.
 
 Version `v0.20.0` is the first release where that contract is expressed directly
 in code.
+
+Version `v0.21.0` adds CI for the verified contract suite and Python bytecode
+compilation. Linting and formatting are intentionally deferred until their
+rules are configured and verified against the existing codebase.
 
 ## Conclusion
 
