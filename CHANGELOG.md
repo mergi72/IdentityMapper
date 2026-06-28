@@ -2,6 +2,15 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.25.1
+
+Release archive hygiene patch.
+
+- Added `.gitattributes` export rules for Python caches and local runtime artifacts.
+- Kept ignored build, cache, virtual environment, and log files out of source archives.
+- Confirmed the working tree is clean after local cache cleanup.
+- Tests: 250 passed.
+
 ## v0.25.0
 
 Provider selection checkpoint.
