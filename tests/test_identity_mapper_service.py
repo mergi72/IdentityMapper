@@ -12,8 +12,7 @@ from identity_mapper.providers.basic import (
     InMemoryBasicUserStore,
 )
 from identity_mapper.domain import Credential, Identification
-from identity_mapper.requests import AuthenticateRequest
-from identity_mapper.responses import AuthenticateResponse
+from identity_mapper.capability_protocol import AuthenticateRequest, AuthenticateResponse
 from identity_mapper_service.__main__ import HostServiceConfig, load_config, main
 from identity_mapper_service.app import create_server
 from identity_mapper_service.registry import ProviderRegistry, UnknownProviderError

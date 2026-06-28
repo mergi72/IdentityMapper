@@ -75,3 +75,14 @@ same capability request and response contracts.
 Transport is a host concern.
 
 Capability protocol is an IdentityMapper contract.
+
+## Source
+
+The primary module for these contracts is:
+
+```text
+identity_mapper.capability_protocol
+```
+
+`identity_mapper.requests` and `identity_mapper.responses` remain available as
+compatibility import surfaces.

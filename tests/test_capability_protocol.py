@@ -1,8 +1,10 @@
 from identity_mapper import (
-    AuthenticateRequest,
-    AuthenticateResponse,
     Credential,
     Identification,
+)
+from identity_mapper.capability_protocol import (
+    AuthenticateRequest,
+    AuthenticateResponse,
     ResolveIdentityRequest,
     ResolveIdentityResponse,
     VerifyCredentialRequest,
