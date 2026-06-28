@@ -13,6 +13,16 @@ The identity domain can be reduced to one stable invariant.
 Implement independent identity models and reduce each of them to the same core
 domain model.
 
+Verify every provider against the same capability contract:
+
+- mapper produces `Identification` and `Credential`
+- resolver returns `IdentityCandidate`, not `Identity`
+- resolver returns `None` for an unknown identification
+- verifier accepts a valid credential
+- verifier rejects an invalid credential
+- authenticator returns `Identity`
+- authenticator rejects an invalid credential
+
 ## Core Files
 
 The core files are:
@@ -20,6 +30,10 @@ The core files are:
 - `src/identity_mapper/domain.py`
 - `src/identity_mapper/capabilities.py`
 - `src/identity_mapper/mapper.py`
+
+The provider capability contract is tested in:
+
+- `tests/test_provider_capability_contracts.py`
 
 ## Verified Flow
 
@@ -60,6 +74,7 @@ Identity
 | v0.14.0 | MFA | No |
 | v0.15.0 | Federated Identity | No |
 | v0.16.0 | Guest / Anonymous Identity | No |
+| v0.20.0 | Provider capability contracts | No |
 
 ## Verified Providers
 
@@ -85,6 +100,8 @@ tickets, assertions, SIDs, WebAuthn credentials, passkeys, multi-factor
 credentials, federated trust mappings, and guest sessions.
 
 No provider introduced a new core concept.
+
+All providers satisfy the same capability contract.
 
 ## Conclusion
 
