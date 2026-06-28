@@ -2,6 +2,15 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.22.7
+
+Authenticate response serialization patch.
+
+- Included `AuthenticateResponse.error` in HTTP JSON response mapping.
+- Added coverage for rejected authenticate response serialization.
+- Confirmed successful HTTP authenticate responses include `error: null`.
+- Tests: 231 passed.
+
 ## v0.22.6
 
 Host Service capability protocol boundary patch.
