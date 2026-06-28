@@ -3,6 +3,7 @@ from identity_mapper.capabilities import (
     ResolveIdentity,
     VerifyCredential,
 )
+from identity_mapper.capability_protocol import AuthenticationRejected
 from identity_mapper.domain import (
     Credential,
     Identification,
@@ -25,7 +26,7 @@ class ExampleAuthenticator(Authenticate):
                 id="identity-1",
             )
 
-        raise ValueError("invalid credential")
+        raise AuthenticationRejected("invalid credential")
 
 
 class ExampleIdentityResolver(ResolveIdentity):

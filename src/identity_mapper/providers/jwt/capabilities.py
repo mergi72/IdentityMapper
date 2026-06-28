@@ -1,5 +1,7 @@
 from hmac import compare_digest
 
+from identity_mapper.capability_protocol import AuthenticationRejected
+
 from identity_mapper.capabilities import (
     Authenticate,
     ResolveIdentity,
@@ -20,7 +22,7 @@ from identity_mapper.providers.jwt.mapper import (
 from identity_mapper.providers.jwt.provider import InMemoryJwtStore
 
 
-class JwtAuthenticationError(ValueError):
+class JwtAuthenticationError(AuthenticationRejected):
     """Raised when JWT / Bearer Token authentication cannot produce identity."""
 
 

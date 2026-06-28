@@ -4,6 +4,7 @@ from typing import Any, Callable
 import pytest
 
 from identity_mapper.capabilities import Authenticate, ResolveIdentity, VerifyCredential
+from identity_mapper.capability_protocol import AuthenticationRejected
 from identity_mapper.domain import Credential, Identification, Identity, IdentityCandidate
 from identity_mapper.providers.api_key import (
     ApiKeyAuthenticator,
@@ -933,7 +934,7 @@ def test_provider_authenticator_rejects_invalid_credential(
         contract.invalid_request
     )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(AuthenticationRejected):
         contract.authenticator_type(contract.store_factory()).authenticate(
             identification,
             credential,

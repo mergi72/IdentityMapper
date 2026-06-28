@@ -8,6 +8,10 @@ from identity_mapper.domain import (
 )
 
 
+class AuthenticationRejected(Exception):
+    """Raised when authentication completes with a rejected result."""
+
+
 @dataclass(frozen=True, slots=True)
 class AuthenticateRequest:
     """Request to execute the Authenticate capability."""
@@ -57,3 +61,14 @@ class VerifyCredentialResponse:
 
     verified: bool
     error: str | None = None
+
+
+__all__ = [
+    "AuthenticationRejected",
+    "AuthenticateRequest",
+    "AuthenticateResponse",
+    "ResolveIdentityRequest",
+    "ResolveIdentityResponse",
+    "VerifyCredentialRequest",
+    "VerifyCredentialResponse",
+]

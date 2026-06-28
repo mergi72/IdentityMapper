@@ -3,7 +3,11 @@ from __future__ import annotations
 from time import perf_counter
 from uuid import uuid4
 
-from identity_mapper.capability_protocol import AuthenticateRequest, AuthenticateResponse
+from identity_mapper.capability_protocol import (
+    AuthenticationRejected,
+    AuthenticateRequest,
+    AuthenticateResponse,
+)
 from identity_mapper_service.registry import ProviderRegistry, UnknownProviderError
 from identity_mapper_service.request_log import RequestLog
 from identity_mapper_service.responses import (
@@ -59,7 +63,7 @@ class IdentityMapperHostService:
                 error="unknown_provider",
             )
             raise
-        except ValueError:
+        except AuthenticationRejected:
             self._log_authenticate(
                 provider=request.provider,
                 identifier=request.identification.identifier,

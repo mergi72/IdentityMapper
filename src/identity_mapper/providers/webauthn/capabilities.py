@@ -1,5 +1,7 @@
 from hmac import compare_digest
 
+from identity_mapper.capability_protocol import AuthenticationRejected
+
 from identity_mapper.capabilities import (
     Authenticate,
     ResolveIdentity,
@@ -20,7 +22,7 @@ from identity_mapper.providers.webauthn.mapper import (
 from identity_mapper.providers.webauthn.provider import InMemoryWebAuthnCredentialStore
 
 
-class WebAuthnAuthenticationError(ValueError):
+class WebAuthnAuthenticationError(AuthenticationRejected):
     """Raised when WebAuthn authentication cannot produce an identity."""
 
 

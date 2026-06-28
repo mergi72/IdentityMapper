@@ -1,5 +1,7 @@
 from hmac import compare_digest
 
+from identity_mapper.capability_protocol import AuthenticationRejected
+
 from identity_mapper.capabilities import (
     Authenticate,
     ResolveIdentity,
@@ -20,7 +22,7 @@ from identity_mapper.providers.guest.mapper import (
 from identity_mapper.providers.guest.provider import InMemoryGuestSessionStore
 
 
-class GuestAuthenticationError(ValueError):
+class GuestAuthenticationError(AuthenticationRejected):
     """Raised when guest authentication cannot produce an identity."""
 
 

@@ -6,6 +6,7 @@ from identity_mapper.capabilities import (
     VerifyCredential,
 )
 from identity_mapper.capability_protocol import (
+    AuthenticationRejected,
     AuthenticateRequest,
     AuthenticateResponse,
     ResolveIdentityRequest,
@@ -24,6 +25,7 @@ from identity_mapper.matrix import ReductionMatrix, ReductionSections
 
 __all__ = [
     "Authenticate",
+    "AuthenticationRejected",
     "AuthenticateRequest",
     "AuthenticateResponse",
     "Credential",

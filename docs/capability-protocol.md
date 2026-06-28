@@ -38,6 +38,15 @@ AuthenticateResponse
   error
 ```
 
+Rejected authentication is represented by the explicit protocol exception:
+
+```text
+AuthenticationRejected
+```
+
+Host services should treat `AuthenticationRejected` as an authentication
+result, not as infrastructure failure.
+
 ## Resolve Identity
 
 ```text

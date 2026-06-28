@@ -11,8 +11,12 @@ from identity_mapper.providers.basic import (
     BasicUserRecord,
     InMemoryBasicUserStore,
 )
+from identity_mapper.capabilities import Authenticate
+from identity_mapper.capability_protocol import (
+    AuthenticateRequest,
+    AuthenticateResponse,
+)
 from identity_mapper.domain import Credential, Identification
-from identity_mapper.capability_protocol import AuthenticateRequest, AuthenticateResponse
 from identity_mapper_service.__main__ import HostServiceConfig, load_config, main
 from identity_mapper_service.app import create_server
 from identity_mapper_service.registry import ProviderRegistry, UnknownProviderError
@@ -138,6 +142,28 @@ def test_service_rejects_invalid_credential_without_leaking_identity() -> None:
 
     assert not response.authenticated
     assert response.identity is None
+
+
+def test_service_does_not_treat_unexpected_value_error_as_rejection() -> None:
+    class BrokenAuthenticator(Authenticate):
+        def authenticate(
+            self,
+            identification: Identification,
+            credential: Credential,
+        ):
+            raise ValueError("unexpected failure")
+
+    registry = ProviderRegistry()
+    registry.register_authenticator("broken", BrokenAuthenticator())
+    service = IdentityMapperHostService(registry)
+    request = AuthenticateRequest(
+        provider="broken",
+        identification=valid_identification(),
+        credential=valid_credential(),
+    )
+
+    with pytest.raises(ValueError, match="unexpected failure"):
+        service.authenticate_request(request)
 
 
 def test_service_rejects_unknown_provider() -> None:

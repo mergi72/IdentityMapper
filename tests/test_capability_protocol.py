@@ -3,6 +3,7 @@ from identity_mapper import (
     Identification,
 )
 from identity_mapper.capability_protocol import (
+    AuthenticationRejected,
     AuthenticateRequest,
     AuthenticateResponse,
     ResolveIdentityRequest,
@@ -36,6 +37,10 @@ def test_authenticate_response_carries_authenticated_identity() -> None:
     assert response.authenticated
     assert response.identity is identity
     assert response.error is None
+
+
+def test_authentication_rejected_is_protocol_signal() -> None:
+    assert issubclass(AuthenticationRejected, Exception)
 
 
 def test_resolve_identity_request_and_response() -> None:

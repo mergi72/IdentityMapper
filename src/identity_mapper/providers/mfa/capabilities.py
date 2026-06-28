@@ -2,6 +2,8 @@ from hmac import compare_digest
 import json
 from typing import Any
 
+from identity_mapper.capability_protocol import AuthenticationRejected
+
 from identity_mapper.capabilities import (
     Authenticate,
     ResolveIdentity,
@@ -22,7 +24,7 @@ from identity_mapper.providers.mfa.mapper import (
 from identity_mapper.providers.mfa.provider import InMemoryMfaStore
 
 
-class MfaAuthenticationError(ValueError):
+class MfaAuthenticationError(AuthenticationRejected):
     """Raised when MFA authentication cannot produce an identity."""
 
 

@@ -1,5 +1,7 @@
 from hmac import compare_digest
 
+from identity_mapper.capability_protocol import AuthenticationRejected
+
 from identity_mapper.capabilities import (
     Authenticate,
     ResolveIdentity,
@@ -20,7 +22,7 @@ from identity_mapper.providers.federated.mapper import (
 from identity_mapper.providers.federated.provider import InMemoryFederatedIdentityStore
 
 
-class FederatedAuthenticationError(ValueError):
+class FederatedAuthenticationError(AuthenticationRejected):
     """Raised when federated authentication cannot produce an identity."""
 
 
