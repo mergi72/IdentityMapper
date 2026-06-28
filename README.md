@@ -1,5 +1,10 @@
 # IdentityMapper
 
+[![CI](https://github.com/mergi72/IdentityMapper/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mergi72/IdentityMapper/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/mergi72/IdentityMapper)](https://github.com/mergi72/IdentityMapper/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
+
 IdentityMapper is the reference implementation of the Invariant Mapping Pattern
 for the identity domain.
 
