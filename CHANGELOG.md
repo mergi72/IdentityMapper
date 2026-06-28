@@ -2,6 +2,16 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.22.10
+
+Authentication rejection protocol patch.
+
+- Added `AuthenticationRejected` as the explicit capability protocol signal for rejected authentication.
+- Made provider-specific authentication errors inherit from `AuthenticationRejected`.
+- Updated Host Service to catch `AuthenticationRejected` instead of broad `ValueError`.
+- Added coverage to ensure unexpected `ValueError` is not treated as authentication rejection.
+- Tests: 234 passed.
+
 ## v0.22.9
 
 Capability protocol terminology patch.
