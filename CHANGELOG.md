@@ -2,6 +2,19 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.26.0
+
+Host API completion checkpoint.
+
+- Added HTTP `POST /resolve-identity`.
+- Added HTTP `POST /verify-credential`.
+- Added Host Service request handling for `ResolveIdentityRequest` and `VerifyCredentialRequest`.
+- Added provider registry support for resolvers and credential verifiers.
+- Made `ResolveIdentityRequest.provider` and `VerifyCredentialRequest.provider` optional.
+- Added JSON mapping for `IdentityCandidate`.
+- Documented the Host Service as exposing all three core identity capabilities.
+- Tests: 263 passed.
+
 ## v0.25.1
 
 Release archive hygiene patch.
