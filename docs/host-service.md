@@ -74,15 +74,23 @@ Logs can be read through HTTP:
 ```text
 GET /authenticate_logs
 GET /authenticate_logs?limit=20
+GET /authenticate_logs?format=json
+GET /authenticate_logs?format=text
 ```
 
-Response:
+Browser response:
+
+```text
+HTML table with a sticky header.
+```
+
+JSON response:
 
 ```json
 {
   "entries": [
     {
-      "timestamp": "2026-06-28T12:00:00+00:00",
+      "timestamp": "2026-06-28T12:00:00.000000+00:00",
       "provider": "basic",
       "identifier": "subject",
       "credential_type": "PASSWORD",
@@ -93,6 +101,18 @@ Response:
   ]
 }
 ```
+
+Text response:
+
+```text
+timestamp                         provider  identifier  credential_type  authenticated  status    identity_id  error
+2026-06-28T12:00:00.000000+00:00  basic     subject     PASSWORD         True           accepted  identity-1
+```
+
+The text output is a fixed-width table intended for terminal use.
+
+Browsers are asked to refresh this endpoint every 2 seconds so newly received
+authentication requests appear without manually reloading the page.
 
 ## Boundary
 

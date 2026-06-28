@@ -191,12 +191,107 @@ def test_http_host_exposes_authenticate_logs(tmp_path) -> None:
         assert status == 200
         assert payload["authenticated"]
 
-        status, logs = request_json("GET", host, port, "/authenticate_logs?limit=1")
+        status, body = request_raw("GET", host, port, "/authenticate_logs?limit=1")
+        text = body.decode("utf-8")
+
+        assert status == 200
+        assert "<table>" in text
+        assert "<th>timestamp</th>" in text
+        assert "<td>basic</td>" in text
+        assert "<td>subject</td>" in text
+        assert "<td>PASSWORD</td>" in text
+        assert "<td>accepted</td>" in text
+        assert "value" not in text
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_http_host_refreshes_authenticate_logs_in_browser(tmp_path) -> None:
+    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    try:
+        status, _, headers = request_raw_with_headers(
+            "GET",
+            host,
+            port,
+            "/authenticate_logs",
+        )
+
+        assert status == 200
+        assert headers["Refresh"] == "2"
+        assert headers["Content-Type"] == "text/html; charset=utf-8"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_http_host_exposes_authenticate_logs_as_json(tmp_path) -> None:
+    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    try:
+        request_json(
+            "POST",
+            host,
+            port,
+            "/authenticate",
+            valid_payload(),
+        )
+
+        status, logs = request_json(
+            "GET",
+            host,
+            port,
+            "/authenticate_logs?format=json",
+        )
+
         assert status == 200
         assert logs["entries"][0]["provider"] == "basic"
-        assert logs["entries"][0]["authenticated"] is True
         assert logs["entries"][0]["identity_id"] == "identity-1"
         assert "value" not in logs["entries"][0]
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_http_host_exposes_authenticate_logs_as_text(tmp_path) -> None:
+    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    try:
+        request_json(
+            "POST",
+            host,
+            port,
+            "/authenticate",
+            valid_payload(),
+        )
+
+        status, body = request_raw("GET", host, port, "/authenticate_logs?format=text")
+        text = body.decode("utf-8")
+        lines = text.splitlines()
+        header = lines[0]
+
+        assert status == 200
+        assert header.startswith(
+            "timestamp                         provider  identifier  credential_type"
+        )
+        assert "basic     subject     PASSWORD         True" in lines[1]
+        assert "accepted  identity-1" in lines[1]
     finally:
         server.shutdown()
         server.server_close()
@@ -218,5 +313,36 @@ def request_json(
         response = connection.getresponse()
         data = json.loads(response.read().decode("utf-8"))
         return response.status, data
+    finally:
+        connection.close()
+
+
+def request_raw(
+    method: str,
+    host: str,
+    port: int,
+    path: str,
+) -> tuple[int, bytes]:
+    connection = http.client.HTTPConnection(host, port, timeout=5)
+    try:
+        connection.request(method, path)
+        response = connection.getresponse()
+        return response.status, response.read()
+    finally:
+        connection.close()
+
+
+def request_raw_with_headers(
+    method: str,
+    host: str,
+    port: int,
+    path: str,
+) -> tuple[int, bytes, dict[str, str]]:
+    connection = http.client.HTTPConnection(host, port, timeout=5)
+    try:
+        connection.request(method, path)
+        response = connection.getresponse()
+        headers = {name: value for name, value in response.getheaders()}
+        return response.status, response.read(), headers
     finally:
         connection.close()

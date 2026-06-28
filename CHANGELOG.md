@@ -2,6 +2,16 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.22.2
+
+Host Service audit log presentation patch.
+
+- Changed `GET /authenticate_logs` to render a browser-friendly HTML table.
+- Added `GET /authenticate_logs?format=json` for API consumers.
+- Added `GET /authenticate_logs?format=text` for terminal-style output.
+- Kept browser auto-refresh for the audit log view.
+- Confirmed credential values remain excluded from audit log output.
+
 ## v0.22.1
 
 Host Service request log patch.
