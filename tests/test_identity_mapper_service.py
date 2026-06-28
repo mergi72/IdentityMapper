@@ -13,10 +13,12 @@ from identity_mapper.providers.basic import (
 )
 from identity_mapper.domain import Credential, Identification
 from identity_mapper.requests import AuthenticateRequest
+from identity_mapper.responses import AuthenticateResponse
 from identity_mapper_service.__main__ import HostServiceConfig, load_config, main
 from identity_mapper_service.app import create_server
 from identity_mapper_service.registry import ProviderRegistry, UnknownProviderError
 from identity_mapper_service.request_log import RequestLog
+from identity_mapper_service.schemas import authenticate_response_to_mapping
 from identity_mapper_service.service import IdentityMapperHostService
 
 
@@ -92,6 +94,16 @@ def test_service_authenticates_capability_request() -> None:
     assert response.authenticated
     assert response.identity is not None
     assert response.identity.id == "identity-1"
+
+
+def test_authenticate_response_mapping_includes_protocol_error() -> None:
+    response = AuthenticateResponse(authenticated=False, error="rejected")
+
+    assert authenticate_response_to_mapping(response) == {
+        "authenticated": False,
+        "identity": None,
+        "error": "rejected",
+    }
 
 
 def test_service_rejects_invalid_credential_without_leaking_identity() -> None:
@@ -258,6 +270,7 @@ def test_http_host_exposes_health_providers_and_authenticate() -> None:
         assert status == 200
         assert payload["authenticated"]
         assert payload["identity"]["id"] == "identity-1"
+        assert payload["error"] is None
     finally:
         server.shutdown()
         server.server_close()

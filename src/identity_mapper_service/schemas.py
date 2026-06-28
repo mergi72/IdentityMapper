@@ -61,6 +61,7 @@ def authenticate_response_to_mapping(
             if response.identity is not None
             else None
         ),
+        "error": response.error,
     }
 
 
