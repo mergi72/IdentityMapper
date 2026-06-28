@@ -2,6 +2,17 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.22.5
+
+Host Service operations patch.
+
+- Added `request_id` to authenticate audit log entries.
+- Added `duration_ms` to authenticate audit log entries.
+- Added `python -m identity_mapper_service providers`.
+- Added `python -m identity_mapper_service logs`.
+- Added text, JSON, and HTML log output selection for CLI log reads.
+- Tests: 230 passed.
+
 ## v0.22.4
 
 Host Service audit log configuration patch.
