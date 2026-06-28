@@ -2,20 +2,28 @@
   "template": "guest",
   "provider": "Guest / Anonymous Identity",
   "invariant": "Identity",
-  "rows": [
-    {"section": "Identification", "source": "session_id", "domain": "Identification.identifier"},
-    {"section": "Identification", "source": "realm", "domain": "Identification.realm"},
-    {"section": "Identification", "literal": "guest", "domain": "Identification.attributes.kind"},
-    {"section": "Credential", "literal": "GUEST_SESSION", "domain": "Credential.type"},
-    {"section": "Credential", "source": "session_token", "domain": "Credential.value"},
-    {"section": "Credential", "source": "metadata", "domain": "Credential.metadata"},
-    {"section": "Candidate", "source": "session_id", "domain": "IdentityCandidate.implementation_id"},
-    {"section": "Candidate", "source": "resolved identification", "domain": "IdentityCandidate.identification"},
-    {"section": "Candidate", "source": "attributes", "domain": "IdentityCandidate.attributes"},
-    {"section": "Identity", "source": "identity_id", "domain": "Identity.id"},
-    {"section": "Identity", "source": "display_name", "domain": "Identity.display_name"},
-    {"section": "Identity", "source": "roles", "domain": "Identity.roles"},
-    {"section": "Identity", "source": "claims", "domain": "Identity.claims"},
-    {"section": "Identity", "source": "attributes", "domain": "Identity.attributes"}
-  ]
+  "identification": {
+    "identifier": "session_id",
+    "realm": "realm",
+    "attributes": {
+      "kind": "guest"
+    }
+  },
+  "credential": {
+    "type": "GUEST_SESSION",
+    "value": "session_token",
+    "metadata": "metadata"
+  },
+  "candidate": {
+    "implementation_id": "session_id",
+    "identification": "resolved identification",
+    "attributes": "attributes"
+  },
+  "identity": {
+    "id": "identity_id",
+    "display_name": "display_name",
+    "roles": "roles",
+    "claims": "claims",
+    "attributes": "attributes"
+  }
 }

@@ -3,17 +3,13 @@ from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
-class MatrixRow:
-    """One reduction matrix row."""
+class ReductionSections:
+    """Section-based reduction matrix shape."""
 
-    section: str
-    domain: str
-    source: str | None = None
-    literal: str | None = None
-
-    def __post_init__(self) -> None:
-        if (self.source is None) == (self.literal is None):
-            raise ValueError("MatrixRow requires exactly one of source or literal.")
+    identification: dict[str, Any]
+    credential: dict[str, Any]
+    candidate: dict[str, Any]
+    identity: dict[str, Any]
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,14 +19,19 @@ class ReductionMatrix:
     template: str
     provider: str
     invariant: str
-    rows: tuple[MatrixRow, ...]
+    sections: ReductionSections
 
     @classmethod
     def from_mapping(cls, value: dict[str, Any]) -> "ReductionMatrix":
-        rows = tuple(MatrixRow(**row) for row in value["rows"])
+        sections = ReductionSections(
+            identification=value["identification"],
+            credential=value["credential"],
+            candidate=value["candidate"],
+            identity=value["identity"],
+        )
         return cls(
             template=value["template"],
             provider=value["provider"],
             invariant=value["invariant"],
-            rows=rows,
+            sections=sections,
         )

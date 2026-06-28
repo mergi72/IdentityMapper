@@ -6,7 +6,7 @@ from identity_mapper.matrix import ReductionMatrix
 PROVIDER_DIR = Path("src/identity_mapper/providers")
 
 
-def test_provider_matrices_are_valid_matrix_rows() -> None:
+def test_provider_matrices_are_valid_sections() -> None:
     provider_dirs = sorted(
         path for path in PROVIDER_DIR.iterdir() if path.is_dir() and path.name != "__pycache__"
     )
@@ -21,8 +21,8 @@ def test_provider_matrices_are_valid_matrix_rows() -> None:
 
         assert matrix.provider
         assert matrix.invariant == "Identity"
-        assert matrix.rows
-
-        for row in matrix.rows:
-            assert row.section
-            assert row.domain
+        assert matrix.sections.identification["identifier"]
+        assert matrix.sections.credential["type"]
+        assert matrix.sections.credential["value"]
+        assert matrix.sections.candidate["implementation_id"]
+        assert matrix.sections.identity["id"]

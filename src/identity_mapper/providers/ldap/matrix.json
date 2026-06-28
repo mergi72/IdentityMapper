@@ -2,76 +2,26 @@
   "template": "ldap",
   "provider": "LDAP",
   "invariant": "Identity",
-  "rows": [
-    {
-      "section": "Identification",
-      "source": "uid",
-      "domain": "Identification.identifier"
-    },
-    {
-      "section": "Identification",
-      "source": "realm",
-      "domain": "Identification.realm"
-    },
-    {
-      "section": "Credential",
-      "literal": "PASSWORD",
-      "domain": "Credential.type"
-    },
-    {
-      "section": "Credential",
-      "source": "password",
-      "domain": "Credential.value"
-    },
-    {
-      "section": "Credential",
-      "source": "metadata",
-      "domain": "Credential.metadata"
-    },
-    {
-      "section": "Candidate",
-      "source": "dn",
-      "domain": "IdentityCandidate.implementation_id"
-    },
-    {
-      "section": "Candidate",
-      "source": "resolved identification",
-      "domain": "IdentityCandidate.identification"
-    },
-    {
-      "section": "Candidate",
-      "source": "attributes",
-      "domain": "IdentityCandidate.attributes"
-    },
-    {
-      "section": "Identity",
-      "source": "identity_id",
-      "domain": "Identity.id"
-    },
-    {
-      "section": "Identity",
-      "source": "cn",
-      "domain": "Identity.display_name"
-    },
-    {
-      "section": "Identity",
-      "source": "mail",
-      "domain": "Identity.email"
-    },
-    {
-      "section": "Identity",
-      "source": "groups",
-      "domain": "Identity.roles"
-    },
-    {
-      "section": "Identity",
-      "source": "claims",
-      "domain": "Identity.claims"
-    },
-    {
-      "section": "Identity",
-      "source": "attributes",
-      "domain": "Identity.attributes"
-    }
-  ]
+  "identification": {
+    "identifier": "uid",
+    "realm": "realm"
+  },
+  "credential": {
+    "type": "PASSWORD",
+    "value": "password",
+    "metadata": "metadata"
+  },
+  "candidate": {
+    "implementation_id": "dn",
+    "identification": "resolved identification",
+    "attributes": "attributes"
+  },
+  "identity": {
+    "id": "identity_id",
+    "display_name": "cn",
+    "email": "mail",
+    "roles": "groups",
+    "claims": "claims",
+    "attributes": "attributes"
+  }
 }

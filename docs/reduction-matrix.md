@@ -48,7 +48,7 @@ For all listed implementations, the answer is yes.
 
 ## Template
 
-A reduction template is the same matrix written as JSON rows.
+A reduction template is the same matrix written as compact JSON sections.
 
 See [Reduction Template](reduction-template.md).
 

@@ -2,11 +2,13 @@
 
 A reduction template is a JSON representation of a reduction matrix.
 
-It describes the same rows as the documentation matrix:
+It describes the same sections as the documentation matrix:
 
 ```text
-Implementation field -> Domain field
-Literal value        -> Domain field
+identification -> Identification
+credential     -> Credential
+candidate      -> IdentityCandidate
+identity       -> Identity
 ```
 
 ## Scope
@@ -23,18 +25,20 @@ authentication flow, authorization rules, persistence, or business decisions.
   "template": "example",
   "provider": "example",
   "invariant": "Identity",
-  "rows": [
-    {
-      "section": "Identification",
-      "source": "source_field",
-      "domain": "Identification.identifier"
-    },
-    {
-      "section": "Credential",
-      "literal": "PASSWORD",
-      "domain": "Credential.type"
-    }
-  ]
+  "identification": {
+    "identifier": "source_field"
+  },
+  "credential": {
+    "type": "PASSWORD",
+    "value": "secret_field"
+  },
+  "candidate": {
+    "implementation_id": "provider_id"
+  },
+  "identity": {
+    "id": "identity_id",
+    "display_name": "display_name"
+  }
 }
 ```
 
@@ -44,14 +48,13 @@ authentication flow, authorization rules, persistence, or business decisions.
 | --- | --- |
 | `template` | Template name. |
 | `provider` | Provider family described by the template. |
-| `invariant` | Domain invariant targeted by the rows. |
-| `rows` | Matrix rows. |
-| `section` | Domain section for readability. |
-| `source` | Implementation field name or path. |
-| `literal` | Fixed value mapped into a domain field. |
-| `domain` | Target domain field. |
+| `invariant` | Domain invariant targeted by the matrix. |
+| `identification` | Mapping to `Identification`. |
+| `credential` | Mapping to `Credential`. |
+| `candidate` | Mapping to `IdentityCandidate`. |
+| `identity` | Mapping to `Identity`. |
 
-Each row uses either `source` or `literal`.
+Values are provider field names or fixed domain values.
 
 ## Examples
 

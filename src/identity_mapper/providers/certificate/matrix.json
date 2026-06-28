@@ -2,23 +2,31 @@
   "template": "certificate",
   "provider": "Client Certificate / mTLS",
   "invariant": "Identity",
-  "rows": [
-    {"section": "Identification", "source": "fingerprint", "domain": "Identification.identifier"},
-    {"section": "Identification", "source": "realm", "domain": "Identification.realm"},
-    {"section": "Identification", "source": "subject", "domain": "Identification.attributes.subject"},
-    {"section": "Identification", "source": "issuer", "domain": "Identification.attributes.issuer"},
-    {"section": "Identification", "source": "serial_number", "domain": "Identification.attributes.serial_number"},
-    {"section": "Credential", "literal": "CERTIFICATE_PROOF", "domain": "Credential.type"},
-    {"section": "Credential", "source": "proof", "domain": "Credential.value"},
-    {"section": "Credential", "source": "metadata", "domain": "Credential.metadata"},
-    {"section": "Candidate", "source": "fingerprint", "domain": "IdentityCandidate.implementation_id"},
-    {"section": "Candidate", "source": "resolved identification", "domain": "IdentityCandidate.identification"},
-    {"section": "Candidate", "source": "attributes", "domain": "IdentityCandidate.attributes"},
-    {"section": "Identity", "source": "identity_id", "domain": "Identity.id"},
-    {"section": "Identity", "source": "display_name", "domain": "Identity.display_name"},
-    {"section": "Identity", "source": "email", "domain": "Identity.email"},
-    {"section": "Identity", "source": "roles", "domain": "Identity.roles"},
-    {"section": "Identity", "source": "claims", "domain": "Identity.claims"},
-    {"section": "Identity", "source": "attributes", "domain": "Identity.attributes"}
-  ]
+  "identification": {
+    "identifier": "fingerprint",
+    "realm": "realm",
+    "attributes": {
+      "subject": "subject",
+      "issuer": "issuer",
+      "serial_number": "serial_number"
+    }
+  },
+  "credential": {
+    "type": "CERTIFICATE_PROOF",
+    "value": "proof",
+    "metadata": "metadata"
+  },
+  "candidate": {
+    "implementation_id": "fingerprint",
+    "identification": "resolved identification",
+    "attributes": "attributes"
+  },
+  "identity": {
+    "id": "identity_id",
+    "display_name": "display_name",
+    "email": "email",
+    "roles": "roles",
+    "claims": "claims",
+    "attributes": "attributes"
+  }
 }
