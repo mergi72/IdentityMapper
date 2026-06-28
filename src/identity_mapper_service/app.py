@@ -229,6 +229,7 @@ def create_handler(
 
         def _authenticate_log_columns(self) -> tuple[str, ...]:
             return (
+                "request_id",
                 "timestamp",
                 "provider",
                 "identifier",
@@ -236,6 +237,7 @@ def create_handler(
                 "authenticated",
                 "status",
                 "identity_id",
+                "duration_ms",
                 "error",
             )
 

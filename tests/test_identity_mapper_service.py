@@ -13,7 +13,7 @@ from identity_mapper.providers.basic import (
 )
 from identity_mapper.domain import Credential, Identification
 from identity_mapper.requests import AuthenticateRequest
-from identity_mapper_service.__main__ import HostServiceConfig, load_config
+from identity_mapper_service.__main__ import HostServiceConfig, load_config, main
 from identity_mapper_service.app import create_server
 from identity_mapper_service.registry import ProviderRegistry, UnknownProviderError
 from identity_mapper_service.request_log import RequestLog
@@ -186,6 +186,8 @@ def test_service_writes_authenticate_log_without_credential_value(tmp_path) -> N
     assert entries[0]["credential_type"] == "PASSWORD"
     assert entries[0]["authenticated"] is False
     assert entries[0]["status"] == "rejected"
+    assert len(entries[0]["request_id"]) == 8
+    assert isinstance(entries[0]["duration_ms"], int)
     assert "value" not in entries[0]
     assert "credential" not in entries[0]
 
@@ -281,7 +283,9 @@ def test_http_host_exposes_authenticate_logs(tmp_path) -> None:
 
         assert status == 200
         assert "<table>" in text
+        assert "<th>request_id</th>" in text
         assert "<th>timestamp</th>" in text
+        assert "<th>duration_ms</th>" in text
         assert "<td>basic</td>" in text
         assert "<td>subject</td>" in text
         assert "<td>PASSWORD</td>" in text
@@ -372,6 +376,8 @@ def test_http_host_exposes_authenticate_logs_as_json(tmp_path) -> None:
         assert status == 200
         assert logs["entries"][0]["provider"] == "basic"
         assert logs["entries"][0]["identity_id"] == "identity-1"
+        assert len(logs["entries"][0]["request_id"]) == 8
+        assert isinstance(logs["entries"][0]["duration_ms"], int)
         assert "value" not in logs["entries"][0]
     finally:
         server.shutdown()
@@ -402,8 +408,9 @@ def test_http_host_exposes_authenticate_logs_as_text(tmp_path) -> None:
 
         assert status == 200
         assert header.startswith(
-            "timestamp                         provider  identifier  credential_type"
+            "request_id  timestamp                         provider"
         )
+        assert "duration_ms" in header
         assert "basic     subject     PASSWORD         True" in lines[1]
         assert "accepted  identity-1" in lines[1]
     finally:
@@ -439,6 +446,55 @@ def test_http_host_exposes_audit_alias(tmp_path) -> None:
         status, text = request_raw("GET", host, port, "/audit?format=text&limit=1")
         assert status == 200
         assert "basic     subject     PASSWORD" in text.decode("utf-8")
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_cli_lists_providers(tmp_path, capsys) -> None:
+    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    try:
+        assert main(["providers", "--host", host, "--port", str(port)]) == 0
+
+        assert capsys.readouterr().out == "basic\n"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_cli_prints_logs(tmp_path, capsys) -> None:
+    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    try:
+        request_json("POST", host, port, "/authenticate", valid_payload())
+
+        assert main(
+            [
+                "logs",
+                "--host",
+                host,
+                "--port",
+                str(port),
+                "--limit",
+                "1",
+            ]
+        ) == 0
+
+        output = capsys.readouterr().out
+        assert "request_id" in output
+        assert "duration_ms" in output
+        assert "basic" in output
     finally:
         server.shutdown()
         server.server_close()

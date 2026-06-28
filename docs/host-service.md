@@ -120,13 +120,15 @@ JSON response:
 {
   "entries": [
     {
+      "request_id": "3f4a8c71",
       "timestamp": "2026-06-28T12:00:00.000000+00:00",
       "provider": "basic",
       "identifier": "subject",
       "credential_type": "PASSWORD",
       "authenticated": true,
       "status": "accepted",
-      "identity_id": "identity-1"
+      "identity_id": "identity-1",
+      "duration_ms": 12
     }
   ]
 }
@@ -135,8 +137,8 @@ JSON response:
 Text response:
 
 ```text
-timestamp                         provider  identifier  credential_type  authenticated  status    identity_id  error
-2026-06-28T12:00:00.000000+00:00  basic     subject     PASSWORD         True           accepted  identity-1
+request_id  timestamp                         provider  identifier  credential_type  authenticated  status    identity_id  duration_ms  error
+3f4a8c71    2026-06-28T12:00:00.000000+00:00  basic     subject     PASSWORD         True           accepted  identity-1  12
 ```
 
 The text output is a fixed-width table intended for terminal use.
@@ -192,4 +194,18 @@ The host can also be checked from the command line:
 
 ```text
 python -m identity_mapper_service status
+```
+
+Providers can be listed through the running service:
+
+```text
+python -m identity_mapper_service providers
+```
+
+Audit logs can be read through the running service:
+
+```text
+python -m identity_mapper_service logs
+python -m identity_mapper_service logs --limit 20
+python -m identity_mapper_service logs --format json
 ```

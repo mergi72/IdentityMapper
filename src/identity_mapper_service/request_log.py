@@ -10,23 +10,27 @@ from typing import Any
 
 @dataclass(frozen=True, slots=True)
 class AuthenticateLogEntry:
+    request_id: str
     timestamp: str
     provider: str
     identifier: str
     credential_type: str
     authenticated: bool
     status: str
+    duration_ms: int
     identity_id: str | None = None
     error: str | None = None
 
     def to_mapping(self) -> dict[str, Any]:
         value: dict[str, Any] = {
+            "request_id": self.request_id,
             "timestamp": self.timestamp,
             "provider": self.provider,
             "identifier": self.identifier,
             "credential_type": self.credential_type,
             "authenticated": self.authenticated,
             "status": self.status,
+            "duration_ms": self.duration_ms,
         }
         if self.identity_id is not None:
             value["identity_id"] = self.identity_id
@@ -46,21 +50,25 @@ class RequestLog:
     def append_authenticate(
         self,
         *,
+        request_id: str,
         provider: str,
         identifier: str,
         credential_type: str,
         authenticated: bool,
         status: str,
+        duration_ms: int,
         identity_id: str | None = None,
         error: str | None = None,
     ) -> None:
         entry = AuthenticateLogEntry(
+            request_id=request_id,
             timestamp=datetime.now().astimezone().isoformat(),
             provider=provider,
             identifier=identifier,
             credential_type=credential_type,
             authenticated=authenticated,
             status=status,
+            duration_ms=duration_ms,
             identity_id=identity_id,
             error=error,
         )

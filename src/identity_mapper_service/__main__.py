@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import http.client
 import json
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -121,6 +122,22 @@ def main(argv: list[str] | None = None) -> int:
     status_parser.add_argument("--host")
     status_parser.add_argument("--port", type=int)
 
+    providers_parser = subparsers.add_parser("providers")
+    providers_parser.add_argument("--config", default="config/config.json")
+    providers_parser.add_argument("--host")
+    providers_parser.add_argument("--port", type=int)
+
+    logs_parser = subparsers.add_parser("logs")
+    logs_parser.add_argument("--config", default="config/config.json")
+    logs_parser.add_argument("--host")
+    logs_parser.add_argument("--port", type=int)
+    logs_parser.add_argument("--limit", type=int, default=100)
+    logs_parser.add_argument(
+        "--format",
+        choices=("text", "json", "html"),
+        default="text",
+    )
+
     args = parser.parse_args(argv)
 
     if args.command == "serve":
@@ -147,6 +164,18 @@ def main(argv: list[str] | None = None) -> int:
         port = args.port or config.port
         return _status(host, port)
 
+    if args.command == "providers":
+        config = load_config(args.config)
+        host = args.host or config.server
+        port = args.port or config.port
+        return _providers(host, port)
+
+    if args.command == "logs":
+        config = load_config(args.config)
+        host = args.host or config.server
+        port = args.port or config.port
+        return _logs(host, port, args.limit, args.format)
+
     parser.error(f"unknown command: {args.command}")
     return 2
 
@@ -169,6 +198,57 @@ def _status(host: str, port: int) -> int:
 
     print(f"IdentityMapper Host Service is running on {host}:{port}")
     return 0
+
+
+def _providers(host: str, port: int) -> int:
+    status, body, _ = _request(host, port, "GET", "/providers")
+    if status != 200:
+        print(f"IdentityMapper Host Service returned HTTP {status}: {body}")
+        return 1
+
+    payload = json.loads(body)
+    for provider in payload.get("providers", []):
+        print(provider)
+    return 0
+
+
+def _logs(host: str, port: int, limit: int, output_format: str) -> int:
+    status, body, headers = _request(
+        host,
+        port,
+        "GET",
+        f"/audit?format={output_format}&limit={limit}",
+    )
+    if status != 200:
+        print(f"IdentityMapper Host Service returned HTTP {status}: {body}")
+        return 1
+
+    content_type = headers.get("Content-Type", "")
+    if output_format == "json" and content_type.startswith("application/json"):
+        print(json.dumps(json.loads(body), indent=2, sort_keys=True))
+    else:
+        sys.stdout.write(body)
+    return 0
+
+
+def _request(
+    host: str,
+    port: int,
+    method: str,
+    path: str,
+) -> tuple[int, str, dict[str, str]]:
+    connection = http.client.HTTPConnection(host, port, timeout=3)
+    try:
+        connection.request(method, path)
+        response = connection.getresponse()
+        body = response.read().decode("utf-8")
+        headers = {name: value for name, value in response.getheaders()}
+        return response.status, body, headers
+    except OSError as exc:
+        print(f"IdentityMapper Host Service is not reachable: {exc}")
+        return 0, "", {}
+    finally:
+        connection.close()
 
 
 if __name__ == "__main__":

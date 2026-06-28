@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from time import perf_counter
 from typing import Any
+from uuid import uuid4
 
 from identity_mapper.requests import AuthenticateRequest
 from identity_mapper.responses import AuthenticateResponse
@@ -44,6 +46,8 @@ class IdentityMapperHostService:
         self,
         request: AuthenticateRequest,
     ) -> AuthenticateResponse:
+        request_id = uuid4().hex[:8]
+        started = perf_counter()
         try:
             identity = self._registry.authenticate(
                 request.provider,
@@ -57,6 +61,8 @@ class IdentityMapperHostService:
                 credential_type=request.credential.type,
                 authenticated=False,
                 status="unknown_provider",
+                duration_ms=self._duration_ms(started),
+                request_id=request_id,
                 error="unknown_provider",
             )
             raise
@@ -67,6 +73,8 @@ class IdentityMapperHostService:
                 credential_type=request.credential.type,
                 authenticated=False,
                 status="rejected",
+                duration_ms=self._duration_ms(started),
+                request_id=request_id,
             )
             return AuthenticateResponse(authenticated=False)
 
@@ -76,6 +84,8 @@ class IdentityMapperHostService:
             credential_type=request.credential.type,
             authenticated=True,
             status="accepted",
+            duration_ms=self._duration_ms(started),
+            request_id=request_id,
             identity_id=identity.id,
         )
         return AuthenticateResponse(authenticated=True, identity=identity)
@@ -88,6 +98,8 @@ class IdentityMapperHostService:
         credential_type: str,
         authenticated: bool,
         status: str,
+        duration_ms: int,
+        request_id: str,
         identity_id: str | None = None,
         error: str | None = None,
     ) -> None:
@@ -95,11 +107,16 @@ class IdentityMapperHostService:
             return
 
         self._request_log.append_authenticate(
+            request_id=request_id,
             provider=provider,
             identifier=identifier,
             credential_type=credential_type,
             authenticated=authenticated,
             status=status,
+            duration_ms=duration_ms,
             identity_id=identity_id,
             error=error,
         )
+
+    def _duration_ms(self, started: float) -> int:
+        return max(0, round((perf_counter() - started) * 1000))
