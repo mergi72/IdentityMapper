@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import parse_qs, urlparse
 from typing import Any
 
 from identity_mapper_service.registry import UnknownProviderError
@@ -40,12 +41,21 @@ def create_handler(
         server_version = "IdentityMapperHostService/0.1"
 
         def do_GET(self) -> None:
-            if self.path == "/health":
+            url = urlparse(self.path)
+            if url.path == "/health":
                 self._send_json(200, service.health())
                 return
 
-            if self.path == "/providers":
+            if url.path == "/providers":
                 self._send_json(200, service.providers())
+                return
+
+            if url.path == "/authenticate_logs":
+                try:
+                    limit = self._read_limit(url.query)
+                    self._send_json(200, service.authenticate_logs(limit))
+                except RequestValidationError as exc:
+                    self._send_json(400, {"error": "bad_request", "message": str(exc)})
                 return
 
             self._send_json(404, {"error": "not_found"})
@@ -77,6 +87,16 @@ def create_handler(
                 raise JsonRequestError("request body must be a JSON object")
 
             return value
+
+        def _read_limit(self, query: str) -> int:
+            value = parse_qs(query).get("limit", ["100"])[0]
+            try:
+                limit = int(value)
+            except ValueError as exc:
+                raise RequestValidationError("limit must be an integer") from exc
+            if limit < 1 or limit > 1000:
+                raise RequestValidationError("limit must be between 1 and 1000")
+            return limit
 
         def _send_json(self, status_code: int, payload: dict[str, Any]) -> None:
             body = json.dumps(payload, sort_keys=True).encode("utf-8")

@@ -2,6 +2,16 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.22.1
+
+Host Service request log patch.
+
+- Added metadata-only authenticate request logging.
+- Added `GET /authenticate_logs`.
+- Added `authenticate_log` to `config/config.json`.
+- Added `python -m identity_mapper_service status`.
+- Confirmed credential values are not written to the request log.
+
 ## v0.22.0
 
 Host Service runtime prototype.

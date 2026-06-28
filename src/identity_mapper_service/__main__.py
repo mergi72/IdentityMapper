@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -13,6 +14,7 @@ from identity_mapper.providers.basic import (
 )
 from identity_mapper_service.app import serve
 from identity_mapper_service.registry import ProviderRegistry
+from identity_mapper_service.request_log import RequestLog
 from identity_mapper_service.service import IdentityMapperHostService
 
 
@@ -20,6 +22,7 @@ from identity_mapper_service.service import IdentityMapperHostService
 class HostServiceConfig:
     server: str = "127.0.0.1"
     port: int = 8066
+    authenticate_log: str = "logs/authenticate.log"
 
 
 def load_config(path: str | Path = "config/config.json") -> HostServiceConfig:
@@ -36,6 +39,11 @@ def load_config(path: str | Path = "config/config.json") -> HostServiceConfig:
     return HostServiceConfig(
         server=_optional_string(value, "server", HostServiceConfig().server),
         port=_optional_int(value, "port", HostServiceConfig().port),
+        authenticate_log=_optional_string(
+            value,
+            "authenticate_log",
+            HostServiceConfig().authenticate_log,
+        ),
     )
 
 
@@ -83,11 +91,17 @@ def main(argv: list[str] | None = None) -> int:
     serve_parser.add_argument("--config", default="config/config.json")
     serve_parser.add_argument("--host")
     serve_parser.add_argument("--port", type=int)
+    serve_parser.add_argument("--authenticate-log")
     serve_parser.add_argument(
         "--demo-basic",
         action="store_true",
         help="Register an in-memory Basic provider for local experiments.",
     )
+
+    status_parser = subparsers.add_parser("status")
+    status_parser.add_argument("--config", default="config/config.json")
+    status_parser.add_argument("--host")
+    status_parser.add_argument("--port", type=int)
 
     args = parser.parse_args(argv)
 
@@ -95,13 +109,40 @@ def main(argv: list[str] | None = None) -> int:
         config = load_config(args.config)
         host = args.host or config.server
         port = args.port or config.port
+        authenticate_log = args.authenticate_log or config.authenticate_log
         registry = build_demo_registry() if args.demo_basic else ProviderRegistry()
-        service = IdentityMapperHostService(registry)
+        service = IdentityMapperHostService(registry, RequestLog(authenticate_log))
         serve(host, port, service)
         return 0
 
+    if args.command == "status":
+        config = load_config(args.config)
+        host = args.host or config.server
+        port = args.port or config.port
+        return _status(host, port)
+
     parser.error(f"unknown command: {args.command}")
     return 2
+
+
+def _status(host: str, port: int) -> int:
+    connection = http.client.HTTPConnection(host, port, timeout=3)
+    try:
+        connection.request("GET", "/health")
+        response = connection.getresponse()
+        body = response.read().decode("utf-8")
+    except OSError as exc:
+        print(f"IdentityMapper Host Service is not reachable: {exc}")
+        return 1
+    finally:
+        connection.close()
+
+    if response.status != 200:
+        print(f"IdentityMapper Host Service returned HTTP {response.status}: {body}")
+        return 1
+
+    print(f"IdentityMapper Host Service is running on {host}:{port}")
+    return 0
 
 
 if __name__ == "__main__":

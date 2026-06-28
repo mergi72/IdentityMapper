@@ -27,6 +27,7 @@ The first service surface is intentionally small:
 GET  /health
 GET  /providers
 POST /authenticate
+GET  /authenticate_logs
 ```
 
 ## Authenticate
@@ -58,6 +59,41 @@ Response:
 }
 ```
 
+## Authenticate Logs
+
+Every `POST /authenticate` request is written to the authenticate request log.
+
+The log is intentionally metadata-only. It records the provider, identifier,
+credential type, authentication result, and identity id when authentication
+succeeds.
+
+It does not record `credential.value`.
+
+Logs can be read through HTTP:
+
+```text
+GET /authenticate_logs
+GET /authenticate_logs?limit=20
+```
+
+Response:
+
+```json
+{
+  "entries": [
+    {
+      "timestamp": "2026-06-28T12:00:00+00:00",
+      "provider": "basic",
+      "identifier": "subject",
+      "credential_type": "PASSWORD",
+      "authenticated": true,
+      "status": "accepted",
+      "identity_id": "identity-1"
+    }
+  ]
+}
+```
+
 ## Boundary
 
 ```text
@@ -84,7 +120,8 @@ By default, the service reads `config/config.json` from the current directory:
 ```json
 {
   "server": "127.0.0.1",
-  "port": 8066
+  "port": 8066,
+  "authenticate_log": "logs/authenticate.log"
 }
 ```
 
@@ -98,4 +135,10 @@ For local experiments, an in-memory Basic provider can be enabled explicitly:
 
 ```text
 python -m identity_mapper_service serve --demo-basic
+```
+
+The host can also be checked from the command line:
+
+```text
+python -m identity_mapper_service status
 ```
