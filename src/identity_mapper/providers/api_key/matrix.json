@@ -1,0 +1,22 @@
+{
+  "template": "api_key",
+  "provider": "API Key",
+  "invariant": "Identity",
+  "rows": [
+    {"section": "Identification", "source": "key_id", "domain": "Identification.identifier"},
+    {"section": "Identification", "source": "realm", "domain": "Identification.realm"},
+    {"section": "Identification", "source": "client_id", "domain": "Identification.attributes.client_id"},
+    {"section": "Credential", "literal": "API_KEY", "domain": "Credential.type"},
+    {"section": "Credential", "source": "api_key", "domain": "Credential.value"},
+    {"section": "Credential", "source": "metadata", "domain": "Credential.metadata"},
+    {"section": "Candidate", "source": "key_id", "domain": "IdentityCandidate.implementation_id"},
+    {"section": "Candidate", "source": "resolved identification", "domain": "IdentityCandidate.identification"},
+    {"section": "Candidate", "source": "attributes", "domain": "IdentityCandidate.attributes"},
+    {"section": "Identity", "source": "identity_id", "domain": "Identity.id"},
+    {"section": "Identity", "source": "display_name", "domain": "Identity.display_name"},
+    {"section": "Identity", "source": "email", "domain": "Identity.email"},
+    {"section": "Identity", "source": "roles", "domain": "Identity.roles"},
+    {"section": "Identity", "source": "claims", "domain": "Identity.claims"},
+    {"section": "Identity", "source": "attributes", "domain": "Identity.attributes"}
+  ]
+}

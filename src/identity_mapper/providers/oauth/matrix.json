@@ -29,9 +29,24 @@
       "domain": "Credential.value"
     },
     {
+      "section": "Credential",
+      "source": "metadata",
+      "domain": "Credential.metadata"
+    },
+    {
       "section": "Candidate",
       "source": "token_id",
       "domain": "IdentityCandidate.implementation_id"
+    },
+    {
+      "section": "Candidate",
+      "source": "resolved identification",
+      "domain": "IdentityCandidate.identification"
+    },
+    {
+      "section": "Candidate",
+      "source": "attributes",
+      "domain": "IdentityCandidate.attributes"
     },
     {
       "section": "Identity",
@@ -57,6 +72,11 @@
       "section": "Identity",
       "source": "claims",
       "domain": "Identity.claims"
+    },
+    {
+      "section": "Identity",
+      "source": "attributes",
+      "domain": "Identity.attributes"
     }
   ]
 }

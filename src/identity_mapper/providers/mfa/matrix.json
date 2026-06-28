@@ -1,0 +1,21 @@
+{
+  "template": "mfa",
+  "provider": "MFA",
+  "invariant": "Identity",
+  "rows": [
+    {"section": "Identification", "source": "identifier", "domain": "Identification.identifier"},
+    {"section": "Identification", "source": "realm", "domain": "Identification.realm"},
+    {"section": "Credential", "literal": "MFA_FACTORS", "domain": "Credential.type"},
+    {"section": "Credential", "source": "factors", "domain": "Credential.value"},
+    {"section": "Credential", "source": "metadata+factor_count", "domain": "Credential.metadata"},
+    {"section": "Candidate", "source": "implementation_id", "domain": "IdentityCandidate.implementation_id"},
+    {"section": "Candidate", "source": "resolved identification", "domain": "IdentityCandidate.identification"},
+    {"section": "Candidate", "source": "attributes", "domain": "IdentityCandidate.attributes"},
+    {"section": "Identity", "source": "identity_id", "domain": "Identity.id"},
+    {"section": "Identity", "source": "display_name", "domain": "Identity.display_name"},
+    {"section": "Identity", "source": "email", "domain": "Identity.email"},
+    {"section": "Identity", "source": "roles", "domain": "Identity.roles"},
+    {"section": "Identity", "source": "claims", "domain": "Identity.claims"},
+    {"section": "Identity", "source": "attributes", "domain": "Identity.attributes"}
+  ]
+}
