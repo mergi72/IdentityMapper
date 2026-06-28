@@ -13,16 +13,6 @@ The identity domain can be reduced to one stable invariant.
 Implement independent identity models and reduce each of them to the same core
 domain model.
 
-Verify every provider against the same capability contract:
-
-- mapper produces `Identification` and `Credential`
-- resolver returns `IdentityCandidate`, not `Identity`
-- resolver returns `None` for an unknown identification
-- verifier accepts a valid credential
-- verifier rejects an invalid credential
-- authenticator returns `Identity`
-- authenticator rejects an invalid credential
-
 ## Core Files
 
 The core files are:
@@ -34,6 +24,24 @@ The core files are:
 The provider capability contract is tested in:
 
 - `tests/test_provider_capability_contracts.py`
+
+## Architecture Contract Verification
+
+Every provider must satisfy the same capability contract.
+
+The test suite verifies:
+
+- mapper returns `Identification` and `Credential`
+- resolver returns `IdentityCandidate`, not `Identity`
+- resolver returns `None` for an unknown identification
+- verifier accepts a valid credential
+- verifier rejects an invalid credential
+- authenticator returns `Identity`
+- authenticator rejects an invalid credential
+
+This is an architectural test. It does not prove that a concrete external
+system is integrated correctly. It proves that every provider implementation in
+this repository follows the same invariant and capability contract.
 
 ## Verified Flow
 
@@ -103,6 +111,9 @@ No provider introduced a new core concept.
 
 All providers satisfy the same capability contract.
 
+Version `v0.20.0` is the first release where that contract is expressed directly
+in code.
+
 ## Conclusion
 
-The core domain model remained unchanged.
+The core domain model and capability contract remained unchanged.
