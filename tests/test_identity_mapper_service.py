@@ -319,6 +319,39 @@ def test_http_host_exposes_authenticate_logs_as_text(tmp_path) -> None:
         thread.join(timeout=5)
 
 
+def test_http_host_exposes_audit_alias(tmp_path) -> None:
+    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    try:
+        request_json(
+            "POST",
+            host,
+            port,
+            "/authenticate",
+            valid_payload(),
+        )
+
+        status, html = request_raw("GET", host, port, "/audit?limit=1")
+        assert status == 200
+        assert "<td>basic</td>" in html.decode("utf-8")
+
+        status, logs = request_json("GET", host, port, "/audit?format=json&limit=1")
+        assert status == 200
+        assert logs["entries"][0]["provider"] == "basic"
+
+        status, text = request_raw("GET", host, port, "/audit?format=text&limit=1")
+        assert status == 200
+        assert "basic     subject     PASSWORD" in text.decode("utf-8")
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
 def request_json(
     method: str,
     host: str,

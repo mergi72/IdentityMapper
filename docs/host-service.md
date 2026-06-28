@@ -28,7 +28,10 @@ GET  /health
 GET  /providers
 POST /authenticate
 GET  /authenticate_logs
+GET  /audit
 ```
+
+`/audit` is currently an alias of `/authenticate_logs`.
 
 ## Authenticate
 
@@ -76,7 +79,12 @@ GET /authenticate_logs
 GET /authenticate_logs?limit=20
 GET /authenticate_logs?format=json
 GET /authenticate_logs?format=text
+GET /audit
+GET /audit?format=json&limit=20
 ```
+
+`/audit` is reserved as the more general audit endpoint shape. In the current
+service version it exposes the authenticate audit log.
 
 Browser response:
 

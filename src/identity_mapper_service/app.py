@@ -51,17 +51,9 @@ def create_handler(
                 self._send_json(200, service.providers())
                 return
 
-            if url.path == "/authenticate_logs":
+            if url.path in {"/authenticate_logs", "/audit"}:
                 try:
-                    limit = self._read_limit(url.query)
-                    payload = service.authenticate_logs(limit)
-                    output_format = self._read_format(url.query)
-                    if output_format == "json":
-                        self._send_json(200, payload)
-                    elif output_format == "text":
-                        self._send_authenticate_log_text(200, payload)
-                    else:
-                        self._send_authenticate_log_html(200, payload)
+                    self._send_authenticate_logs(url.query)
                 except RequestValidationError as exc:
                     self._send_json(400, {"error": "bad_request", "message": str(exc)})
                 return
@@ -115,6 +107,17 @@ def create_handler(
         def _send_json(self, status_code: int, payload: dict[str, Any]) -> None:
             body = (json.dumps(payload, sort_keys=True) + "\r\n").encode("utf-8")
             self._send_response(status_code, body)
+
+        def _send_authenticate_logs(self, query: str) -> None:
+            limit = self._read_limit(query)
+            payload = service.authenticate_logs(limit)
+            output_format = self._read_format(query)
+            if output_format == "json":
+                self._send_json(200, payload)
+            elif output_format == "text":
+                self._send_authenticate_log_text(200, payload)
+            else:
+                self._send_authenticate_log_html(200, payload)
 
         def _send_authenticate_log_html(
             self,
