@@ -2,6 +2,16 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.22.4
+
+Host Service audit log configuration patch.
+
+- Added `authenticate_log_enabled` to `config/config.json`.
+- Added `--disable-authenticate-log` for one-off service runs.
+- Allowed Host Service to run without creating an authenticate request log.
+- Kept audit endpoints available with an empty view when logging is disabled.
+- Tests: 228 passed.
+
 ## v0.22.3
 
 Host Service stabilization patch.
