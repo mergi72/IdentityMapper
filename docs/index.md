@@ -14,7 +14,7 @@ identity domain.
 
 ## Rule
 
-The reduction matrix describes the mapping. It does not execute it.
+The reduction matrix describes the mapping.
 
 ```text
 Implementation Model

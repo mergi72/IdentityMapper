@@ -3,7 +3,7 @@
 Each file describes one implementation model and how it reduces to the identity
 domain invariant.
 
-These documents are matrices, not executable configuration.
+These documents are documentation matrices.
 
 ## Documents
 

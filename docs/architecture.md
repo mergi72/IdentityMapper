@@ -19,7 +19,7 @@ Capabilities
 
 ## Roles
 
-`Implementation` is an external model, protocol, product, API, runtime, or
+`Implementation` is an external model, protocol, product, API, or
 provider-specific representation.
 
 `Mapper` translates an implementation model into a domain model. It does not

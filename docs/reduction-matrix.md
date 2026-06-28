@@ -1,6 +1,6 @@
 # Reduction Matrix
 
-The reduction matrix is documentation. It is not a runtime mapping engine.
+The reduction matrix is a documentation table.
 
 It shows how implementation-specific identity models reduce to the same core
 domain invariant.
@@ -37,7 +37,7 @@ Identity
 | v0.15.0 | Federated Identity | external subject/issuer | federation assertion | trust mapping | [federated](implementations/federated.md) |
 | v0.16.0 | Guest / Anonymous Identity | session id | guest session token | guest session | [guest](implementations/guest.md) |
 
-## Interpretation
+## Purpose
 
 The matrix answers one question:
 

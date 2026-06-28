@@ -10,7 +10,7 @@
 | Implementation field | Domain field |
 | --- | --- |
 | `fingerprint` | `Identification.identifier` |
-| configured realm | `Identification.realm` |
+| provider realm | `Identification.realm` |
 | `subject` | `Identification.attributes["subject"]` |
 | `issuer` | `Identification.attributes["issuer"]` |
 | `serial_number` | `Identification.attributes["serial_number"]` |

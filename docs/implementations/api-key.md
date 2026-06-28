@@ -10,7 +10,7 @@
 | Implementation field | Domain field |
 | --- | --- |
 | `key_id` | `Identification.identifier` |
-| configured realm | `Identification.realm` |
+| provider realm | `Identification.realm` |
 | `client_id` | `Identification.attributes["client_id"]` |
 
 ## Credential
