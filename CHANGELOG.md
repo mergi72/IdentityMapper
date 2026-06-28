@@ -2,6 +2,19 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.28.0
+
+Runtime provider configuration checkpoint.
+
+- Added runtime provider configuration to `config/config.json`.
+- Added config-driven Basic provider registration for the Host Service.
+- Kept `--demo-basic` as a local experiment shortcut.
+- Added `CapabilityInvocationLog` as the primary audit log class name.
+- Kept `RequestLog` as a compatibility alias.
+- Documented runtime provider configuration and local-development password limits.
+- Added tests for configured Basic providers, disabled providers, and unknown provider types.
+- Tests: 271 passed.
+
 ## v0.27.0
 
 Capability Invocation Log checkpoint.
