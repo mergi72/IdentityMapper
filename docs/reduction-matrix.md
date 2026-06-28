@@ -51,3 +51,6 @@ For all listed implementations, the answer is yes.
 A reduction template is the same matrix written as JSON rows.
 
 See [Reduction Template](reduction-template.md).
+
+Concrete JSON matrices live with their providers, for example
+`src/identity_mapper/providers/ldap/matrix.json`.

@@ -1,31 +1,36 @@
 {
-  "template": "ldap",
-  "implementation": "LDAP",
+  "template": "oauth",
+  "provider": "OAuth",
   "invariant": "Identity",
   "rows": [
     {
       "section": "Identification",
-      "source": "uid",
+      "source": "subject",
       "domain": "Identification.identifier"
     },
     {
       "section": "Identification",
-      "source": "realm",
+      "source": "issuer",
       "domain": "Identification.realm"
     },
     {
+      "section": "Identification",
+      "source": "audience",
+      "domain": "Identification.attributes.audience"
+    },
+    {
       "section": "Credential",
-      "literal": "PASSWORD",
+      "literal": "BEARER_TOKEN",
       "domain": "Credential.type"
     },
     {
       "section": "Credential",
-      "source": "password",
+      "source": "access_token",
       "domain": "Credential.value"
     },
     {
       "section": "Candidate",
-      "source": "dn",
+      "source": "token_id",
       "domain": "IdentityCandidate.implementation_id"
     },
     {
@@ -35,18 +40,23 @@
     },
     {
       "section": "Identity",
-      "source": "cn",
+      "source": "display_name",
       "domain": "Identity.display_name"
     },
     {
       "section": "Identity",
-      "source": "mail",
+      "source": "email",
       "domain": "Identity.email"
     },
     {
       "section": "Identity",
-      "source": "groups",
+      "source": "scopes",
       "domain": "Identity.roles"
+    },
+    {
+      "section": "Identity",
+      "source": "claims",
+      "domain": "Identity.claims"
     }
   ]
 }

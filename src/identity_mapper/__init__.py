@@ -12,6 +12,7 @@ from identity_mapper.domain import (
     IdentityCandidate,
 )
 from identity_mapper.mapper import Mapper
+from identity_mapper.matrix import MatrixRow, ReductionMatrix
 
 __all__ = [
     "Authenticate",
@@ -19,7 +20,9 @@ __all__ = [
     "Identification",
     "Identity",
     "IdentityCandidate",
+    "MatrixRow",
     "Mapper",
+    "ReductionMatrix",
     "ResolveIdentity",
     "VerifyCredential",
 ]

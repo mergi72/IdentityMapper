@@ -21,7 +21,7 @@ authentication flow, authorization rules, persistence, or business decisions.
 ```json
 {
   "template": "example",
-  "implementation": "example",
+  "provider": "example",
   "invariant": "Identity",
   "rows": [
     {
@@ -43,7 +43,7 @@ authentication flow, authorization rules, persistence, or business decisions.
 | Field | Meaning |
 | --- | --- |
 | `template` | Template name. |
-| `implementation` | Implementation family described by the template. |
+| `provider` | Provider family described by the template. |
 | `invariant` | Domain invariant targeted by the rows. |
 | `rows` | Matrix rows. |
 | `section` | Domain section for readability. |
@@ -55,6 +55,14 @@ Each row uses either `source` or `literal`.
 
 ## Examples
 
-- [BasicAuth](reduction-templates/basic.json)
-- [LDAP](reduction-templates/ldap.json)
-- [OAuth](reduction-templates/oauth.json)
+Provider-owned matrices:
+
+- [BasicAuth](../src/identity_mapper/providers/basic/matrix.json)
+- [LDAP](../src/identity_mapper/providers/ldap/matrix.json)
+- [OAuth](../src/identity_mapper/providers/oauth/matrix.json)
+
+## Ownership
+
+The core package owns the general matrix contract in `identity_mapper.matrix`.
+
+Each provider owns its concrete `matrix.json`.

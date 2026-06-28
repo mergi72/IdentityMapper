@@ -1,6 +1,6 @@
 {
   "template": "basic",
-  "implementation": "BasicAuth",
+  "provider": "BasicAuth",
   "invariant": "Identity",
   "rows": [
     {

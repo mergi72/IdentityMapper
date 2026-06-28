@@ -25,6 +25,9 @@ provider-specific representation.
 In this repository, provider-specific code lives under
 `identity_mapper.providers`.
 
+Provider-specific reduction matrices live next to their provider code as
+`matrix.json`.
+
 `Mapper` translates an implementation model into a domain model. It does not
 validate, authenticate, authorize, persist, or decide.
 

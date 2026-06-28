@@ -104,10 +104,14 @@ src/identity_mapper/
   domain.py
   capabilities.py
   mapper.py
+  matrix.py
   providers/
     basic/
+      matrix.json
     ldap/
+      matrix.json
     oauth/
+      matrix.json
     ...
 
 docs/
