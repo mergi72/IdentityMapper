@@ -15,6 +15,9 @@ Domain Invariant
        |
        v
 Capabilities
+       |
+       v
+Host
 ```
 
 ## Roles
@@ -41,6 +44,9 @@ In this project, the invariant is identity.
 `Capability` describes what can be done with the invariant without coupling
 business logic to a specific implementation.
 
+`Host` exposes one or more capabilities through a transport such as CLI, REST,
+gRPC, or a message bus. A host is not part of the domain.
+
 ## Rules
 
 Implementations are never mapped to each other.
@@ -53,6 +59,8 @@ A mapper is deterministic. The same input always produces the same domain
 model.
 
 Business logic depends on the invariant, not on the implementation.
+
+Hosts expose capabilities. They do not define the domain invariant.
 
 ## Why
 

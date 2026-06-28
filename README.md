@@ -103,6 +103,7 @@ The implementation details are intentionally kept out of this README.
 - [Documentation index](docs/index.md)
 - [Architecture](docs/architecture.md)
 - [Architecture verification](docs/architecture-verification.md)
+- [Host](docs/host.md)
 - [Reduction matrix](docs/reduction-matrix.md)
 - [Reduction template](docs/reduction-template.md)
 - [Provider footprint](docs/provider-footprint.md)
@@ -131,6 +132,7 @@ src/identity_mapper/
 docs/
   architecture.md
   provider-footprint.md
+  host.md
   reduction-matrix.md
   reduction-template.md
   architecture-verification.md

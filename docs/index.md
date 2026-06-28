@@ -6,6 +6,7 @@ identity domain.
 ## Documents
 
 - [Architecture](architecture.md)
+- [Host](host.md)
 - [Reduction matrix](reduction-matrix.md)
 - [Reduction template](reduction-template.md)
 - [Provider footprint](provider-footprint.md)
