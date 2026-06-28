@@ -4,7 +4,7 @@ import argparse
 import http.client
 import json
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +17,7 @@ from identity_mapper.providers.basic import (
 )
 from identity_mapper_service.app import DEFAULT_MAX_REQUEST_BODY_BYTES, serve
 from identity_mapper_service.registry import ProviderRegistry
-from identity_mapper_service.request_log import CapabilityInvocationLog
+from identity_mapper_service.request_log import RequestLog
 from identity_mapper_service.service import IdentityMapperHostService
 
 
@@ -29,28 +29,6 @@ class HostServiceConfig:
     audit_log_enabled: bool = True
     audit_log: str = "logs/audit.log"
     audit_log_max_entries: int = 1000
-    providers: tuple[ProviderConfig, ...] = ()
-
-
-@dataclass(frozen=True, slots=True)
-class ProviderConfig:
-    name: str
-    type: str
-    enabled: bool = True
-    users: tuple[BasicProviderUserConfig, ...] = ()
-
-
-@dataclass(frozen=True, slots=True)
-class BasicProviderUserConfig:
-    username: str
-    password: str
-    identity_id: str
-    implementation_id: str | None = None
-    display_name: str | None = None
-    email: str | None = None
-    roles: tuple[str, ...] = ()
-    claims: dict[str, Any] = field(default_factory=dict)
-    attributes: dict[str, Any] = field(default_factory=dict)
 
 
 def load_config(path: str | Path = "config/config.json") -> HostServiceConfig:
@@ -99,7 +77,6 @@ def load_config(path: str | Path = "config/config.json") -> HostServiceConfig:
                 HostServiceConfig().audit_log_max_entries,
             ),
         ),
-        providers=_optional_providers(value, "providers"),
     )
 
 
@@ -138,121 +115,11 @@ def _optional_bool(data: dict[str, Any], key: str, default: bool) -> bool:
     return value
 
 
-def _optional_providers(
-    data: dict[str, Any],
-    key: str,
-) -> tuple[ProviderConfig, ...]:
-    value = data.get(key, ())
-    if not isinstance(value, list | tuple):
-        raise ValueError(f"{key} must be a list")
-
-    return tuple(_provider_config_from_mapping(item) for item in value)
-
-
-def _provider_config_from_mapping(value: Any) -> ProviderConfig:
-    if not isinstance(value, dict):
-        raise ValueError("provider config must be an object")
-
-    provider_type = _required_string(value, "type")
-    if provider_type != "basic":
-        raise ValueError(f"unknown provider type: {provider_type}")
-
-    return ProviderConfig(
-        name=_required_string(value, "name"),
-        type=provider_type,
-        enabled=_optional_bool(value, "enabled", True),
-        users=_optional_basic_users(value, "users"),
-    )
-
-
-def _optional_basic_users(
-    data: dict[str, Any],
-    key: str,
-) -> tuple[BasicProviderUserConfig, ...]:
-    value = data.get(key, ())
-    if not isinstance(value, list | tuple):
-        raise ValueError(f"{key} must be a list")
-
-    return tuple(_basic_user_config_from_mapping(item) for item in value)
-
-
-def _basic_user_config_from_mapping(value: Any) -> BasicProviderUserConfig:
-    if not isinstance(value, dict):
-        raise ValueError("basic provider user config must be an object")
-
-    return BasicProviderUserConfig(
-        username=_required_string(value, "username"),
-        password=_required_string(value, "password"),
-        identity_id=_required_string(value, "identity_id"),
-        implementation_id=_optional_string_or_none(value, "implementation_id"),
-        display_name=_optional_string_or_none(value, "display_name"),
-        email=_optional_string_or_none(value, "email"),
-        roles=_optional_string_tuple(value, "roles"),
-        claims=_optional_mapping(value, "claims"),
-        attributes=_optional_mapping(value, "attributes"),
-    )
-
-
-def _required_string(data: dict[str, Any], key: str) -> str:
-    value = data.get(key)
-    if not isinstance(value, str) or not value:
-        raise ValueError(f"{key} must be a non-empty string")
-    return value
-
-
-def _optional_string_or_none(data: dict[str, Any], key: str) -> str | None:
-    value = data.get(key)
-    if value is None:
-        return None
-    if not isinstance(value, str) or not value:
-        raise ValueError(f"{key} must be a non-empty string or null")
-    return value
-
-
-def _optional_string_tuple(data: dict[str, Any], key: str) -> tuple[str, ...]:
-    value = data.get(key, ())
-    if not isinstance(value, list | tuple):
-        raise ValueError(f"{key} must be a list")
-    if not all(isinstance(item, str) and item for item in value):
-        raise ValueError(f"{key} must contain only non-empty strings")
-    return tuple(value)
-
-
-def _optional_mapping(data: dict[str, Any], key: str) -> dict[str, Any]:
-    value = data.get(key, {})
-    if not isinstance(value, dict):
-        raise ValueError(f"{key} must be an object")
-    return dict(value)
-
-
-def build_configured_registry(config: HostServiceConfig) -> ProviderRegistry:
-    registry = ProviderRegistry()
-    for provider in config.providers:
-        if not provider.enabled:
-            continue
-        _register_provider(registry, provider)
-    return registry
-
-
-def _register_provider(registry: ProviderRegistry, provider: ProviderConfig) -> None:
-    if provider.type == "basic":
-        _register_basic_provider(registry, provider.name, provider.users)
-        return
-    raise ValueError(f"unknown provider type: {provider.type}")
-
-
 def build_demo_registry() -> ProviderRegistry:
     registry = ProviderRegistry()
-    _register_demo_basic_provider(registry)
-    return registry
-
-
-def _register_demo_basic_provider(registry: ProviderRegistry) -> None:
-    _register_basic_provider(
-        registry,
-        "basic",
-        (
-            BasicProviderUserConfig(
+    store = InMemoryBasicUserStore(
+        [
+            BasicUserRecord(
                 implementation_id="basic:demo",
                 username="demo",
                 password="secret",
@@ -260,36 +127,13 @@ def _register_demo_basic_provider(registry: ProviderRegistry) -> None:
                 display_name="Demo User",
                 roles=("demo",),
                 attributes={"source": "demo-basic"},
-            ),
-        ),
-    )
-
-
-def _register_basic_provider(
-    registry: ProviderRegistry,
-    provider_name: str,
-    users: tuple[BasicProviderUserConfig, ...],
-) -> None:
-    store = InMemoryBasicUserStore(
-        [
-            BasicUserRecord(
-                implementation_id=user.implementation_id
-                or f"{provider_name}:{user.username}",
-                username=user.username,
-                password=user.password,
-                identity_id=user.identity_id,
-                display_name=user.display_name,
-                email=user.email,
-                roles=user.roles,
-                claims=user.claims,
-                attributes=user.attributes,
             )
-            for user in users
         ]
     )
-    registry.register_resolver(provider_name, BasicIdentityResolver(store))
-    registry.register_verifier(provider_name, BasicCredentialVerifier(store))
-    registry.register_authenticator(provider_name, BasicAuthenticator(store))
+    registry.register_resolver("basic", BasicIdentityResolver(store))
+    registry.register_verifier("basic", BasicCredentialVerifier(store))
+    registry.register_authenticator("basic", BasicAuthenticator(store))
+    return registry
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -395,15 +239,13 @@ def main(argv: list[str] | None = None) -> int:
             and not args.disable_audit_log
             and not args.disable_authenticate_log
         )
-        registry = build_configured_registry(config)
-        if args.demo_basic:
-            _register_demo_basic_provider(registry)
-        invocation_log = (
-            CapabilityInvocationLog(audit_log, max_entries=audit_log_max_entries)
+        registry = build_demo_registry() if args.demo_basic else ProviderRegistry()
+        request_log = (
+            RequestLog(audit_log, max_entries=audit_log_max_entries)
             if audit_log_enabled
             else None
         )
-        service = IdentityMapperHostService(registry, invocation_log)
+        service = IdentityMapperHostService(registry, request_log)
         serve(host, port, service, max_request_body_bytes)
         return 0
 

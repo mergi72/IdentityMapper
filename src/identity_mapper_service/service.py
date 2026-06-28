@@ -13,7 +13,7 @@ from identity_mapper.capability_protocol import (
     VerifyCredentialResponse,
 )
 from identity_mapper_service.registry import ProviderRegistry, UnknownProviderError
-from identity_mapper_service.request_log import CapabilityInvocationLog
+from identity_mapper_service.request_log import RequestLog
 from identity_mapper_service.responses import (
     AuditResponse,
     HealthResponse,
@@ -27,10 +27,10 @@ class IdentityMapperHostService:
     def __init__(
         self,
         registry: ProviderRegistry,
-        invocation_log: CapabilityInvocationLog | None = None,
+        request_log: RequestLog | None = None,
     ) -> None:
         self._registry = registry
-        self._invocation_log = invocation_log
+        self._request_log = request_log
 
     def health(self) -> HealthResponse:
         return HealthResponse(status="ok")
@@ -42,9 +42,9 @@ class IdentityMapperHostService:
         return self.audit_logs(limit)
 
     def audit_logs(self, limit: int = 100) -> AuditResponse:
-        if self._invocation_log is None:
+        if self._request_log is None:
             return AuditResponse(entries=())
-        return AuditResponse(entries=tuple(self._invocation_log.entries(limit)))
+        return AuditResponse(entries=tuple(self._request_log.entries(limit)))
 
     def authenticate_request(
         self,
@@ -198,10 +198,10 @@ class IdentityMapperHostService:
         identity_id: str | None = None,
         error: str | None = None,
     ) -> None:
-        if self._invocation_log is None:
+        if self._request_log is None:
             return
 
-        self._invocation_log.append_invocation(
+        self._request_log.append_invocation(
             request_id=request_id,
             capability=capability,
             provider=provider,

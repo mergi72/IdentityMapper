@@ -50,7 +50,7 @@ class CapabilityInvocationLogEntry:
         return value
 
 
-class CapabilityInvocationLog:
+class RequestLog:
     """Append-only JSONL invocation log for hosted capabilities."""
 
     def __init__(self, path: str | Path, max_entries: int = 1000) -> None:
@@ -158,6 +158,3 @@ class CapabilityInvocationLog:
             "\n".join(lines[-self._max_entries :]) + "\n",
             encoding="utf-8",
         )
-
-
-RequestLog = CapabilityInvocationLog
