@@ -2,6 +2,19 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.22.3
+
+Host Service stabilization patch.
+
+- Cleaned up Host Service response metadata.
+- Removed duplicate audit log refresh behavior.
+- Added `/audit` as an alias for authenticate audit logs.
+- Added capability request and response contracts.
+- Routed HTTP authenticate payloads through `AuthenticateRequest`.
+- Wrote audit timestamps using the local timezone of the service machine.
+- Rendered newest audit entries first in the browser view.
+- Tests: 226 passed.
+
 ## v0.22.2
 
 Host Service audit log presentation patch.
