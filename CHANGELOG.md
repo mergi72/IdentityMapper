@@ -2,6 +2,19 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.27.0
+
+Capability Invocation Log checkpoint.
+
+- Generalized the request log into a capability invocation log.
+- Added `capability` to audit entries for `authenticate`, `resolve_identity`, and `verify_credential`.
+- Added audit metadata for `candidate_id` and `verified`.
+- Made `/audit` the primary capability audit endpoint.
+- Kept `/authenticate_logs` as a compatibility alias.
+- Renamed config keys to `audit_log_enabled`, `audit_log`, and `audit_log_max_entries`.
+- Kept legacy `authenticate_log_*` config keys and CLI flags as compatibility fallbacks.
+- Tests: 266 passed.
+
 ## v0.26.0
 
 Host API completion checkpoint.
