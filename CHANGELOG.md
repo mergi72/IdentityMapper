@@ -2,6 +2,16 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.22.6
+
+Host Service capability protocol boundary patch.
+
+- Removed transport-shaped authenticate payload handling from the Host Service.
+- Kept HTTP JSON mapping inside the HTTP adapter.
+- Made `authenticate_request()` the Host Service authenticate API.
+- Updated tests to verify the service through capability requests.
+- Tests: 230 passed.
+
 ## v0.22.5
 
 Host Service operations patch.
