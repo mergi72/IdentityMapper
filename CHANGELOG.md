@@ -2,6 +2,16 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.22.8
+
+Host Service response object patch.
+
+- Added `HealthResponse`, `ProvidersResponse`, and `AuditResponse`.
+- Made Host Service health, provider listing, and audit surfaces return response objects.
+- Kept HTTP serialization in the HTTP adapter schema mapping layer.
+- Added response mapping coverage for Host Service surfaces.
+- Tests: 232 passed.
+
 ## v0.22.7
 
 Authenticate response serialization patch.
