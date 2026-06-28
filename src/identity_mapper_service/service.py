@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from identity_mapper.requests import AuthenticateRequest
+from identity_mapper.responses import AuthenticateResponse
 from identity_mapper_service.registry import ProviderRegistry, UnknownProviderError
 from identity_mapper_service.schemas import (
-    RequestValidationError,
-    credential_from_mapping,
-    identification_from_mapping,
-    identity_to_mapping,
+    authenticate_request_from_mapping,
+    authenticate_response_to_mapping,
 )
 from identity_mapper_service.request_log import RequestLog
 
@@ -35,24 +35,26 @@ class IdentityMapperHostService:
         return {"entries": self._request_log.entries(limit)}
 
     def authenticate(self, payload: dict[str, Any]) -> dict[str, Any]:
-        provider = payload.get("provider")
-        if not isinstance(provider, str) or not provider:
-            raise RequestValidationError("provider must be a non-empty string")
+        response = self.authenticate_request(
+            authenticate_request_from_mapping(payload),
+        )
+        return authenticate_response_to_mapping(response)
 
-        identification = identification_from_mapping(payload.get("identification"))
-        credential = credential_from_mapping(payload.get("credential"))
-
+    def authenticate_request(
+        self,
+        request: AuthenticateRequest,
+    ) -> AuthenticateResponse:
         try:
             identity = self._registry.authenticate(
-                provider,
-                identification,
-                credential,
+                request.provider,
+                request.identification,
+                request.credential,
             )
         except UnknownProviderError:
             self._log_authenticate(
-                provider=provider,
-                identifier=identification.identifier,
-                credential_type=credential.type,
+                provider=request.provider,
+                identifier=request.identification.identifier,
+                credential_type=request.credential.type,
                 authenticated=False,
                 status="unknown_provider",
                 error="unknown_provider",
@@ -60,29 +62,23 @@ class IdentityMapperHostService:
             raise
         except ValueError:
             self._log_authenticate(
-                provider=provider,
-                identifier=identification.identifier,
-                credential_type=credential.type,
+                provider=request.provider,
+                identifier=request.identification.identifier,
+                credential_type=request.credential.type,
                 authenticated=False,
                 status="rejected",
             )
-            return {
-                "authenticated": False,
-                "identity": None,
-            }
+            return AuthenticateResponse(authenticated=False)
 
         self._log_authenticate(
-            provider=provider,
-            identifier=identification.identifier,
-            credential_type=credential.type,
+            provider=request.provider,
+            identifier=request.identification.identifier,
+            credential_type=request.credential.type,
             authenticated=True,
             status="accepted",
             identity_id=identity.id,
         )
-        return {
-            "authenticated": True,
-            "identity": identity_to_mapping(identity),
-        }
+        return AuthenticateResponse(authenticated=True, identity=identity)
 
     def _log_authenticate(
         self,

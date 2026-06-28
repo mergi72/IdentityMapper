@@ -47,6 +47,10 @@ business logic to a specific implementation.
 `Host` exposes one or more capabilities through a transport such as CLI, REST,
 gRPC, or a message bus. A host is not part of the domain.
 
+`Capability Protocol` defines request and response contracts for capabilities.
+Hosts translate transport requests into capability requests and translate
+capability responses back into transport responses.
+
 ## Rules
 
 Implementations are never mapped to each other.

@@ -13,9 +13,21 @@ from identity_mapper.domain import (
 )
 from identity_mapper.mapper import Mapper
 from identity_mapper.matrix import ReductionMatrix, ReductionSections
+from identity_mapper.requests import (
+    AuthenticateRequest,
+    ResolveIdentityRequest,
+    VerifyCredentialRequest,
+)
+from identity_mapper.responses import (
+    AuthenticateResponse,
+    ResolveIdentityResponse,
+    VerifyCredentialResponse,
+)
 
 __all__ = [
     "Authenticate",
+    "AuthenticateRequest",
+    "AuthenticateResponse",
     "Credential",
     "Identification",
     "Identity",
@@ -24,5 +36,9 @@ __all__ = [
     "ReductionMatrix",
     "ReductionSections",
     "ResolveIdentity",
+    "ResolveIdentityRequest",
+    "ResolveIdentityResponse",
     "VerifyCredential",
+    "VerifyCredentialRequest",
+    "VerifyCredentialResponse",
 ]

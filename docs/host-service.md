@@ -35,6 +35,11 @@ GET  /audit
 
 ## Authenticate
 
+HTTP is only the transport.
+
+`POST /authenticate` is translated into `AuthenticateRequest`. The host service
+returns `AuthenticateResponse` and then serializes it as HTTP output.
+
 Request:
 
 ```json

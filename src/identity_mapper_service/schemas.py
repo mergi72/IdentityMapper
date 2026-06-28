@@ -4,6 +4,8 @@ from collections.abc import Mapping
 from typing import Any
 
 from identity_mapper.domain import Credential, Identification, Identity
+from identity_mapper.requests import AuthenticateRequest
+from identity_mapper.responses import AuthenticateResponse
 
 
 class RequestValidationError(ValueError):
@@ -28,6 +30,16 @@ def credential_from_mapping(value: Any) -> Credential:
     )
 
 
+def authenticate_request_from_mapping(value: Any) -> AuthenticateRequest:
+    data = _require_mapping(value, "request")
+    provider = _require_string(data, "provider")
+    return AuthenticateRequest(
+        provider=provider,
+        identification=identification_from_mapping(data.get("identification")),
+        credential=credential_from_mapping(data.get("credential")),
+    )
+
+
 def identity_to_mapping(identity: Identity) -> dict[str, Any]:
     return {
         "id": identity.id,
@@ -36,6 +48,19 @@ def identity_to_mapping(identity: Identity) -> dict[str, Any]:
         "roles": list(identity.roles),
         "claims": dict(identity.claims),
         "attributes": dict(identity.attributes),
+    }
+
+
+def authenticate_response_to_mapping(
+    response: AuthenticateResponse,
+) -> dict[str, Any]:
+    return {
+        "authenticated": response.authenticated,
+        "identity": (
+            identity_to_mapping(response.identity)
+            if response.identity is not None
+            else None
+        ),
     }
 
 

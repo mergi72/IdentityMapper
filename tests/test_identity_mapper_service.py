@@ -10,6 +10,8 @@ from identity_mapper.providers.basic import (
     BasicUserRecord,
     InMemoryBasicUserStore,
 )
+from identity_mapper.domain import Credential, Identification
+from identity_mapper.requests import AuthenticateRequest
 from identity_mapper_service.__main__ import HostServiceConfig, load_config
 from identity_mapper_service.app import create_server
 from identity_mapper_service.registry import ProviderRegistry, UnknownProviderError
@@ -51,6 +53,14 @@ def valid_payload() -> dict[str, Any]:
     }
 
 
+def valid_identification() -> Identification:
+    return Identification(identifier="subject")
+
+
+def valid_credential() -> Credential:
+    return Credential(type="PASSWORD", value="accepted")
+
+
 def test_service_reports_health() -> None:
     assert make_service().health() == {"status": "ok"}
 
@@ -65,6 +75,20 @@ def test_service_authenticates_registered_provider() -> None:
     assert response["authenticated"]
     assert response["identity"]["id"] == "identity-1"
     assert response["identity"]["display_name"] == "Example Subject"
+
+
+def test_service_authenticates_capability_request() -> None:
+    request = AuthenticateRequest(
+        provider="basic",
+        identification=valid_identification(),
+        credential=valid_credential(),
+    )
+
+    response = make_service().authenticate_request(request)
+
+    assert response.authenticated
+    assert response.identity is not None
+    assert response.identity.id == "identity-1"
 
 
 def test_service_rejects_invalid_credential_without_leaking_identity() -> None:
