@@ -6,7 +6,7 @@ from identity_mapper.domain import (
     Identity,
     IdentityCandidate,
 )
-from identity_mapper_mfa import (
+from identity_mapper.providers.mfa import (
     InMemoryMfaStore,
     MfaAuthenticationError,
     MfaAuthenticator,

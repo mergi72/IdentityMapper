@@ -6,7 +6,7 @@ from identity_mapper.domain import (
     Identity,
     IdentityCandidate,
 )
-from identity_mapper_basic import (
+from identity_mapper.providers.basic import (
     BasicAuthenticationError,
     BasicAuthenticationMapper,
     BasicAuthenticationRequest,

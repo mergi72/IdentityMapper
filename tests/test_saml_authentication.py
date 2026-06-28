@@ -6,7 +6,7 @@ from identity_mapper.domain import (
     Identity,
     IdentityCandidate,
 )
-from identity_mapper_saml import (
+from identity_mapper.providers.saml import (
     InMemorySamlAssertionStore,
     SamlAssertionRecord,
     SamlAuthenticationError,

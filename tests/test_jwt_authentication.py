@@ -6,7 +6,7 @@ from identity_mapper.domain import (
     Identity,
     IdentityCandidate,
 )
-from identity_mapper_jwt import (
+from identity_mapper.providers.jwt import (
     InMemoryJwtStore,
     JwtAuthenticationError,
     JwtAuthenticator,

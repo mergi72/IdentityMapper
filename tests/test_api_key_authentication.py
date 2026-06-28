@@ -6,7 +6,7 @@ from identity_mapper.domain import (
     Identity,
     IdentityCandidate,
 )
-from identity_mapper_api_key import (
+from identity_mapper.providers.api_key import (
     ApiKeyAuthenticationError,
     ApiKeyAuthenticator,
     ApiKeyCredentialVerifier,

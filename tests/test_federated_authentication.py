@@ -6,7 +6,7 @@ from identity_mapper.domain import (
     Identity,
     IdentityCandidate,
 )
-from identity_mapper_federated import (
+from identity_mapper.providers.federated import (
     FederatedAuthenticationError,
     FederatedAuthenticator,
     FederatedCredentialVerifier,

@@ -6,7 +6,7 @@ from identity_mapper.domain import (
     Identity,
     IdentityCandidate,
 )
-from identity_mapper_ldap import (
+from identity_mapper.providers.ldap import (
     InMemoryLdapDirectory,
     LdapAuthenticationError,
     LdapAuthenticator,

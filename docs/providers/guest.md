@@ -1,0 +1,45 @@
+# Guest / Anonymous Identity Provider
+
+## Provider Model
+
+- `GuestRequest`
+- `GuestSessionRecord`
+
+## Identification
+
+| Provider field | Domain field |
+| --- | --- |
+| `session_id` | `Identification.identifier` |
+| `realm` or `"guest"` | `Identification.realm` |
+| `"guest"` | `Identification.attributes["kind"]` |
+
+## Credential
+
+| Provider field | Domain field |
+| --- | --- |
+| `session_token` | `Credential.value` |
+| `"GUEST_SESSION"` | `Credential.type` |
+| `metadata` | `Credential.metadata` |
+
+## Candidate
+
+| Provider field | Domain field |
+| --- | --- |
+| `session_id` | `IdentityCandidate.implementation_id` |
+| resolved identification | `IdentityCandidate.identification` |
+| `attributes` | `IdentityCandidate.attributes` |
+
+## Identity
+
+| Provider field | Domain field |
+| --- | --- |
+| `identity_id` | `Identity.id` |
+| `display_name` | `Identity.display_name` |
+| `roles` | `Identity.roles` |
+| `claims` | `Identity.claims` |
+| `attributes` | `Identity.attributes` |
+
+## Reduction
+
+Guest / Anonymous Identity reduces to the identity invariant without requiring
+a core model change.

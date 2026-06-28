@@ -95,7 +95,7 @@ The implementation details are intentionally kept out of this README.
 - [Reduction template](docs/reduction-template.md)
 - [Domain concepts](docs/domain/index.md)
 - [Capabilities](docs/capabilities/index.md)
-- [Implementation notes](docs/implementations/index.md)
+- [Provider notes](docs/providers/index.md)
 
 ## Repository Structure
 
@@ -104,6 +104,11 @@ src/identity_mapper/
   domain.py
   capabilities.py
   mapper.py
+  providers/
+    basic/
+    ldap/
+    oauth/
+    ...
 
 docs/
   architecture.md
@@ -112,7 +117,7 @@ docs/
   architecture-verification.md
   domain/
   capabilities/
-  implementations/
+  providers/
 ```
 
 ## Status

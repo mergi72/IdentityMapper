@@ -22,6 +22,9 @@ Capabilities
 `Implementation` is an external model, protocol, product, API, or
 provider-specific representation.
 
+In this repository, provider-specific code lives under
+`identity_mapper.providers`.
+
 `Mapper` translates an implementation model into a domain model. It does not
 validate, authenticate, authorize, persist, or decide.
 

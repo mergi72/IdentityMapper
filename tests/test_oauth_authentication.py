@@ -6,7 +6,7 @@ from identity_mapper.domain import (
     Identity,
     IdentityCandidate,
 )
-from identity_mapper_oauth import (
+from identity_mapper.providers.oauth import (
     InMemoryOAuthTokenStore,
     OAuthAuthenticationError,
     OAuthAuthenticator,

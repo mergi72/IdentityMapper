@@ -43,7 +43,7 @@ Identity
 
 ## Result
 
-| Version | Implementation | Core changed |
+| Version | Provider | Core changed |
 | --- | --- | --- |
 | v0.2.0 | BasicAuth | No |
 | v0.3.0 | LDAP | No |
@@ -61,7 +61,7 @@ Identity
 | v0.15.0 | Federated Identity | No |
 | v0.16.0 | Guest / Anonymous Identity | No |
 
-## Verified Implementations
+## Verified Providers
 
 - BasicAuth
 - LDAP
@@ -80,11 +80,11 @@ Identity
 
 ## Observation
 
-The tested implementations cover passwords, tokens, API keys, certificates,
+The tested providers cover passwords, tokens, API keys, certificates,
 tickets, assertions, SIDs, WebAuthn credentials, passkeys, multi-factor
 credentials, federated trust mappings, and guest sessions.
 
-No implementation introduced a new core concept.
+No provider introduced a new core concept.
 
 ## Conclusion
 

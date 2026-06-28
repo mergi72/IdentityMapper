@@ -6,7 +6,7 @@ from identity_mapper.domain import (
     Identity,
     IdentityCandidate,
 )
-from identity_mapper_webauthn import (
+from identity_mapper.providers.webauthn import (
     InMemoryWebAuthnCredentialStore,
     WebAuthnAuthenticationError,
     WebAuthnAuthenticator,

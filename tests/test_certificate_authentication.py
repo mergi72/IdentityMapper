@@ -6,7 +6,7 @@ from identity_mapper.domain import (
     Identity,
     IdentityCandidate,
 )
-from identity_mapper_certificate import (
+from identity_mapper.providers.certificate import (
     ClientCertificateAuthenticationError,
     ClientCertificateAuthenticator,
     ClientCertificateCredentialVerifier,

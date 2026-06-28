@@ -11,7 +11,7 @@ identity domain.
 - [Architecture verification](architecture-verification.md)
 - [Domain](domain/index.md)
 - [Capabilities](capabilities/index.md)
-- [Implementations](implementations/index.md)
+- [Providers](providers/index.md)
 
 ## Rule
 

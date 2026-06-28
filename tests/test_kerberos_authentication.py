@@ -6,7 +6,7 @@ from identity_mapper.domain import (
     Identity,
     IdentityCandidate,
 )
-from identity_mapper_kerberos import (
+from identity_mapper.providers.kerberos import (
     InMemoryKerberosPrincipalStore,
     KerberosAuthenticationError,
     KerberosAuthenticator,

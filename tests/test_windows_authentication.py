@@ -6,7 +6,7 @@ from identity_mapper.domain import (
     Identity,
     IdentityCandidate,
 )
-from identity_mapper_windows import (
+from identity_mapper.providers.windows import (
     InMemoryWindowsIdentityStore,
     WindowsAuthenticationError,
     WindowsAuthenticator,
