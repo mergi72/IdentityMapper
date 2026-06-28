@@ -2,6 +2,20 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.24.0
+
+Host Service CLI and hardening checkpoint.
+
+- Added `python -m identity_mapper_service authenticate`.
+- Added text and JSON output for CLI authenticate.
+- Documented `AuthenticationRejected` host conversion to `AuthenticateResponse(authenticated=False)`.
+- Added HTTP request body size limiting with `max_request_body_bytes`.
+- Added `413 payload_too_large` responses for oversized JSON requests.
+- Added `authenticate_log_max_entries` and audit log trimming.
+- Added config validation for port and positive integer limits.
+- Added CLI override validation for service limits.
+- Tests: 244 passed.
+
 ## v0.22.10
 
 Authentication rejection protocol patch.
