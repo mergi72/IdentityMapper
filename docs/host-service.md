@@ -156,8 +156,11 @@ provider = implementation + footprint
 
 The service must not own the domain model.
 
-The service receives transport-shaped input, selects a provider, calls a
-capability, and returns transport-shaped output.
+The HTTP adapter receives transport-shaped input and maps it to a capability
+request.
+
+The host service receives capability requests, selects a provider, calls a
+capability, and returns capability responses.
 
 ## Run
 

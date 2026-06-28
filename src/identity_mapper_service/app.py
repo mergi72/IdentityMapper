@@ -7,7 +7,11 @@ from urllib.parse import parse_qs, urlparse
 from typing import Any
 
 from identity_mapper_service.registry import UnknownProviderError
-from identity_mapper_service.schemas import RequestValidationError
+from identity_mapper_service.schemas import (
+    RequestValidationError,
+    authenticate_request_from_mapping,
+    authenticate_response_to_mapping,
+)
 from identity_mapper_service.service import IdentityMapperHostService
 
 
@@ -67,7 +71,9 @@ def create_handler(
 
             try:
                 payload = self._read_json()
-                self._send_json(200, service.authenticate(payload))
+                request = authenticate_request_from_mapping(payload)
+                response = service.authenticate_request(request)
+                self._send_json(200, authenticate_response_to_mapping(response))
             except RequestValidationError as exc:
                 self._send_json(400, {"error": "bad_request", "message": str(exc)})
             except UnknownProviderError as exc:

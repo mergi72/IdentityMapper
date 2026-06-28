@@ -7,10 +7,6 @@ from uuid import uuid4
 from identity_mapper.requests import AuthenticateRequest
 from identity_mapper.responses import AuthenticateResponse
 from identity_mapper_service.registry import ProviderRegistry, UnknownProviderError
-from identity_mapper_service.schemas import (
-    authenticate_request_from_mapping,
-    authenticate_response_to_mapping,
-)
 from identity_mapper_service.request_log import RequestLog
 
 
@@ -35,12 +31,6 @@ class IdentityMapperHostService:
         if self._request_log is None:
             return {"entries": []}
         return {"entries": self._request_log.entries(limit)}
-
-    def authenticate(self, payload: dict[str, Any]) -> dict[str, Any]:
-        response = self.authenticate_request(
-            authenticate_request_from_mapping(payload),
-        )
-        return authenticate_response_to_mapping(response)
 
     def authenticate_request(
         self,

@@ -17,7 +17,6 @@ from identity_mapper_service.__main__ import HostServiceConfig, load_config, mai
 from identity_mapper_service.app import create_server
 from identity_mapper_service.registry import ProviderRegistry, UnknownProviderError
 from identity_mapper_service.request_log import RequestLog
-from identity_mapper_service.schemas import RequestValidationError
 from identity_mapper_service.service import IdentityMapperHostService
 
 
@@ -62,6 +61,14 @@ def valid_credential() -> Credential:
     return Credential(type="PASSWORD", value="accepted")
 
 
+def valid_authenticate_request() -> AuthenticateRequest:
+    return AuthenticateRequest(
+        provider="basic",
+        identification=valid_identification(),
+        credential=valid_credential(),
+    )
+
+
 def test_service_reports_health() -> None:
     assert make_service().health() == {"status": "ok"}
 
@@ -71,21 +78,16 @@ def test_service_reports_providers() -> None:
 
 
 def test_service_authenticates_registered_provider() -> None:
-    response = make_service().authenticate(valid_payload())
+    response = make_service().authenticate_request(valid_authenticate_request())
 
-    assert response["authenticated"]
-    assert response["identity"]["id"] == "identity-1"
-    assert response["identity"]["display_name"] == "Example Subject"
+    assert response.authenticated
+    assert response.identity is not None
+    assert response.identity.id == "identity-1"
+    assert response.identity.display_name == "Example Subject"
 
 
 def test_service_authenticates_capability_request() -> None:
-    request = AuthenticateRequest(
-        provider="basic",
-        identification=valid_identification(),
-        credential=valid_credential(),
-    )
-
-    response = make_service().authenticate_request(request)
+    response = make_service().authenticate_request(valid_authenticate_request())
 
     assert response.authenticated
     assert response.identity is not None
@@ -93,29 +95,47 @@ def test_service_authenticates_capability_request() -> None:
 
 
 def test_service_rejects_invalid_credential_without_leaking_identity() -> None:
-    payload = valid_payload()
-    payload["credential"]["value"] = "wrong"
+    request = AuthenticateRequest(
+        provider="basic",
+        identification=valid_identification(),
+        credential=Credential(type="PASSWORD", value="wrong"),
+    )
 
-    assert make_service().authenticate(payload) == {
-        "authenticated": False,
-        "identity": None,
-    }
+    response = make_service().authenticate_request(request)
+
+    assert not response.authenticated
+    assert response.identity is None
 
 
 def test_service_rejects_unknown_provider() -> None:
-    payload = valid_payload()
-    payload["provider"] = "missing"
+    request = AuthenticateRequest(
+        provider="missing",
+        identification=valid_identification(),
+        credential=valid_credential(),
+    )
 
     with pytest.raises(UnknownProviderError):
-        make_service().authenticate(payload)
+        make_service().authenticate_request(request)
 
 
-def test_service_validates_transport_payload() -> None:
+def test_http_host_validates_transport_payload() -> None:
+    service = make_service()
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
     payload = valid_payload()
     payload["identification"] = {}
 
-    with pytest.raises(RequestValidationError):
-        make_service().authenticate(payload)
+    try:
+        status, response = request_json("POST", host, port, "/authenticate", payload)
+
+        assert status == 400
+        assert response["error"] == "bad_request"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
 
 
 def test_service_loads_host_config(tmp_path) -> None:
@@ -163,9 +183,9 @@ def test_service_can_run_without_authenticate_log(tmp_path) -> None:
     log_path = tmp_path / "authenticate.log"
     service = make_service(request_log=None)
 
-    response = service.authenticate(valid_payload())
+    response = service.authenticate_request(valid_authenticate_request())
 
-    assert response["authenticated"]
+    assert response.authenticated
     assert service.authenticate_logs() == {"entries": []}
     assert not log_path.exists()
 
@@ -173,12 +193,15 @@ def test_service_can_run_without_authenticate_log(tmp_path) -> None:
 def test_service_writes_authenticate_log_without_credential_value(tmp_path) -> None:
     request_log = RequestLog(tmp_path / "authenticate.log")
     service = make_service(request_log)
-    payload = valid_payload()
-    payload["credential"]["value"] = "never-log-this-secret"
+    request = AuthenticateRequest(
+        provider="basic",
+        identification=valid_identification(),
+        credential=Credential(type="PASSWORD", value="never-log-this-secret"),
+    )
 
-    response = service.authenticate(payload)
+    response = service.authenticate_request(request)
 
-    assert not response["authenticated"]
+    assert not response.authenticated
     entries = service.authenticate_logs()["entries"]
     assert len(entries) == 1
     assert entries[0]["provider"] == "basic"
@@ -199,9 +222,9 @@ def test_service_writes_authenticate_log_with_local_timezone(tmp_path) -> None:
     request_log = RequestLog(tmp_path / "authenticate.log")
     service = make_service(request_log)
 
-    response = service.authenticate(valid_payload())
+    response = service.authenticate_request(valid_authenticate_request())
 
-    assert response["authenticated"]
+    assert response.authenticated
     timestamp = request_log.entries()[0]["timestamp"]
     logged_time = datetime.fromisoformat(timestamp)
     assert logged_time.tzinfo is not None
