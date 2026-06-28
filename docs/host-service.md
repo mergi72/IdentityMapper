@@ -79,6 +79,21 @@ The service can be started as a module:
 python -m identity_mapper_service serve
 ```
 
+By default, the service reads `config/config.json` from the current directory:
+
+```json
+{
+  "server": "127.0.0.1",
+  "port": 8066
+}
+```
+
+The server and port can still be overridden from the command line:
+
+```text
+python -m identity_mapper_service serve --host 127.0.0.1 --port 8066
+```
+
 For local experiments, an in-memory Basic provider can be enabled explicitly:
 
 ```text

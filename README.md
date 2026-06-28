@@ -136,6 +136,9 @@ src/identity_mapper_service/
   schemas.py
   service.py
 
+config/
+  config.json
+
 docs/
   architecture.md
   provider-footprint.md

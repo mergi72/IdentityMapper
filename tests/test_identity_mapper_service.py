@@ -5,6 +5,7 @@ from typing import Any
 
 import pytest
 
+from identity_mapper_service.__main__ import HostServiceConfig, load_config
 from identity_mapper.providers.basic import (
     BasicAuthenticator,
     BasicUserRecord,
@@ -89,6 +90,28 @@ def test_service_validates_transport_payload() -> None:
 
     with pytest.raises(RequestValidationError):
         make_service().authenticate(payload)
+
+
+def test_service_loads_host_config(tmp_path) -> None:
+    config_path = tmp_path / "config.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "server": "127.0.0.1",
+                "port": 8066,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert load_config(config_path) == HostServiceConfig(
+        server="127.0.0.1",
+        port=8066,
+    )
+
+
+def test_service_uses_default_config_when_file_is_missing(tmp_path) -> None:
+    assert load_config(tmp_path / "missing.json") == HostServiceConfig()
 
 
 def test_http_host_exposes_health_providers_and_authenticate() -> None:
