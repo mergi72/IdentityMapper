@@ -39,6 +39,9 @@ class IdentityMapperHostService:
         return ProvidersResponse(providers=tuple(self._registry.providers()))
 
     def authenticate_logs(self, limit: int = 100) -> AuditResponse:
+        return self.audit_logs(limit)
+
+    def audit_logs(self, limit: int = 100) -> AuditResponse:
         if self._request_log is None:
             return AuditResponse(entries=())
         return AuditResponse(entries=tuple(self._request_log.entries(limit)))
@@ -56,7 +59,8 @@ class IdentityMapperHostService:
                 request.credential,
             )
         except UnknownProviderError:
-            self._log_authenticate(
+            self._log_invocation(
+                capability="authenticate",
                 provider=self._log_provider(request.provider),
                 identifier=request.identification.identifier,
                 credential_type=request.credential.type,
@@ -68,7 +72,8 @@ class IdentityMapperHostService:
             )
             raise
         except AuthenticationRejected:
-            self._log_authenticate(
+            self._log_invocation(
+                capability="authenticate",
                 provider=self._log_provider(request.provider),
                 identifier=request.identification.identifier,
                 credential_type=request.credential.type,
@@ -79,7 +84,8 @@ class IdentityMapperHostService:
             )
             return AuthenticateResponse(authenticated=False)
 
-        self._log_authenticate(
+        self._log_invocation(
+            capability="authenticate",
             provider=result.provider,
             identifier=request.identification.identifier,
             credential_type=request.credential.type,
@@ -95,49 +101,117 @@ class IdentityMapperHostService:
         self,
         request: ResolveIdentityRequest,
     ) -> ResolveIdentityResponse:
-        result = self._registry.resolve_identity(
-            request.provider,
-            request.identification,
-        )
+        request_id = uuid4().hex[:8]
+        started = perf_counter()
+        try:
+            result = self._registry.resolve_identity(
+                request.provider,
+                request.identification,
+            )
+        except UnknownProviderError:
+            self._log_invocation(
+                capability="resolve_identity",
+                provider=self._log_provider(request.provider),
+                identifier=request.identification.identifier,
+                status="unknown_provider",
+                duration_ms=self._duration_ms(started),
+                request_id=request_id,
+                error="unknown_provider",
+            )
+            raise
+
         if result is None:
+            self._log_invocation(
+                capability="resolve_identity",
+                provider=self._log_provider(request.provider),
+                identifier=request.identification.identifier,
+                status="not_found",
+                duration_ms=self._duration_ms(started),
+                request_id=request_id,
+            )
             return ResolveIdentityResponse(candidate=None)
+
+        self._log_invocation(
+            capability="resolve_identity",
+            provider=result.provider,
+            identifier=request.identification.identifier,
+            candidate_id=result.candidate.implementation_id,
+            status="resolved",
+            duration_ms=self._duration_ms(started),
+            request_id=request_id,
+        )
         return ResolveIdentityResponse(candidate=result.candidate)
 
     def verify_credential_request(
         self,
         request: VerifyCredentialRequest,
     ) -> VerifyCredentialResponse:
-        verified = self._registry.verify_credential(
-            request.provider,
-            request.candidate,
-            request.credential,
-        )
-        return VerifyCredentialResponse(verified=verified)
+        request_id = uuid4().hex[:8]
+        started = perf_counter()
+        try:
+            result = self._registry.verify_credential(
+                request.provider,
+                request.candidate,
+                request.credential,
+            )
+        except UnknownProviderError:
+            self._log_invocation(
+                capability="verify_credential",
+                provider=self._log_provider(request.provider),
+                identifier=request.candidate.identification.identifier,
+                credential_type=request.credential.type,
+                candidate_id=request.candidate.implementation_id,
+                verified=False,
+                status="unknown_provider",
+                duration_ms=self._duration_ms(started),
+                request_id=request_id,
+                error="unknown_provider",
+            )
+            raise
 
-    def _log_authenticate(
+        self._log_invocation(
+            capability="verify_credential",
+            provider=result.provider,
+            identifier=request.candidate.identification.identifier,
+            credential_type=request.credential.type,
+            candidate_id=request.candidate.implementation_id,
+            verified=result.verified,
+            status="verified" if result.verified else "rejected",
+            duration_ms=self._duration_ms(started),
+            request_id=request_id,
+        )
+        return VerifyCredentialResponse(verified=result.verified)
+
+    def _log_invocation(
         self,
         *,
+        capability: str,
         provider: str,
-        identifier: str,
-        credential_type: str,
-        authenticated: bool,
         status: str,
         duration_ms: int,
         request_id: str,
+        identifier: str | None = None,
+        credential_type: str | None = None,
+        candidate_id: str | None = None,
+        authenticated: bool | None = None,
+        verified: bool | None = None,
         identity_id: str | None = None,
         error: str | None = None,
     ) -> None:
         if self._request_log is None:
             return
 
-        self._request_log.append_authenticate(
+        self._request_log.append_invocation(
             request_id=request_id,
+            capability=capability,
             provider=provider,
             identifier=identifier,
             credential_type=credential_type,
-            authenticated=authenticated,
             status=status,
             duration_ms=duration_ms,
+            candidate_id=candidate_id,
+            authenticated=authenticated,
+            verified=verified,
             identity_id=identity_id,
             error=error,
         )

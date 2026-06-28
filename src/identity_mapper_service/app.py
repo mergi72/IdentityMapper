@@ -86,7 +86,7 @@ def create_handler(
 
             if url.path in {"/authenticate_logs", "/audit"}:
                 try:
-                    self._send_authenticate_logs(url.query)
+                    self._send_audit_logs(url.query)
                 except RequestValidationError as exc:
                     self._send_error(400, "bad_request", str(exc))
                 return
@@ -208,18 +208,18 @@ def create_handler(
                 },
             )
 
-        def _send_authenticate_logs(self, query: str) -> None:
+        def _send_audit_logs(self, query: str) -> None:
             limit = self._read_limit(query)
-            payload = audit_response_to_mapping(service.authenticate_logs(limit))
+            payload = audit_response_to_mapping(service.audit_logs(limit))
             output_format = self._read_format(query)
             if output_format == "json":
                 self._send_json(200, payload)
             elif output_format == "text":
-                self._send_authenticate_log_text(200, payload)
+                self._send_audit_log_text(200, payload)
             else:
-                self._send_authenticate_log_html(200, payload)
+                self._send_audit_log_html(200, payload)
 
-        def _send_authenticate_log_html(
+        def _send_audit_log_html(
             self,
             status_code: int,
             payload: dict[str, Any],
@@ -229,7 +229,7 @@ def create_handler(
                 self._send_json(status_code, payload)
                 return
 
-            columns = self._authenticate_log_columns()
+            columns = self._audit_log_columns()
             rows = [
                 "          <tr>"
                 + "".join(
@@ -241,14 +241,14 @@ def create_handler(
             ]
             empty_row = (
                 f'          <tr><td colspan="{len(columns)}" class="empty">'
-                "No authenticate requests logged yet.</td></tr>"
+                "No capability invocations logged yet.</td></tr>"
             )
             body = f"""<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="refresh" content="2">
-    <title>IdentityMapper Authenticate Logs</title>
+    <title>IdentityMapper Audit Log</title>
     <style>
       body {{
         color: #172026;
@@ -295,7 +295,7 @@ def create_handler(
                 "text/html; charset=utf-8",
             )
 
-        def _send_authenticate_log_text(
+        def _send_audit_log_text(
             self,
             status_code: int,
             payload: dict[str, Any],
@@ -305,7 +305,7 @@ def create_handler(
                 self._send_json(status_code, payload)
                 return
 
-            columns = self._authenticate_log_columns()
+            columns = self._audit_log_columns()
             rows = [
                 [self._format_log_value(entry.get(column)) for column in columns]
                 for entry in entries
@@ -327,14 +327,17 @@ def create_handler(
                 "text/plain; charset=utf-8",
             )
 
-        def _authenticate_log_columns(self) -> tuple[str, ...]:
+        def _audit_log_columns(self) -> tuple[str, ...]:
             return (
                 "request_id",
                 "timestamp",
+                "capability",
                 "provider",
                 "identifier",
                 "credential_type",
+                "candidate_id",
                 "authenticated",
+                "verified",
                 "status",
                 "identity_id",
                 "duration_ms",

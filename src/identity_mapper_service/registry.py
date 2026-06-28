@@ -32,6 +32,14 @@ class ProviderResolutionResult:
     candidate: IdentityCandidate
 
 
+@dataclass(frozen=True, slots=True)
+class ProviderVerificationResult:
+    """Verification result with the provider that handled the request."""
+
+    provider: str
+    verified: bool
+
+
 class ProviderRegistry:
     """Registry of hosted provider capabilities."""
 
@@ -144,7 +152,7 @@ class ProviderRegistry:
         provider: str | None,
         candidate: IdentityCandidate,
         credential: Credential,
-    ) -> bool:
+    ) -> ProviderVerificationResult:
         if provider is None:
             return self._verify_with_first_matching_provider(candidate, credential)
 
@@ -152,18 +160,21 @@ class ProviderRegistry:
         if verifier is None:
             raise UnknownProviderError(provider)
 
-        return verifier.verify_credential(candidate, credential)
+        return ProviderVerificationResult(
+            provider=provider,
+            verified=verifier.verify_credential(candidate, credential),
+        )
 
     def _verify_with_first_matching_provider(
         self,
         candidate: IdentityCandidate,
         credential: Credential,
-    ) -> bool:
+    ) -> ProviderVerificationResult:
         for provider in self.providers():
             verifier = self._verifiers.get(provider)
             if verifier is not None and verifier.verify_credential(
                 candidate,
                 credential,
             ):
-                return True
-        return False
+                return ProviderVerificationResult(provider=provider, verified=True)
+        return ProviderVerificationResult(provider="auto", verified=False)

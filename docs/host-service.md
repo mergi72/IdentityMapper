@@ -33,7 +33,9 @@ GET  /authenticate_logs
 GET  /audit
 ```
 
-`/audit` is currently an alias of `/authenticate_logs`.
+`/audit` is the capability invocation log.
+
+`/authenticate_logs` remains available as a compatibility alias.
 
 ## Authenticate
 
@@ -183,28 +185,30 @@ Rejected credential verification is also a normal capability result:
 }
 ```
 
-## Authenticate Logs
+## Audit Log
 
-Every `POST /authenticate` request is written to the authenticate request log.
+Every hosted capability request is written to the audit log.
 
-The log is intentionally metadata-only. It records the selected provider,
-identifier, credential type, authentication result, and identity id when
-authentication succeeds.
+The log is intentionally metadata-only. It records the capability, selected
+provider, identifier, credential type, result status, and selected domain ids
+when available.
 
 It does not record `credential.value`.
 
 Timestamps are written using the local timezone configured on the machine
 running the Host Service.
 
-Authenticate logging can be disabled in `config/config.json`:
+Audit logging can be disabled in `config/config.json`:
 
 ```json
 {
-  "authenticate_log_enabled": false
+  "audit_log_enabled": false
 }
 ```
 
-When disabled, no authenticate request log file is written and audit endpoints
+Legacy `authenticate_log_*` config keys remain accepted for compatibility.
+
+When disabled, no capability invocation log file is written and audit endpoints
 return an empty view.
 
 Logs can be read through HTTP:
@@ -218,8 +222,7 @@ GET /audit
 GET /audit?format=json&limit=20
 ```
 
-`/audit` is reserved as the more general audit endpoint shape. In the current
-service version it exposes the authenticate audit log.
+`/authenticate_logs` returns the same audit entries as `/audit`.
 
 Browser response:
 
@@ -227,8 +230,8 @@ Browser response:
 HTML table with a sticky header.
 ```
 
-The HTML view shows the newest authenticate log entries first so the latest
-request is visible directly below the table header.
+The HTML view shows the newest capability invocation entries first so the
+latest request is visible directly below the table header.
 
 JSON response:
 
@@ -238,6 +241,7 @@ JSON response:
     {
       "request_id": "3f4a8c71",
       "timestamp": "2026-06-28T12:00:00.000000+00:00",
+      "capability": "authenticate",
       "provider": "basic",
       "identifier": "subject",
       "credential_type": "PASSWORD",
@@ -253,14 +257,14 @@ JSON response:
 Text response:
 
 ```text
-request_id  timestamp                         provider  identifier  credential_type  authenticated  status    identity_id  duration_ms  error
-3f4a8c71    2026-06-28T12:00:00.000000+00:00  basic     subject     PASSWORD         True           accepted  identity-1  12
+request_id  timestamp                         capability    provider  identifier  credential_type  candidate_id  authenticated  verified  status    identity_id  duration_ms  error
+3f4a8c71    2026-06-28T12:00:00.000000+00:00  authenticate  basic     subject     PASSWORD                       True                    accepted  identity-1  12
 ```
 
 The text output is a fixed-width table intended for terminal use.
 
 The HTML view uses a browser meta refresh every 2 seconds so newly received
-authentication requests appear without manually reloading the page.
+capability invocations appear without manually reloading the page.
 
 ## Boundary
 
@@ -305,16 +309,16 @@ By default, the service reads `config/config.json` from the current directory:
   "server": "127.0.0.1",
   "port": 8066,
   "max_request_body_bytes": 65536,
-  "authenticate_log_enabled": true,
-  "authenticate_log": "logs/authenticate.log",
-  "authenticate_log_max_entries": 1000
+  "audit_log_enabled": true,
+  "audit_log": "logs/audit.log",
+  "audit_log_max_entries": 1000
 }
 ```
 
 `max_request_body_bytes` limits HTTP request body size for JSON requests.
 
-`authenticate_log_max_entries` keeps the append-only authenticate audit log
-bounded by trimming older entries after writes.
+`audit_log_max_entries` keeps the append-only capability invocation log bounded
+by trimming older entries after writes.
 
 The server and port can still be overridden from the command line:
 

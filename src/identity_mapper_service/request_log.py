@@ -9,15 +9,18 @@ from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
-class AuthenticateLogEntry:
+class CapabilityInvocationLogEntry:
     request_id: str
     timestamp: str
+    capability: str
     provider: str
-    identifier: str
-    credential_type: str
-    authenticated: bool
     status: str
     duration_ms: int
+    identifier: str | None = None
+    credential_type: str | None = None
+    candidate_id: str | None = None
+    authenticated: bool | None = None
+    verified: bool | None = None
     identity_id: str | None = None
     error: str | None = None
 
@@ -25,13 +28,21 @@ class AuthenticateLogEntry:
         value: dict[str, Any] = {
             "request_id": self.request_id,
             "timestamp": self.timestamp,
+            "capability": self.capability,
             "provider": self.provider,
-            "identifier": self.identifier,
-            "credential_type": self.credential_type,
-            "authenticated": self.authenticated,
             "status": self.status,
             "duration_ms": self.duration_ms,
         }
+        if self.identifier is not None:
+            value["identifier"] = self.identifier
+        if self.credential_type is not None:
+            value["credential_type"] = self.credential_type
+        if self.candidate_id is not None:
+            value["candidate_id"] = self.candidate_id
+        if self.authenticated is not None:
+            value["authenticated"] = self.authenticated
+        if self.verified is not None:
+            value["verified"] = self.verified
         if self.identity_id is not None:
             value["identity_id"] = self.identity_id
         if self.error is not None:
@@ -40,7 +51,7 @@ class AuthenticateLogEntry:
 
 
 class RequestLog:
-    """Append-only JSONL request log for hosted capabilities."""
+    """Append-only JSONL invocation log for hosted capabilities."""
 
     def __init__(self, path: str | Path, max_entries: int = 1000) -> None:
         if max_entries < 1:
@@ -49,6 +60,39 @@ class RequestLog:
         self._path = Path(path)
         self._max_entries = max_entries
         self._lock = threading.Lock()
+
+    def append_invocation(
+        self,
+        *,
+        request_id: str,
+        capability: str,
+        provider: str,
+        status: str,
+        duration_ms: int,
+        identifier: str | None = None,
+        credential_type: str | None = None,
+        candidate_id: str | None = None,
+        authenticated: bool | None = None,
+        verified: bool | None = None,
+        identity_id: str | None = None,
+        error: str | None = None,
+    ) -> None:
+        entry = CapabilityInvocationLogEntry(
+            request_id=request_id,
+            timestamp=datetime.now().astimezone().isoformat(),
+            capability=capability,
+            provider=provider,
+            status=status,
+            duration_ms=duration_ms,
+            identifier=identifier,
+            credential_type=credential_type,
+            candidate_id=candidate_id,
+            authenticated=authenticated,
+            verified=verified,
+            identity_id=identity_id,
+            error=error,
+        )
+        self._append(entry.to_mapping())
 
     def append_authenticate(
         self,
@@ -63,9 +107,9 @@ class RequestLog:
         identity_id: str | None = None,
         error: str | None = None,
     ) -> None:
-        entry = AuthenticateLogEntry(
+        self.append_invocation(
             request_id=request_id,
-            timestamp=datetime.now().astimezone().isoformat(),
+            capability="authenticate",
             provider=provider,
             identifier=identifier,
             credential_type=credential_type,
@@ -75,7 +119,6 @@ class RequestLog:
             identity_id=identity_id,
             error=error,
         )
-        self._append(entry.to_mapping())
 
     def entries(self, limit: int = 100) -> list[dict[str, Any]]:
         if limit < 1:

@@ -339,10 +339,33 @@ def test_service_loads_host_config(tmp_path) -> None:
     config_path = tmp_path / "config.json"
     config_path.write_text(
         json.dumps(
+                {
+                    "server": "127.0.0.1",
+                    "port": 8066,
+                    "max_request_body_bytes": 4096,
+                    "audit_log_enabled": False,
+                    "audit_log": "logs/audit.log",
+                    "audit_log_max_entries": 50,
+                }
+            ),
+            encoding="utf-8",
+    )
+
+    assert load_config(config_path) == HostServiceConfig(
+        server="127.0.0.1",
+        port=8066,
+        max_request_body_bytes=4096,
+        audit_log_enabled=False,
+        audit_log="logs/audit.log",
+        audit_log_max_entries=50,
+    )
+
+
+def test_service_loads_legacy_authenticate_log_config(tmp_path) -> None:
+    config_path = tmp_path / "config.json"
+    config_path.write_text(
+        json.dumps(
             {
-                "server": "127.0.0.1",
-                "port": 8066,
-                "max_request_body_bytes": 4096,
                 "authenticate_log_enabled": False,
                 "authenticate_log": "logs/authenticate.log",
                 "authenticate_log_max_entries": 50,
@@ -352,12 +375,9 @@ def test_service_loads_host_config(tmp_path) -> None:
     )
 
     assert load_config(config_path) == HostServiceConfig(
-        server="127.0.0.1",
-        port=8066,
-        max_request_body_bytes=4096,
-        authenticate_log_enabled=False,
-        authenticate_log="logs/authenticate.log",
-        authenticate_log_max_entries=50,
+        audit_log_enabled=False,
+        audit_log="logs/authenticate.log",
+        audit_log_max_entries=50,
     )
 
 
@@ -365,18 +385,18 @@ def test_service_uses_default_config_when_file_is_missing(tmp_path) -> None:
     assert load_config(tmp_path / "missing.json") == HostServiceConfig()
 
 
-def test_service_rejects_invalid_authenticate_log_enabled_config(tmp_path) -> None:
+def test_service_rejects_invalid_audit_log_enabled_config(tmp_path) -> None:
     config_path = tmp_path / "config.json"
     config_path.write_text(
         json.dumps(
             {
-                "authenticate_log_enabled": "false",
+                "audit_log_enabled": "false",
             }
         ),
         encoding="utf-8",
     )
 
-    with pytest.raises(ValueError, match="authenticate_log_enabled"):
+    with pytest.raises(ValueError, match="audit_log_enabled"):
         load_config(config_path)
 
 
@@ -410,18 +430,18 @@ def test_service_rejects_invalid_max_request_body_config(tmp_path) -> None:
         load_config(config_path)
 
 
-def test_service_rejects_invalid_authenticate_log_max_entries_config(tmp_path) -> None:
+def test_service_rejects_invalid_audit_log_max_entries_config(tmp_path) -> None:
     config_path = tmp_path / "config.json"
     config_path.write_text(
         json.dumps(
             {
-                "authenticate_log_max_entries": 0,
+                "audit_log_max_entries": 0,
             }
         ),
         encoding="utf-8",
     )
 
-    with pytest.raises(ValueError, match="authenticate_log_max_entries"):
+    with pytest.raises(ValueError, match="audit_log_max_entries"):
         load_config(config_path)
 
 
@@ -430,13 +450,13 @@ def test_cli_serve_rejects_invalid_max_request_body_override() -> None:
         main(["serve", "--max-request-body-bytes", "0"])
 
 
-def test_cli_serve_rejects_invalid_authenticate_log_max_entries_override() -> None:
-    with pytest.raises(ValueError, match="authenticate_log_max_entries"):
-        main(["serve", "--authenticate-log-max-entries", "0"])
+def test_cli_serve_rejects_invalid_audit_log_max_entries_override() -> None:
+    with pytest.raises(ValueError, match="audit_log_max_entries"):
+        main(["serve", "--audit-log-max-entries", "0"])
 
 
-def test_service_can_run_without_authenticate_log(tmp_path) -> None:
-    log_path = tmp_path / "authenticate.log"
+def test_service_can_run_without_audit_log(tmp_path) -> None:
+    log_path = tmp_path / "audit.log"
     service = make_service(request_log=None)
 
     response = service.authenticate_request(valid_authenticate_request())
@@ -460,6 +480,7 @@ def test_service_writes_authenticate_log_without_credential_value(tmp_path) -> N
     assert not response.authenticated
     entries = service.authenticate_logs().entries
     assert len(entries) == 1
+    assert entries[0]["capability"] == "authenticate"
     assert entries[0]["provider"] == "basic"
     assert entries[0]["identifier"] == "subject"
     assert entries[0]["credential_type"] == "PASSWORD"
@@ -486,6 +507,7 @@ def test_service_logs_selected_provider_for_implicit_authentication(tmp_path) ->
 
     assert response.authenticated
     entries = service.authenticate_logs().entries
+    assert entries[0]["capability"] == "authenticate"
     assert entries[0]["provider"] == "basic"
     assert entries[0]["status"] == "accepted"
 
@@ -502,6 +524,7 @@ def test_service_logs_auto_when_no_provider_accepts_request(tmp_path) -> None:
 
     assert not response.authenticated
     entries = service.authenticate_logs().entries
+    assert entries[0]["capability"] == "authenticate"
     assert entries[0]["provider"] == "auto"
     assert entries[0]["status"] == "rejected"
 
@@ -523,6 +546,32 @@ def test_request_log_trims_to_max_entries(tmp_path) -> None:
 
     entries = request_log.entries(10)
     assert [entry["request_id"] for entry in entries] == ["req-1", "req-2"]
+
+
+def test_service_logs_resolve_and_verify_invocations(tmp_path) -> None:
+    request_log = RequestLog(tmp_path / "audit.log")
+    service = make_service(request_log)
+
+    candidate = service.resolve_identity_request(
+        ResolveIdentityRequest(identification=valid_identification())
+    ).candidate
+    assert candidate is not None
+    verified = service.verify_credential_request(
+        VerifyCredentialRequest(candidate=candidate, credential=valid_credential())
+    )
+
+    assert verified.verified
+    entries = service.audit_logs().entries
+    assert [entry["capability"] for entry in entries] == [
+        "resolve_identity",
+        "verify_credential",
+    ]
+    assert entries[0]["status"] == "resolved"
+    assert entries[0]["candidate_id"] == "basic:subject"
+    assert entries[1]["status"] == "verified"
+    assert entries[1]["verified"] is True
+    assert entries[1]["credential_type"] == "PASSWORD"
+    assert "value" not in entries[1]
 
 
 def test_service_writes_authenticate_log_with_local_timezone(tmp_path) -> None:
@@ -706,6 +755,56 @@ def test_http_host_rejects_invalid_verify_credential() -> None:
 
         assert status == 200
         assert verified == {"verified": False, "error": None}
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_http_host_audit_logs_all_capabilities(tmp_path) -> None:
+    service = make_service(RequestLog(tmp_path / "audit.log"))
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    try:
+        request_json("POST", host, port, "/authenticate", valid_payload())
+        status, resolved = request_json(
+            "POST",
+            host,
+            port,
+            "/resolve-identity",
+            {
+                "identification": {
+                    "identifier": "subject",
+                },
+            },
+        )
+        assert status == 200
+        request_json(
+            "POST",
+            host,
+            port,
+            "/verify-credential",
+            {
+                "candidate": resolved["candidate"],
+                "credential": {
+                    "type": "PASSWORD",
+                    "value": "accepted",
+                },
+            },
+        )
+
+        status, audit = request_json("GET", host, port, "/audit?format=json&limit=3")
+
+        assert status == 200
+        assert [entry["capability"] for entry in audit["entries"]] == [
+            "authenticate",
+            "resolve_identity",
+            "verify_credential",
+        ]
+        assert "value" not in json.dumps(audit)
     finally:
         server.shutdown()
         server.server_close()
@@ -908,10 +1007,14 @@ def test_http_host_exposes_authenticate_logs_as_text(tmp_path) -> None:
 
         assert status == 200
         assert header.startswith(
-            "request_id  timestamp                         provider"
+            "request_id  timestamp                         capability"
         )
         assert "duration_ms" in header
-        assert "basic     subject     PASSWORD         True" in lines[1]
+        assert "authenticate" in lines[1]
+        assert "basic" in lines[1]
+        assert "subject" in lines[1]
+        assert "PASSWORD" in lines[1]
+        assert "True" in lines[1]
         assert "accepted  identity-1" in lines[1]
     finally:
         server.shutdown()

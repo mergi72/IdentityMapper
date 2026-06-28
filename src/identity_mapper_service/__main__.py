@@ -26,9 +26,9 @@ class HostServiceConfig:
     server: str = "127.0.0.1"
     port: int = 8066
     max_request_body_bytes: int = DEFAULT_MAX_REQUEST_BODY_BYTES
-    authenticate_log_enabled: bool = True
-    authenticate_log: str = "logs/authenticate.log"
-    authenticate_log_max_entries: int = 1000
+    audit_log_enabled: bool = True
+    audit_log: str = "logs/audit.log"
+    audit_log_max_entries: int = 1000
 
 
 def load_config(path: str | Path = "config/config.json") -> HostServiceConfig:
@@ -50,20 +50,32 @@ def load_config(path: str | Path = "config/config.json") -> HostServiceConfig:
             "max_request_body_bytes",
             HostServiceConfig().max_request_body_bytes,
         ),
-        authenticate_log_enabled=_optional_bool(
+        audit_log_enabled=_optional_bool(
             value,
-            "authenticate_log_enabled",
-            HostServiceConfig().authenticate_log_enabled,
+            "audit_log_enabled",
+            _optional_bool(
+                value,
+                "authenticate_log_enabled",
+                HostServiceConfig().audit_log_enabled,
+            ),
         ),
-        authenticate_log=_optional_string(
+        audit_log=_optional_string(
             value,
-            "authenticate_log",
-            HostServiceConfig().authenticate_log,
+            "audit_log",
+            _optional_string(
+                value,
+                "authenticate_log",
+                HostServiceConfig().audit_log,
+            ),
         ),
-        authenticate_log_max_entries=_optional_positive_int(
+        audit_log_max_entries=_optional_positive_int(
             value,
-            "authenticate_log_max_entries",
-            HostServiceConfig().authenticate_log_max_entries,
+            "audit_log_max_entries",
+            _optional_positive_int(
+                value,
+                "authenticate_log_max_entries",
+                HostServiceConfig().audit_log_max_entries,
+            ),
         ),
     )
 
@@ -136,12 +148,23 @@ def main(argv: list[str] | None = None) -> int:
     serve_parser.add_argument("--host")
     serve_parser.add_argument("--port", type=int)
     serve_parser.add_argument("--max-request-body-bytes", type=int)
-    serve_parser.add_argument("--authenticate-log")
-    serve_parser.add_argument("--authenticate-log-max-entries", type=int)
+    serve_parser.add_argument("--audit-log")
+    serve_parser.add_argument("--authenticate-log", help=argparse.SUPPRESS)
+    serve_parser.add_argument("--audit-log-max-entries", type=int)
+    serve_parser.add_argument(
+        "--authenticate-log-max-entries",
+        type=int,
+        help=argparse.SUPPRESS,
+    )
+    serve_parser.add_argument(
+        "--disable-audit-log",
+        action="store_true",
+        help="Disable capability invocation logging for this process.",
+    )
     serve_parser.add_argument(
         "--disable-authenticate-log",
         action="store_true",
-        help="Disable authenticate request logging for this process.",
+        help=argparse.SUPPRESS,
     )
     serve_parser.add_argument(
         "--demo-basic",
@@ -198,22 +221,28 @@ def main(argv: list[str] | None = None) -> int:
         if max_request_body_bytes < 1:
             raise ValueError("max_request_body_bytes must be greater than zero")
 
-        authenticate_log = args.authenticate_log or config.authenticate_log
-        authenticate_log_max_entries = (
-            args.authenticate_log_max_entries
-            if args.authenticate_log_max_entries is not None
-            else config.authenticate_log_max_entries
+        audit_log = args.audit_log or args.authenticate_log or config.audit_log
+        audit_log_max_entries = (
+            args.audit_log_max_entries
+            if args.audit_log_max_entries is not None
+            else (
+                args.authenticate_log_max_entries
+                if args.authenticate_log_max_entries is not None
+                else config.audit_log_max_entries
+            )
         )
-        if authenticate_log_max_entries < 1:
-            raise ValueError("authenticate_log_max_entries must be greater than zero")
+        if audit_log_max_entries < 1:
+            raise ValueError("audit_log_max_entries must be greater than zero")
 
-        authenticate_log_enabled = (
-            config.authenticate_log_enabled and not args.disable_authenticate_log
+        audit_log_enabled = (
+            config.audit_log_enabled
+            and not args.disable_audit_log
+            and not args.disable_authenticate_log
         )
         registry = build_demo_registry() if args.demo_basic else ProviderRegistry()
         request_log = (
-            RequestLog(authenticate_log, max_entries=authenticate_log_max_entries)
-            if authenticate_log_enabled
+            RequestLog(audit_log, max_entries=audit_log_max_entries)
+            if audit_log_enabled
             else None
         )
         service = IdentityMapperHostService(registry, request_log)

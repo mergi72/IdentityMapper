@@ -46,6 +46,7 @@ The test suite verifies:
 - host service can select a provider without changing the core domain model
 - host service exposes `Authenticate`, `ResolveIdentity`, and `VerifyCredential`
   through the same request/response boundary
+- host service records capability invocations without logging credential values
 
 This is an architectural test. It does not prove that a concrete external
 system is integrated correctly. It proves that every provider implementation in
