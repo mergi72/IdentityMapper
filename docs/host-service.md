@@ -111,7 +111,7 @@ timestamp                         provider  identifier  credential_type  authent
 
 The text output is a fixed-width table intended for terminal use.
 
-Browsers are asked to refresh this endpoint every 2 seconds so newly received
+The HTML view uses a browser meta refresh every 2 seconds so newly received
 authentication requests appear without manually reloading the page.
 
 ## Boundary

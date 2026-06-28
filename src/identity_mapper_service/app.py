@@ -39,7 +39,7 @@ def create_handler(
     service: IdentityMapperHostService,
 ) -> type[BaseHTTPRequestHandler]:
     class IdentityMapperRequestHandler(BaseHTTPRequestHandler):
-        server_version = "IdentityMapperHostService/0.1"
+        server_version = "IdentityMapperHostService"
 
         def do_GET(self) -> None:
             url = urlparse(self.path)
@@ -190,7 +190,6 @@ def create_handler(
                 status_code,
                 body.encode("utf-8"),
                 "text/html; charset=utf-8",
-                {"Refresh": "2"},
             )
 
         def _send_authenticate_log_text(
@@ -223,7 +222,6 @@ def create_handler(
                 status_code,
                 body,
                 "text/plain; charset=utf-8",
-                {"Refresh": "2"},
             )
 
         def _authenticate_log_columns(self) -> tuple[str, ...]:

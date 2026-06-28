@@ -173,6 +173,25 @@ def test_http_host_exposes_health_providers_and_authenticate() -> None:
         thread.join(timeout=5)
 
 
+def test_http_host_uses_neutral_server_header() -> None:
+    service = make_service()
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    try:
+        status, _, headers = request_raw_with_headers("GET", host, port, "/health")
+
+        assert status == 200
+        assert headers["Server"].startswith("IdentityMapperHostService ")
+        assert "IdentityMapperHostService/0.1" not in headers["Server"]
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
 def test_http_host_exposes_authenticate_logs(tmp_path) -> None:
     service = make_service(RequestLog(tmp_path / "authenticate.log"))
     server = create_server("127.0.0.1", 0, service)
@@ -208,7 +227,7 @@ def test_http_host_exposes_authenticate_logs(tmp_path) -> None:
         thread.join(timeout=5)
 
 
-def test_http_host_refreshes_authenticate_logs_in_browser(tmp_path) -> None:
+def test_http_host_refreshes_authenticate_logs_with_html_meta(tmp_path) -> None:
     service = make_service(RequestLog(tmp_path / "authenticate.log"))
     server = create_server("127.0.0.1", 0, service)
     host, port = server.server_address
@@ -216,16 +235,18 @@ def test_http_host_refreshes_authenticate_logs_in_browser(tmp_path) -> None:
     thread.start()
 
     try:
-        status, _, headers = request_raw_with_headers(
+        status, body, headers = request_raw_with_headers(
             "GET",
             host,
             port,
             "/authenticate_logs",
         )
+        text = body.decode("utf-8")
 
         assert status == 200
-        assert headers["Refresh"] == "2"
+        assert "Refresh" not in headers
         assert headers["Content-Type"] == "text/html; charset=utf-8"
+        assert '<meta http-equiv="refresh" content="2">' in text
     finally:
         server.shutdown()
         server.server_close()
