@@ -26,9 +26,9 @@ Transport Response
 
 ```text
 AuthenticateRequest
-  provider
   identification
   credential
+  provider optional
 ```
 
 ```text
@@ -55,6 +55,10 @@ AuthenticateResponse(authenticated=False)
 
 Unexpected provider failures should not be converted into authentication
 rejection.
+
+`provider` is a host routing hint, not a domain concept. When it is provided,
+the host calls that provider explicitly. When it is omitted, the host may select
+a provider according to its registry or policy.
 
 ## Resolve Identity
 

@@ -55,6 +55,21 @@ Request:
 }
 ```
 
+`provider` is optional. If it is omitted, the host service asks the provider
+registry to select the first provider that accepts the request:
+
+```json
+{
+  "identification": {
+    "identifier": "subject"
+  },
+  "credential": {
+    "type": "PASSWORD",
+    "value": "accepted"
+  }
+}
+```
+
 Response:
 
 ```json
@@ -86,9 +101,9 @@ Unexpected errors are not treated as authentication rejection.
 
 Every `POST /authenticate` request is written to the authenticate request log.
 
-The log is intentionally metadata-only. It records the provider, identifier,
-credential type, authentication result, and identity id when authentication
-succeeds.
+The log is intentionally metadata-only. It records the selected provider,
+identifier, credential type, authentication result, and identity id when
+authentication succeeds.
 
 It does not record `credential.value`.
 
@@ -234,6 +249,7 @@ python -m identity_mapper_service providers
 Authentication can be requested through the running service:
 
 ```text
+python -m identity_mapper_service authenticate --identifier subject --credential-value accepted
 python -m identity_mapper_service authenticate --provider basic --identifier subject --credential-value accepted
 python -m identity_mapper_service authenticate --provider basic --identifier subject --credential-value accepted --format json
 ```

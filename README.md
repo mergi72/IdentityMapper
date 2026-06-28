@@ -103,6 +103,7 @@ The implementation details are intentionally kept out of this README.
 - [Documentation index](docs/index.md)
 - [Architecture](docs/architecture.md)
 - [Architecture verification](docs/architecture-verification.md)
+- [Capability protocol](docs/capability-protocol.md)
 - [Host](docs/host.md)
 - [Host service](docs/host-service.md)
 - [Reduction matrix](docs/reduction-matrix.md)

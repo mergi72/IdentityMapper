@@ -43,6 +43,7 @@ The test suite verifies:
 - authenticator returns `Identity`
 - authenticator rejects an invalid credential with `AuthenticationRejected`
 - host service does not treat unexpected `ValueError` as authentication rejection
+- host service can select a provider without changing the core domain model
 
 This is an architectural test. It does not prove that a concrete external
 system is integrated correctly. It proves that every provider implementation in

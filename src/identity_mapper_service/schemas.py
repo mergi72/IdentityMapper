@@ -39,11 +39,11 @@ def credential_from_mapping(value: Any) -> Credential:
 
 def authenticate_request_from_mapping(value: Any) -> AuthenticateRequest:
     data = _require_mapping(value, "request")
-    provider = _require_string(data, "provider")
+    provider = _optional_non_empty_string(data, "provider")
     return AuthenticateRequest(
-        provider=provider,
         identification=identification_from_mapping(data.get("identification")),
         credential=credential_from_mapping(data.get("credential")),
+        provider=provider,
     )
 
 
@@ -103,6 +103,13 @@ def _optional_string(data: Mapping[str, Any], field: str) -> str | None:
         return None
     if not isinstance(value, str):
         raise RequestValidationError(f"{field} must be a string")
+    return value
+
+
+def _optional_non_empty_string(data: Mapping[str, Any], field: str) -> str | None:
+    value = _optional_string(data, field)
+    if value == "":
+        raise RequestValidationError(f"{field} must be a non-empty string")
     return value
 
 

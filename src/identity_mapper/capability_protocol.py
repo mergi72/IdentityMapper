@@ -16,9 +16,9 @@ class AuthenticationRejected(Exception):
 class AuthenticateRequest:
     """Request to execute the Authenticate capability."""
 
-    provider: str
     identification: Identification
     credential: Credential
+    provider: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

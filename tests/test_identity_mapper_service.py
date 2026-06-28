@@ -121,6 +121,19 @@ def test_service_authenticates_capability_request() -> None:
     assert response.identity.id == "identity-1"
 
 
+def test_service_can_select_provider_for_authenticate_request() -> None:
+    request = AuthenticateRequest(
+        identification=valid_identification(),
+        credential=valid_credential(),
+    )
+
+    response = make_service().authenticate_request(request)
+
+    assert response.authenticated
+    assert response.identity is not None
+    assert response.identity.id == "identity-1"
+
+
 def test_authenticate_response_mapping_includes_protocol_error() -> None:
     response = AuthenticateResponse(authenticated=False, error="rejected")
 
@@ -336,6 +349,38 @@ def test_service_writes_authenticate_log_without_credential_value(tmp_path) -> N
     assert "never-log-this-secret" not in log_text
 
 
+def test_service_logs_selected_provider_for_implicit_authentication(tmp_path) -> None:
+    request_log = RequestLog(tmp_path / "authenticate.log")
+    service = make_service(request_log)
+    request = AuthenticateRequest(
+        identification=valid_identification(),
+        credential=valid_credential(),
+    )
+
+    response = service.authenticate_request(request)
+
+    assert response.authenticated
+    entries = service.authenticate_logs().entries
+    assert entries[0]["provider"] == "basic"
+    assert entries[0]["status"] == "accepted"
+
+
+def test_service_logs_auto_when_no_provider_accepts_request(tmp_path) -> None:
+    request_log = RequestLog(tmp_path / "authenticate.log")
+    service = make_service(request_log)
+    request = AuthenticateRequest(
+        identification=valid_identification(),
+        credential=Credential(type="PASSWORD", value="wrong"),
+    )
+
+    response = service.authenticate_request(request)
+
+    assert not response.authenticated
+    entries = service.authenticate_logs().entries
+    assert entries[0]["provider"] == "auto"
+    assert entries[0]["status"] == "rejected"
+
+
 def test_request_log_trims_to_max_entries(tmp_path) -> None:
     request_log = RequestLog(tmp_path / "authenticate.log", max_entries=2)
 
@@ -396,6 +441,27 @@ def test_http_host_exposes_health_providers_and_authenticate() -> None:
         assert payload["authenticated"]
         assert payload["identity"]["id"] == "identity-1"
         assert payload["error"] is None
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_http_host_can_select_provider_for_authenticate() -> None:
+    service = make_service()
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    payload = valid_payload()
+    del payload["provider"]
+
+    try:
+        status, response = request_json("POST", host, port, "/authenticate", payload)
+
+        assert status == 200
+        assert response["authenticated"]
+        assert response["identity"]["id"] == "identity-1"
     finally:
         server.shutdown()
         server.server_close()
@@ -708,6 +774,39 @@ def test_cli_authenticates(tmp_path, capsys) -> None:
                 str(port),
                 "--provider",
                 "basic",
+                "--identifier",
+                "subject",
+                "--credential-type",
+                "PASSWORD",
+                "--credential-value",
+                "accepted",
+            ]
+        ) == 0
+
+        output = capsys.readouterr().out
+        assert "authenticated=True" in output
+        assert "identity_id=identity-1" in output
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_cli_authenticate_can_defer_provider_selection(tmp_path, capsys) -> None:
+    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    try:
+        assert main(
+            [
+                "authenticate",
+                "--host",
+                host,
+                "--port",
+                str(port),
                 "--identifier",
                 "subject",
                 "--credential-type",

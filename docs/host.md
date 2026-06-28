@@ -56,6 +56,10 @@ The host receives transport-shaped input, selects a provider, calls a
 capability through the Capability Protocol, and returns a transport-shaped
 response.
 
+Provider selection can be explicit or host-driven. If a capability request
+includes a provider, the host routes to that provider. If it omits the provider,
+the host may select one from the provider registry.
+
 Authentication rejection is represented inside the Capability Protocol by
 `AuthenticationRejected`. A host converts that protocol signal into a normal
 `AuthenticateResponse(authenticated=False)` result.

@@ -46,14 +46,14 @@ class IdentityMapperHostService:
         request_id = uuid4().hex[:8]
         started = perf_counter()
         try:
-            identity = self._registry.authenticate(
+            result = self._registry.authenticate(
                 request.provider,
                 request.identification,
                 request.credential,
             )
         except UnknownProviderError:
             self._log_authenticate(
-                provider=request.provider,
+                provider=self._log_provider(request.provider),
                 identifier=request.identification.identifier,
                 credential_type=request.credential.type,
                 authenticated=False,
@@ -65,7 +65,7 @@ class IdentityMapperHostService:
             raise
         except AuthenticationRejected:
             self._log_authenticate(
-                provider=request.provider,
+                provider=self._log_provider(request.provider),
                 identifier=request.identification.identifier,
                 credential_type=request.credential.type,
                 authenticated=False,
@@ -76,16 +76,16 @@ class IdentityMapperHostService:
             return AuthenticateResponse(authenticated=False)
 
         self._log_authenticate(
-            provider=request.provider,
+            provider=result.provider,
             identifier=request.identification.identifier,
             credential_type=request.credential.type,
             authenticated=True,
             status="accepted",
             duration_ms=self._duration_ms(started),
             request_id=request_id,
-            identity_id=identity.id,
+            identity_id=result.identity.id,
         )
-        return AuthenticateResponse(authenticated=True, identity=identity)
+        return AuthenticateResponse(authenticated=True, identity=result.identity)
 
     def _log_authenticate(
         self,
@@ -117,3 +117,6 @@ class IdentityMapperHostService:
 
     def _duration_ms(self, started: float) -> int:
         return max(0, round((perf_counter() - started) * 1000))
+
+    def _log_provider(self, provider: str | None) -> str:
+        return provider if provider is not None else "auto"

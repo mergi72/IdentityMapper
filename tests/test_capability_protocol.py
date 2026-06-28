@@ -29,6 +29,20 @@ def test_authenticate_request_carries_domain_inputs() -> None:
     assert request.credential is credential
 
 
+def test_authenticate_request_can_defer_provider_selection() -> None:
+    identification = Identification(identifier="subject")
+    credential = Credential(type="PASSWORD", value="accepted")
+
+    request = AuthenticateRequest(
+        identification=identification,
+        credential=credential,
+    )
+
+    assert request.provider is None
+    assert request.identification is identification
+    assert request.credential is credential
+
+
 def test_authenticate_response_carries_authenticated_identity() -> None:
     identity = Identity(id="identity-1", display_name="Example Subject")
 

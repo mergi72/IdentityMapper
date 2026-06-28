@@ -159,7 +159,7 @@ def main(argv: list[str] | None = None) -> int:
     authenticate_parser.add_argument("--config", default="config/config.json")
     authenticate_parser.add_argument("--host")
     authenticate_parser.add_argument("--port", type=int)
-    authenticate_parser.add_argument("--provider", required=True)
+    authenticate_parser.add_argument("--provider")
     authenticate_parser.add_argument("--identifier", required=True)
     authenticate_parser.add_argument("--credential-type", default="PASSWORD")
     authenticate_parser.add_argument("--credential-value", required=True)
@@ -287,14 +287,13 @@ def _providers(host: str, port: int) -> int:
 def _authenticate(
     host: str,
     port: int,
-    provider: str,
+    provider: str | None,
     identifier: str,
     credential_type: str,
     credential_value: str,
     output_format: str,
 ) -> int:
     payload = {
-        "provider": provider,
         "identification": {
             "identifier": identifier,
         },
@@ -303,6 +302,8 @@ def _authenticate(
             "value": credential_value,
         },
     }
+    if provider is not None:
+        payload["provider"] = provider
     status, body, headers = _request(
         host,
         port,
