@@ -137,7 +137,7 @@ def create_handler(
                     for column in columns
                 )
                 + "</tr>"
-                for entry in entries
+                for entry in reversed(entries)
             ]
             empty_row = (
                 f'          <tr><td colspan="{len(columns)}" class="empty">'

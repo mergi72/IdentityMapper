@@ -1,6 +1,7 @@
 import http.client
 import json
 import threading
+from datetime import datetime
 from typing import Any
 
 import pytest
@@ -164,6 +165,19 @@ def test_service_writes_authenticate_log_without_credential_value(tmp_path) -> N
     assert "never-log-this-secret" not in log_text
 
 
+def test_service_writes_authenticate_log_with_local_timezone(tmp_path) -> None:
+    request_log = RequestLog(tmp_path / "authenticate.log")
+    service = make_service(request_log)
+
+    response = service.authenticate(valid_payload())
+
+    assert response["authenticated"]
+    timestamp = request_log.entries()[0]["timestamp"]
+    logged_time = datetime.fromisoformat(timestamp)
+    assert logged_time.tzinfo is not None
+    assert logged_time.utcoffset() == datetime.now().astimezone().utcoffset()
+
+
 def test_http_host_exposes_health_providers_and_authenticate() -> None:
     service = make_service()
     server = create_server("127.0.0.1", 0, service)
@@ -245,6 +259,33 @@ def test_http_host_exposes_authenticate_logs(tmp_path) -> None:
         assert "<td>PASSWORD</td>" in text
         assert "<td>accepted</td>" in text
         assert "value" not in text
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_http_host_shows_latest_authenticate_log_first(tmp_path) -> None:
+    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    try:
+        first = valid_payload()
+        first["credential"]["type"] = "FIRST"
+        second = valid_payload()
+        second["credential"]["type"] = "SECOND"
+
+        request_json("POST", host, port, "/authenticate", first)
+        request_json("POST", host, port, "/authenticate", second)
+
+        status, body = request_raw("GET", host, port, "/authenticate_logs?limit=2")
+        text = body.decode("utf-8")
+
+        assert status == 200
+        assert text.index("<td>SECOND</td>") < text.index("<td>FIRST</td>")
     finally:
         server.shutdown()
         server.server_close()

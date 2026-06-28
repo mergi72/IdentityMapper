@@ -77,6 +77,9 @@ succeeds.
 
 It does not record `credential.value`.
 
+Timestamps are written using the local timezone configured on the machine
+running the Host Service.
+
 Logs can be read through HTTP:
 
 ```text
@@ -96,6 +99,9 @@ Browser response:
 ```text
 HTML table with a sticky header.
 ```
+
+The HTML view shows the newest authenticate log entries first so the latest
+request is visible directly below the table header.
 
 JSON response:
 
