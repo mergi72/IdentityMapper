@@ -3,6 +3,13 @@
 IdentityMapper is the reference implementation of the Invariant Mapping Pattern
 for the identity domain.
 
+## Project Status
+
+IdentityMapper is a reference architecture under active development.
+
+The core architecture has been validated against multiple identity models. The
+provider capability contract is tested across all included providers.
+
 ## The IdentityMapper Rule
 
 Implementations are never mapped to each other.
@@ -97,6 +104,7 @@ The implementation details are intentionally kept out of this README.
 - [Domain concepts](docs/domain/index.md)
 - [Capabilities](docs/capabilities/index.md)
 - [Provider notes](docs/providers/index.md)
+- [Changelog](CHANGELOG.md)
 
 ## Repository Structure
 
@@ -126,7 +134,3 @@ docs/
   providers/
 ```
 
-## Status
-
-Reference implementation of the Invariant Mapping Pattern under active
-development.
