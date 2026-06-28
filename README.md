@@ -92,7 +92,26 @@ The implementation details are intentionally kept out of this README.
 - [Architecture](docs/architecture.md)
 - [Architecture verification](docs/architecture-verification.md)
 - [Reduction matrix](docs/reduction-matrix.md)
+- [Domain concepts](docs/domain/index.md)
+- [Capabilities](docs/capabilities/index.md)
 - [Implementation notes](docs/implementations/index.md)
+
+## Repository Structure
+
+```text
+src/identity_mapper/
+  domain.py
+  capabilities.py
+  mapper.py
+
+docs/
+  architecture.md
+  reduction-matrix.md
+  architecture-verification.md
+  domain/
+  capabilities/
+  implementations/
+```
 
 ## Status
 

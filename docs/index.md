@@ -8,6 +8,8 @@ identity domain.
 - [Architecture](architecture.md)
 - [Reduction matrix](reduction-matrix.md)
 - [Architecture verification](architecture-verification.md)
+- [Domain](domain/index.md)
+- [Capabilities](capabilities/index.md)
 - [Implementations](implementations/index.md)
 
 ## Rule
