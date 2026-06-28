@@ -11,6 +11,9 @@ from identity_mapper_service.schemas import (
     RequestValidationError,
     authenticate_request_from_mapping,
     authenticate_response_to_mapping,
+    audit_response_to_mapping,
+    health_response_to_mapping,
+    providers_response_to_mapping,
 )
 from identity_mapper_service.service import IdentityMapperHostService
 
@@ -48,11 +51,14 @@ def create_handler(
         def do_GET(self) -> None:
             url = urlparse(self.path)
             if url.path == "/health":
-                self._send_json(200, service.health())
+                self._send_json(200, health_response_to_mapping(service.health()))
                 return
 
             if url.path == "/providers":
-                self._send_json(200, service.providers())
+                self._send_json(
+                    200,
+                    providers_response_to_mapping(service.providers()),
+                )
                 return
 
             if url.path in {"/authenticate_logs", "/audit"}:
@@ -116,7 +122,7 @@ def create_handler(
 
         def _send_authenticate_logs(self, query: str) -> None:
             limit = self._read_limit(query)
-            payload = service.authenticate_logs(limit)
+            payload = audit_response_to_mapping(service.authenticate_logs(limit))
             output_format = self._read_format(query)
             if output_format == "json":
                 self._send_json(200, payload)

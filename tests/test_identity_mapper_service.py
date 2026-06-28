@@ -18,7 +18,17 @@ from identity_mapper_service.__main__ import HostServiceConfig, load_config, mai
 from identity_mapper_service.app import create_server
 from identity_mapper_service.registry import ProviderRegistry, UnknownProviderError
 from identity_mapper_service.request_log import RequestLog
-from identity_mapper_service.schemas import authenticate_response_to_mapping
+from identity_mapper_service.responses import (
+    AuditResponse,
+    HealthResponse,
+    ProvidersResponse,
+)
+from identity_mapper_service.schemas import (
+    audit_response_to_mapping,
+    authenticate_response_to_mapping,
+    health_response_to_mapping,
+    providers_response_to_mapping,
+)
 from identity_mapper_service.service import IdentityMapperHostService
 
 
@@ -72,11 +82,23 @@ def valid_authenticate_request() -> AuthenticateRequest:
 
 
 def test_service_reports_health() -> None:
-    assert make_service().health() == {"status": "ok"}
+    assert make_service().health() == HealthResponse(status="ok")
 
 
 def test_service_reports_providers() -> None:
-    assert make_service().providers() == {"providers": ["basic"]}
+    assert make_service().providers() == ProvidersResponse(providers=("basic",))
+
+
+def test_host_service_response_mappings() -> None:
+    assert health_response_to_mapping(HealthResponse(status="ok")) == {
+        "status": "ok",
+    }
+    assert providers_response_to_mapping(
+        ProvidersResponse(providers=("basic", "oauth"))
+    ) == {"providers": ["basic", "oauth"]}
+    assert audit_response_to_mapping(
+        AuditResponse(entries=({"provider": "basic"},))
+    ) == {"entries": [{"provider": "basic"}]}
 
 
 def test_service_authenticates_registered_provider() -> None:
@@ -198,7 +220,7 @@ def test_service_can_run_without_authenticate_log(tmp_path) -> None:
     response = service.authenticate_request(valid_authenticate_request())
 
     assert response.authenticated
-    assert service.authenticate_logs() == {"entries": []}
+    assert service.authenticate_logs() == AuditResponse(entries=())
     assert not log_path.exists()
 
 
@@ -214,7 +236,7 @@ def test_service_writes_authenticate_log_without_credential_value(tmp_path) -> N
     response = service.authenticate_request(request)
 
     assert not response.authenticated
-    entries = service.authenticate_logs()["entries"]
+    entries = service.authenticate_logs().entries
     assert len(entries) == 1
     assert entries[0]["provider"] == "basic"
     assert entries[0]["identifier"] == "subject"

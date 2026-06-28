@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 from time import perf_counter
-from typing import Any
 from uuid import uuid4
 
 from identity_mapper.requests import AuthenticateRequest
 from identity_mapper.responses import AuthenticateResponse
 from identity_mapper_service.registry import ProviderRegistry, UnknownProviderError
 from identity_mapper_service.request_log import RequestLog
+from identity_mapper_service.responses import (
+    AuditResponse,
+    HealthResponse,
+    ProvidersResponse,
+)
 
 
 class IdentityMapperHostService:
@@ -21,16 +25,16 @@ class IdentityMapperHostService:
         self._registry = registry
         self._request_log = request_log
 
-    def health(self) -> dict[str, str]:
-        return {"status": "ok"}
+    def health(self) -> HealthResponse:
+        return HealthResponse(status="ok")
 
-    def providers(self) -> dict[str, list[str]]:
-        return {"providers": list(self._registry.providers())}
+    def providers(self) -> ProvidersResponse:
+        return ProvidersResponse(providers=tuple(self._registry.providers()))
 
-    def authenticate_logs(self, limit: int = 100) -> dict[str, list[dict[str, Any]]]:
+    def authenticate_logs(self, limit: int = 100) -> AuditResponse:
         if self._request_log is None:
-            return {"entries": []}
-        return {"entries": self._request_log.entries(limit)}
+            return AuditResponse(entries=())
+        return AuditResponse(entries=tuple(self._request_log.entries(limit)))
 
     def authenticate_request(
         self,

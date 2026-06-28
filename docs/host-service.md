@@ -162,6 +162,10 @@ request.
 The host service receives capability requests, selects a provider, calls a
 capability, and returns capability responses.
 
+Host Service surfaces such as health, provider listing, and audit also return
+response objects. The HTTP adapter is responsible for serializing those
+responses to transport-shaped output.
+
 ## Run
 
 The service can be started as a module:

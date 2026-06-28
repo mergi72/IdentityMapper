@@ -6,6 +6,11 @@ from typing import Any
 from identity_mapper.domain import Credential, Identification, Identity
 from identity_mapper.requests import AuthenticateRequest
 from identity_mapper.responses import AuthenticateResponse
+from identity_mapper_service.responses import (
+    AuditResponse,
+    HealthResponse,
+    ProvidersResponse,
+)
 
 
 class RequestValidationError(ValueError):
@@ -63,6 +68,18 @@ def authenticate_response_to_mapping(
         ),
         "error": response.error,
     }
+
+
+def health_response_to_mapping(response: HealthResponse) -> dict[str, Any]:
+    return {"status": response.status}
+
+
+def providers_response_to_mapping(response: ProvidersResponse) -> dict[str, Any]:
+    return {"providers": list(response.providers)}
+
+
+def audit_response_to_mapping(response: AuditResponse) -> dict[str, Any]:
+    return {"entries": list(response.entries)}
 
 
 def _require_mapping(value: Any, field: str) -> Mapping[str, Any]:
