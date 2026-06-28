@@ -2,6 +2,16 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.22.9
+
+Capability protocol terminology patch.
+
+- Added `identity_mapper.capability_protocol` as the primary module for capability request and response contracts.
+- Kept `identity_mapper.requests` and `identity_mapper.responses` as compatibility import surfaces.
+- Updated Host Service imports to use the capability protocol module.
+- Documented the primary capability protocol module.
+- Tests: 232 passed.
+
 ## v0.22.8
 
 Host Service response object patch.
