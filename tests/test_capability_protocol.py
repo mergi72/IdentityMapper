@@ -74,6 +74,15 @@ def test_resolve_identity_request_and_response() -> None:
     assert response.candidate is candidate
 
 
+def test_resolve_identity_request_can_defer_provider_selection() -> None:
+    identification = Identification(identifier="subject")
+
+    request = ResolveIdentityRequest(identification=identification)
+
+    assert request.provider is None
+    assert request.identification is identification
+
+
 def test_verify_credential_request_and_response() -> None:
     identification = Identification(identifier="subject")
     candidate = IdentityCandidate(
@@ -93,3 +102,21 @@ def test_verify_credential_request_and_response() -> None:
     assert request.candidate is candidate
     assert request.credential is credential
     assert response.verified
+
+
+def test_verify_credential_request_can_defer_provider_selection() -> None:
+    identification = Identification(identifier="subject")
+    candidate = IdentityCandidate(
+        implementation_id="basic:subject",
+        identification=identification,
+    )
+    credential = Credential(type="PASSWORD", value="accepted")
+
+    request = VerifyCredentialRequest(
+        candidate=candidate,
+        credential=credential,
+    )
+
+    assert request.provider is None
+    assert request.candidate is candidate
+    assert request.credential is credential

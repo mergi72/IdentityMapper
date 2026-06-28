@@ -8,6 +8,8 @@ import pytest
 
 from identity_mapper.providers.basic import (
     BasicAuthenticator,
+    BasicCredentialVerifier,
+    BasicIdentityResolver,
     BasicUserRecord,
     InMemoryBasicUserStore,
 )
@@ -15,6 +17,8 @@ from identity_mapper.capabilities import Authenticate
 from identity_mapper.capability_protocol import (
     AuthenticateRequest,
     AuthenticateResponse,
+    ResolveIdentityRequest,
+    VerifyCredentialRequest,
 )
 from identity_mapper.domain import Credential, Identification
 from identity_mapper_service.__main__ import HostServiceConfig, load_config, main
@@ -30,6 +34,8 @@ from identity_mapper_service.schemas import (
     audit_response_to_mapping,
     authenticate_response_to_mapping,
     health_response_to_mapping,
+    resolve_identity_response_to_mapping,
+    verify_credential_response_to_mapping,
     providers_response_to_mapping,
 )
 from identity_mapper_service.service import IdentityMapperHostService
@@ -51,6 +57,8 @@ def make_service(request_log: RequestLog | None = None) -> IdentityMapperHostSer
             )
         ]
     )
+    registry.register_resolver("basic", BasicIdentityResolver(store))
+    registry.register_verifier("basic", BasicCredentialVerifier(store))
     registry.register_authenticator("basic", BasicAuthenticator(store))
     return IdentityMapperHostService(registry, request_log)
 
@@ -134,6 +142,86 @@ def test_service_can_select_provider_for_authenticate_request() -> None:
     assert response.identity.id == "identity-1"
 
 
+def test_service_resolves_identity_candidate() -> None:
+    request = ResolveIdentityRequest(
+        provider="basic",
+        identification=valid_identification(),
+    )
+
+    response = make_service().resolve_identity_request(request)
+
+    assert response.candidate is not None
+    assert response.candidate.implementation_id == "basic:subject"
+    assert response.candidate.identification.identifier == "subject"
+
+
+def test_service_can_select_provider_for_resolve_identity_request() -> None:
+    request = ResolveIdentityRequest(identification=valid_identification())
+
+    response = make_service().resolve_identity_request(request)
+
+    assert response.candidate is not None
+    assert response.candidate.implementation_id == "basic:subject"
+
+
+def test_service_returns_empty_resolution_for_unknown_identity() -> None:
+    request = ResolveIdentityRequest(
+        identification=Identification(identifier="missing"),
+    )
+
+    response = make_service().resolve_identity_request(request)
+
+    assert response.candidate is None
+
+
+def test_service_verifies_credential() -> None:
+    candidate = make_service().resolve_identity_request(
+        ResolveIdentityRequest(identification=valid_identification())
+    ).candidate
+    assert candidate is not None
+    request = VerifyCredentialRequest(
+        provider="basic",
+        candidate=candidate,
+        credential=valid_credential(),
+    )
+
+    response = make_service().verify_credential_request(request)
+
+    assert response.verified
+
+
+def test_service_can_select_provider_for_verify_credential_request() -> None:
+    service = make_service()
+    candidate = service.resolve_identity_request(
+        ResolveIdentityRequest(identification=valid_identification())
+    ).candidate
+    assert candidate is not None
+    request = VerifyCredentialRequest(
+        candidate=candidate,
+        credential=valid_credential(),
+    )
+
+    response = service.verify_credential_request(request)
+
+    assert response.verified
+
+
+def test_service_rejects_invalid_credential_verification() -> None:
+    service = make_service()
+    candidate = service.resolve_identity_request(
+        ResolveIdentityRequest(identification=valid_identification())
+    ).candidate
+    assert candidate is not None
+    request = VerifyCredentialRequest(
+        candidate=candidate,
+        credential=Credential(type="PASSWORD", value="wrong"),
+    )
+
+    response = service.verify_credential_request(request)
+
+    assert not response.verified
+
+
 def test_authenticate_response_mapping_includes_protocol_error() -> None:
     response = AuthenticateResponse(authenticated=False, error="rejected")
 
@@ -142,6 +230,43 @@ def test_authenticate_response_mapping_includes_protocol_error() -> None:
         "identity": None,
         "error": "rejected",
     }
+
+
+def test_resolve_identity_response_mapping_includes_candidate() -> None:
+    candidate = make_service().resolve_identity_request(
+        ResolveIdentityRequest(identification=valid_identification())
+    ).candidate
+    assert candidate is not None
+
+    assert resolve_identity_response_to_mapping(
+        make_service().resolve_identity_request(
+            ResolveIdentityRequest(identification=valid_identification())
+        )
+    ) == {
+        "candidate": {
+            "implementation_id": "basic:subject",
+            "identification": {
+                "identifier": "subject",
+                "realm": None,
+                "attributes": {},
+            },
+            "attributes": {"source": "basic"},
+        },
+        "error": None,
+    }
+
+
+def test_verify_credential_response_mapping() -> None:
+    assert verify_credential_response_to_mapping(
+        make_service().verify_credential_request(
+            VerifyCredentialRequest(
+                candidate=make_service().resolve_identity_request(
+                    ResolveIdentityRequest(identification=valid_identification())
+                ).candidate,
+                credential=valid_credential(),
+            )
+        )
+    ) == {"verified": True, "error": None}
 
 
 def test_service_rejects_invalid_credential_without_leaking_identity() -> None:
@@ -462,6 +587,125 @@ def test_http_host_can_select_provider_for_authenticate() -> None:
         assert status == 200
         assert response["authenticated"]
         assert response["identity"]["id"] == "identity-1"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_http_host_exposes_resolve_identity_and_verify_credential() -> None:
+    service = make_service()
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    try:
+        status, resolved = request_json(
+            "POST",
+            host,
+            port,
+            "/resolve-identity",
+            {
+                "identification": {
+                    "identifier": "subject",
+                },
+            },
+        )
+
+        assert status == 200
+        assert resolved["candidate"]["implementation_id"] == "basic:subject"
+        assert resolved["error"] is None
+
+        status, verified = request_json(
+            "POST",
+            host,
+            port,
+            "/verify-credential",
+            {
+                "candidate": resolved["candidate"],
+                "credential": {
+                    "type": "PASSWORD",
+                    "value": "accepted",
+                },
+            },
+        )
+
+        assert status == 200
+        assert verified == {"verified": True, "error": None}
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_http_host_returns_empty_candidate_for_unknown_identity() -> None:
+    service = make_service()
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    try:
+        status, resolved = request_json(
+            "POST",
+            host,
+            port,
+            "/resolve-identity",
+            {
+                "provider": "basic",
+                "identification": {
+                    "identifier": "missing",
+                },
+            },
+        )
+
+        assert status == 200
+        assert resolved == {"candidate": None, "error": None}
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_http_host_rejects_invalid_verify_credential() -> None:
+    service = make_service()
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    try:
+        status, resolved = request_json(
+            "POST",
+            host,
+            port,
+            "/resolve-identity",
+            {
+                "identification": {
+                    "identifier": "subject",
+                },
+            },
+        )
+        assert status == 200
+
+        status, verified = request_json(
+            "POST",
+            host,
+            port,
+            "/verify-credential",
+            {
+                "provider": "basic",
+                "candidate": resolved["candidate"],
+                "credential": {
+                    "type": "PASSWORD",
+                    "value": "wrong",
+                },
+            },
+        )
+
+        assert status == 200
+        assert verified == {"verified": False, "error": None}
     finally:
         server.shutdown()
         server.server_close()

@@ -7,6 +7,10 @@ from identity_mapper.capability_protocol import (
     AuthenticationRejected,
     AuthenticateRequest,
     AuthenticateResponse,
+    ResolveIdentityRequest,
+    ResolveIdentityResponse,
+    VerifyCredentialRequest,
+    VerifyCredentialResponse,
 )
 from identity_mapper_service.registry import ProviderRegistry, UnknownProviderError
 from identity_mapper_service.request_log import RequestLog
@@ -86,6 +90,29 @@ class IdentityMapperHostService:
             identity_id=result.identity.id,
         )
         return AuthenticateResponse(authenticated=True, identity=result.identity)
+
+    def resolve_identity_request(
+        self,
+        request: ResolveIdentityRequest,
+    ) -> ResolveIdentityResponse:
+        result = self._registry.resolve_identity(
+            request.provider,
+            request.identification,
+        )
+        if result is None:
+            return ResolveIdentityResponse(candidate=None)
+        return ResolveIdentityResponse(candidate=result.candidate)
+
+    def verify_credential_request(
+        self,
+        request: VerifyCredentialRequest,
+    ) -> VerifyCredentialResponse:
+        verified = self._registry.verify_credential(
+            request.provider,
+            request.candidate,
+            request.credential,
+        )
+        return VerifyCredentialResponse(verified=verified)
 
     def _log_authenticate(
         self,

@@ -64,8 +64,8 @@ a provider according to its registry or policy.
 
 ```text
 ResolveIdentityRequest
-  provider
   identification
+  provider optional
 ```
 
 ```text
@@ -78,9 +78,9 @@ ResolveIdentityResponse
 
 ```text
 VerifyCredentialRequest
-  provider
   candidate
   credential
+  provider optional
 ```
 
 ```text

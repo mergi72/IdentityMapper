@@ -14,6 +14,10 @@ from identity_mapper_service.schemas import (
     audit_response_to_mapping,
     health_response_to_mapping,
     providers_response_to_mapping,
+    resolve_identity_request_from_mapping,
+    resolve_identity_response_to_mapping,
+    verify_credential_request_from_mapping,
+    verify_credential_response_to_mapping,
 )
 from identity_mapper_service.service import IdentityMapperHostService
 
@@ -90,15 +94,52 @@ def create_handler(
             self._send_error(404, "not_found", "endpoint not found")
 
         def do_POST(self) -> None:
-            if self.path != "/authenticate":
-                self._send_error(404, "not_found", "endpoint not found")
+            if self.path == "/authenticate":
+                self._handle_authenticate()
                 return
 
+            if self.path == "/resolve-identity":
+                self._handle_resolve_identity()
+                return
+
+            if self.path == "/verify-credential":
+                self._handle_verify_credential()
+                return
+
+            self._send_error(404, "not_found", "endpoint not found")
+
+        def _handle_authenticate(self) -> None:
             try:
                 payload = self._read_json()
                 request = authenticate_request_from_mapping(payload)
                 response = service.authenticate_request(request)
                 self._send_json(200, authenticate_response_to_mapping(response))
+            except RequestValidationError as exc:
+                self._send_error(400, "bad_request", str(exc))
+            except UnknownProviderError as exc:
+                self._send_error(404, "unknown_provider", str(exc))
+            except JsonRequestError as exc:
+                self._send_error(exc.status_code, exc.error, str(exc))
+
+        def _handle_resolve_identity(self) -> None:
+            try:
+                payload = self._read_json()
+                request = resolve_identity_request_from_mapping(payload)
+                response = service.resolve_identity_request(request)
+                self._send_json(200, resolve_identity_response_to_mapping(response))
+            except RequestValidationError as exc:
+                self._send_error(400, "bad_request", str(exc))
+            except UnknownProviderError as exc:
+                self._send_error(404, "unknown_provider", str(exc))
+            except JsonRequestError as exc:
+                self._send_error(exc.status_code, exc.error, str(exc))
+
+        def _handle_verify_credential(self) -> None:
+            try:
+                payload = self._read_json()
+                request = verify_credential_request_from_mapping(payload)
+                response = service.verify_credential_request(request)
+                self._send_json(200, verify_credential_response_to_mapping(response))
             except RequestValidationError as exc:
                 self._send_error(400, "bad_request", str(exc))
             except UnknownProviderError as exc:

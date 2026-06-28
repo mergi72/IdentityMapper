@@ -34,8 +34,8 @@ class AuthenticateResponse:
 class ResolveIdentityRequest:
     """Request to execute the ResolveIdentity capability."""
 
-    provider: str
     identification: Identification
+    provider: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,9 +50,9 @@ class ResolveIdentityResponse:
 class VerifyCredentialRequest:
     """Request to execute the VerifyCredential capability."""
 
-    provider: str
     candidate: IdentityCandidate
     credential: Credential
+    provider: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

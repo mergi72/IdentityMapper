@@ -60,6 +60,12 @@ Provider selection can be explicit or host-driven. If a capability request
 includes a provider, the host routes to that provider. If it omits the provider,
 the host may select one from the provider registry.
 
+For `ResolveIdentity`, host-driven selection means the host can use the first
+provider that returns an `IdentityCandidate`.
+
+For `VerifyCredential`, host-driven selection means the host can use the first
+provider that verifies the candidate and credential.
+
 Authentication rejection is represented inside the Capability Protocol by
 `AuthenticationRejected`. A host converts that protocol signal into a normal
 `AuthenticateResponse(authenticated=False)` result.

@@ -10,6 +10,8 @@ from typing import Any
 
 from identity_mapper.providers.basic import (
     BasicAuthenticator,
+    BasicCredentialVerifier,
+    BasicIdentityResolver,
     BasicUserRecord,
     InMemoryBasicUserStore,
 )
@@ -116,6 +118,8 @@ def build_demo_registry() -> ProviderRegistry:
             )
         ]
     )
+    registry.register_resolver("basic", BasicIdentityResolver(store))
+    registry.register_verifier("basic", BasicCredentialVerifier(store))
     registry.register_authenticator("basic", BasicAuthenticator(store))
     return registry
 

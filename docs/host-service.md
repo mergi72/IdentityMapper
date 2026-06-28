@@ -27,6 +27,8 @@ The first service surface is intentionally small:
 GET  /health
 GET  /providers
 POST /authenticate
+POST /resolve-identity
+POST /verify-credential
 GET  /authenticate_logs
 GET  /audit
 ```
@@ -96,6 +98,90 @@ Rejected response:
 Providers signal rejected authentication with `AuthenticationRejected`. The
 Host Service converts that signal into `AuthenticateResponse(authenticated=False)`.
 Unexpected errors are not treated as authentication rejection.
+
+## Resolve Identity
+
+`POST /resolve-identity` is translated into `ResolveIdentityRequest`.
+
+Request:
+
+```json
+{
+  "identification": {
+    "identifier": "subject"
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "candidate": {
+    "implementation_id": "basic:subject",
+    "identification": {
+      "identifier": "subject",
+      "realm": null,
+      "attributes": {}
+    },
+    "attributes": {
+      "source": "basic"
+    }
+  },
+  "error": null
+}
+```
+
+Unknown identification is a normal capability result:
+
+```json
+{
+  "candidate": null,
+  "error": null
+}
+```
+
+## Verify Credential
+
+`POST /verify-credential` is translated into `VerifyCredentialRequest`.
+
+Request:
+
+```json
+{
+  "candidate": {
+    "implementation_id": "basic:subject",
+    "identification": {
+      "identifier": "subject"
+    },
+    "attributes": {
+      "source": "basic"
+    }
+  },
+  "credential": {
+    "type": "PASSWORD",
+    "value": "accepted"
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "verified": true,
+  "error": null
+}
+```
+
+Rejected credential verification is also a normal capability result:
+
+```json
+{
+  "verified": false,
+  "error": null
+}
+```
 
 ## Authenticate Logs
 
@@ -191,6 +277,14 @@ request.
 
 The host service receives capability requests, selects a provider, calls a
 capability, and returns capability responses.
+
+The host service currently exposes the three core identity capabilities:
+
+```text
+Authenticate
+ResolveIdentity
+VerifyCredential
+```
 
 Host Service surfaces such as health, provider listing, and audit also return
 response objects. The HTTP adapter is responsible for serializing those

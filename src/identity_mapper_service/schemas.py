@@ -3,10 +3,19 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from identity_mapper.domain import Credential, Identification, Identity
+from identity_mapper.domain import (
+    Credential,
+    Identification,
+    Identity,
+    IdentityCandidate,
+)
 from identity_mapper.capability_protocol import (
     AuthenticateRequest,
     AuthenticateResponse,
+    ResolveIdentityRequest,
+    ResolveIdentityResponse,
+    VerifyCredentialRequest,
+    VerifyCredentialResponse,
 )
 from identity_mapper_service.responses import (
     AuditResponse,
@@ -47,6 +56,25 @@ def authenticate_request_from_mapping(value: Any) -> AuthenticateRequest:
     )
 
 
+def resolve_identity_request_from_mapping(value: Any) -> ResolveIdentityRequest:
+    data = _require_mapping(value, "request")
+    provider = _optional_non_empty_string(data, "provider")
+    return ResolveIdentityRequest(
+        identification=identification_from_mapping(data.get("identification")),
+        provider=provider,
+    )
+
+
+def verify_credential_request_from_mapping(value: Any) -> VerifyCredentialRequest:
+    data = _require_mapping(value, "request")
+    provider = _optional_non_empty_string(data, "provider")
+    return VerifyCredentialRequest(
+        candidate=identity_candidate_from_mapping(data.get("candidate")),
+        credential=credential_from_mapping(data.get("credential")),
+        provider=provider,
+    )
+
+
 def identity_to_mapping(identity: Identity) -> dict[str, Any]:
     return {
         "id": identity.id,
@@ -55,6 +83,31 @@ def identity_to_mapping(identity: Identity) -> dict[str, Any]:
         "roles": list(identity.roles),
         "claims": dict(identity.claims),
         "attributes": dict(identity.attributes),
+    }
+
+
+def identification_to_mapping(identification: Identification) -> dict[str, Any]:
+    return {
+        "identifier": identification.identifier,
+        "realm": identification.realm,
+        "attributes": dict(identification.attributes),
+    }
+
+
+def identity_candidate_from_mapping(value: Any) -> IdentityCandidate:
+    data = _require_mapping(value, "candidate")
+    return IdentityCandidate(
+        implementation_id=_require_string(data, "implementation_id"),
+        identification=identification_from_mapping(data.get("identification")),
+        attributes=_optional_dict(data, "attributes"),
+    )
+
+
+def identity_candidate_to_mapping(candidate: IdentityCandidate) -> dict[str, Any]:
+    return {
+        "implementation_id": candidate.implementation_id,
+        "identification": identification_to_mapping(candidate.identification),
+        "attributes": dict(candidate.attributes),
     }
 
 
@@ -68,6 +121,28 @@ def authenticate_response_to_mapping(
             if response.identity is not None
             else None
         ),
+        "error": response.error,
+    }
+
+
+def resolve_identity_response_to_mapping(
+    response: ResolveIdentityResponse,
+) -> dict[str, Any]:
+    return {
+        "candidate": (
+            identity_candidate_to_mapping(response.candidate)
+            if response.candidate is not None
+            else None
+        ),
+        "error": response.error,
+    }
+
+
+def verify_credential_response_to_mapping(
+    response: VerifyCredentialResponse,
+) -> dict[str, Any]:
+    return {
+        "verified": response.verified,
         "error": response.error,
     }
 
