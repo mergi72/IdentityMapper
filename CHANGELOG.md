@@ -2,6 +2,18 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.25.0
+
+Provider selection checkpoint.
+
+- Made `AuthenticateRequest.provider` optional.
+- Added host-driven provider selection for authenticate requests.
+- Kept explicit provider routing available for callers that need it.
+- Logged the selected provider for implicit authenticate requests.
+- Allowed HTTP and CLI authenticate requests to omit `provider`.
+- Documented provider as a host routing hint, not a domain concept.
+- Tests: 250 passed.
+
 ## v0.24.0
 
 Host Service CLI and hardening checkpoint.
