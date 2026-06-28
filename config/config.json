@@ -1,5 +1,6 @@
 {
   "server": "127.0.0.1",
   "port": 8066,
+  "authenticate_log_enabled": true,
   "authenticate_log": "logs/authenticate.log"
 }

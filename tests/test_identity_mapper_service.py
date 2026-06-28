@@ -125,6 +125,7 @@ def test_service_loads_host_config(tmp_path) -> None:
             {
                 "server": "127.0.0.1",
                 "port": 8066,
+                "authenticate_log_enabled": False,
                 "authenticate_log": "logs/authenticate.log",
             }
         ),
@@ -134,12 +135,39 @@ def test_service_loads_host_config(tmp_path) -> None:
     assert load_config(config_path) == HostServiceConfig(
         server="127.0.0.1",
         port=8066,
+        authenticate_log_enabled=False,
         authenticate_log="logs/authenticate.log",
     )
 
 
 def test_service_uses_default_config_when_file_is_missing(tmp_path) -> None:
     assert load_config(tmp_path / "missing.json") == HostServiceConfig()
+
+
+def test_service_rejects_invalid_authenticate_log_enabled_config(tmp_path) -> None:
+    config_path = tmp_path / "config.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "authenticate_log_enabled": "false",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="authenticate_log_enabled"):
+        load_config(config_path)
+
+
+def test_service_can_run_without_authenticate_log(tmp_path) -> None:
+    log_path = tmp_path / "authenticate.log"
+    service = make_service(request_log=None)
+
+    response = service.authenticate(valid_payload())
+
+    assert response["authenticated"]
+    assert service.authenticate_logs() == {"entries": []}
+    assert not log_path.exists()
 
 
 def test_service_writes_authenticate_log_without_credential_value(tmp_path) -> None:

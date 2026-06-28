@@ -22,6 +22,7 @@ from identity_mapper_service.service import IdentityMapperHostService
 class HostServiceConfig:
     server: str = "127.0.0.1"
     port: int = 8066
+    authenticate_log_enabled: bool = True
     authenticate_log: str = "logs/authenticate.log"
 
 
@@ -39,6 +40,11 @@ def load_config(path: str | Path = "config/config.json") -> HostServiceConfig:
     return HostServiceConfig(
         server=_optional_string(value, "server", HostServiceConfig().server),
         port=_optional_int(value, "port", HostServiceConfig().port),
+        authenticate_log_enabled=_optional_bool(
+            value,
+            "authenticate_log_enabled",
+            HostServiceConfig().authenticate_log_enabled,
+        ),
         authenticate_log=_optional_string(
             value,
             "authenticate_log",
@@ -58,6 +64,13 @@ def _optional_int(data: dict[str, Any], key: str, default: int) -> int:
     value = data.get(key, default)
     if not isinstance(value, int):
         raise ValueError(f"{key} must be an integer")
+    return value
+
+
+def _optional_bool(data: dict[str, Any], key: str, default: bool) -> bool:
+    value = data.get(key, default)
+    if not isinstance(value, bool):
+        raise ValueError(f"{key} must be a boolean")
     return value
 
 
@@ -93,6 +106,11 @@ def main(argv: list[str] | None = None) -> int:
     serve_parser.add_argument("--port", type=int)
     serve_parser.add_argument("--authenticate-log")
     serve_parser.add_argument(
+        "--disable-authenticate-log",
+        action="store_true",
+        help="Disable authenticate request logging for this process.",
+    )
+    serve_parser.add_argument(
         "--demo-basic",
         action="store_true",
         help="Register an in-memory Basic provider for local experiments.",
@@ -110,8 +128,16 @@ def main(argv: list[str] | None = None) -> int:
         host = args.host or config.server
         port = args.port or config.port
         authenticate_log = args.authenticate_log or config.authenticate_log
+        authenticate_log_enabled = (
+            config.authenticate_log_enabled and not args.disable_authenticate_log
+        )
         registry = build_demo_registry() if args.demo_basic else ProviderRegistry()
-        service = IdentityMapperHostService(registry, RequestLog(authenticate_log))
+        request_log = (
+            RequestLog(authenticate_log)
+            if authenticate_log_enabled
+            else None
+        )
+        service = IdentityMapperHostService(registry, request_log)
         serve(host, port, service)
         return 0
 

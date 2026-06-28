@@ -80,6 +80,17 @@ It does not record `credential.value`.
 Timestamps are written using the local timezone configured on the machine
 running the Host Service.
 
+Authenticate logging can be disabled in `config/config.json`:
+
+```json
+{
+  "authenticate_log_enabled": false
+}
+```
+
+When disabled, no authenticate request log file is written and audit endpoints
+return an empty view.
+
 Logs can be read through HTTP:
 
 ```text
@@ -160,6 +171,7 @@ By default, the service reads `config/config.json` from the current directory:
 {
   "server": "127.0.0.1",
   "port": 8066,
+  "authenticate_log_enabled": true,
   "authenticate_log": "logs/authenticate.log"
 }
 ```
