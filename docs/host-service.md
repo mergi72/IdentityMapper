@@ -311,7 +311,26 @@ By default, the service reads `config/config.json` from the current directory:
   "max_request_body_bytes": 65536,
   "audit_log_enabled": true,
   "audit_log": "logs/audit.log",
-  "audit_log_max_entries": 1000
+  "audit_log_max_entries": 1000,
+  "providers": [
+    {
+      "name": "basic",
+      "type": "basic",
+      "enabled": true,
+      "users": [
+        {
+          "username": "demo",
+          "password": "secret",
+          "identity_id": "demo",
+          "display_name": "Demo User",
+          "roles": ["demo"],
+          "attributes": {
+            "source": "config-basic"
+          }
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -319,6 +338,47 @@ By default, the service reads `config/config.json` from the current directory:
 
 `audit_log_max_entries` keeps the append-only capability invocation log bounded
 by trimming older entries after writes.
+
+## Runtime Provider Configuration
+
+The Host Service builds its provider registry from `config/config.json`.
+
+The first runtime-configurable provider type is `basic`:
+
+```json
+{
+  "providers": [
+    {
+      "name": "basic",
+      "type": "basic",
+      "enabled": true,
+      "users": [
+        {
+          "username": "demo",
+          "password": "secret",
+          "identity_id": "demo",
+          "display_name": "Demo User"
+        }
+      ]
+    }
+  ]
+}
+```
+
+`name` is the provider name exposed by `/providers` and accepted as the
+optional `provider` routing hint in capability requests.
+
+`type` selects the provider implementation. Currently only `basic` is supported
+by runtime configuration. Unknown provider types fail fast during config
+loading.
+
+`enabled: false` keeps a provider definition in the config file but does not
+register it in the runtime registry.
+
+Passwords in the Basic provider config are intended only for local development
+and architecture verification. Production deployments should use a real
+provider adapter or a secret manager rather than storing secrets in
+`config/config.json`.
 
 The server and port can still be overridden from the command line:
 

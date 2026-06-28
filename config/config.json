@@ -4,5 +4,26 @@
   "max_request_body_bytes": 65536,
   "audit_log_enabled": true,
   "audit_log": "logs/audit.log",
-  "audit_log_max_entries": 1000
+  "audit_log_max_entries": 1000,
+  "providers": [
+    {
+      "name": "basic",
+      "type": "basic",
+      "enabled": true,
+      "users": [
+        {
+          "username": "demo",
+          "password": "secret",
+          "identity_id": "demo",
+          "display_name": "Demo User",
+          "roles": [
+            "demo"
+          ],
+          "attributes": {
+            "source": "config-basic"
+          }
+        }
+      ]
+    }
+  ]
 }
