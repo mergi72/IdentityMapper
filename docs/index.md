@@ -7,6 +7,7 @@ identity domain.
 
 - [Architecture](architecture.md)
 - [Host](host.md)
+- [Host service](host-service.md)
 - [Reduction matrix](reduction-matrix.md)
 - [Reduction template](reduction-template.md)
 - [Provider footprint](provider-footprint.md)

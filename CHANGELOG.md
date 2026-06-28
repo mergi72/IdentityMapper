@@ -2,6 +2,17 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.22.0
+
+Host Service runtime prototype.
+
+- Added `identity_mapper_service` as a minimal capability host.
+- Added a provider registry for hosted authenticators.
+- Added stdlib HTTP endpoints for `GET /health`, `GET /providers`, and
+  `POST /authenticate`.
+- Added `python -m identity_mapper_service serve`.
+- Kept service responsibility limited to transport and lifecycle.
+
 ## v0.21.0
 
 CI and release cleanup checkpoint.

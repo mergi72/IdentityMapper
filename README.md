@@ -104,6 +104,7 @@ The implementation details are intentionally kept out of this README.
 - [Architecture](docs/architecture.md)
 - [Architecture verification](docs/architecture-verification.md)
 - [Host](docs/host.md)
+- [Host service](docs/host-service.md)
 - [Reduction matrix](docs/reduction-matrix.md)
 - [Reduction template](docs/reduction-template.md)
 - [Provider footprint](docs/provider-footprint.md)
@@ -129,10 +130,17 @@ src/identity_mapper/
       matrix.json
     ...
 
+src/identity_mapper_service/
+  app.py
+  registry.py
+  schemas.py
+  service.py
+
 docs/
   architecture.md
   provider-footprint.md
   host.md
+  host-service.md
   reduction-matrix.md
   reduction-template.md
   architecture-verification.md
