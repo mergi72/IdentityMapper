@@ -5,6 +5,9 @@ The reduction matrix is a documentation table.
 It shows how implementation-specific identity models reduce to the same core
 domain invariant.
 
+It is also the provider footprint: a declaration of where the invariant points
+live in the provider world.
+
 ```text
 Implementation
        |
@@ -46,6 +49,9 @@ The matrix answers one question:
 
 For all listed implementations, the answer is yes.
 
+It does not answer how to authenticate. It answers where the domain invariant
+is located inside a provider model.
+
 ## Template
 
 A reduction template is the same matrix written as compact JSON sections.
@@ -54,3 +60,6 @@ See [Reduction Template](reduction-template.md).
 
 Concrete JSON matrices live with their providers, for example
 `src/identity_mapper/providers/ldap/matrix.json`.
+
+See [Provider Footprint](provider-footprint.md) for the meaning behind the
+matrix.

@@ -8,6 +8,7 @@ identity domain.
 - [Architecture](architecture.md)
 - [Reduction matrix](reduction-matrix.md)
 - [Reduction template](reduction-template.md)
+- [Provider footprint](provider-footprint.md)
 - [Architecture verification](architecture-verification.md)
 - [Domain](domain/index.md)
 - [Capabilities](capabilities/index.md)
@@ -15,7 +16,8 @@ identity domain.
 
 ## Rule
 
-The reduction matrix describes the mapping.
+The reduction matrix describes the mapping. A provider matrix is the provider
+footprint in the domain invariant.
 
 ```text
 Implementation Model
@@ -24,8 +26,12 @@ Implementation Model
 Reduction Matrix
         |
         v
+Provider Footprint
+        |
+        v
 Domain Invariant
 ```
 
 The mapper code is still the implementation. The matrix is the architectural
-description of the reduction.
+description of the reduction. It says where invariant points live in the
+provider world.

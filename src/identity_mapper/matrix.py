@@ -14,7 +14,7 @@ class ReductionSections:
 
 @dataclass(frozen=True, slots=True)
 class ReductionMatrix:
-    """Provider-owned reduction matrix targeting a domain invariant."""
+    """Provider-owned footprint targeting a domain invariant."""
 
     template: str
     provider: str

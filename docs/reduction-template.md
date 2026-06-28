@@ -2,6 +2,9 @@
 
 A reduction template is a JSON representation of a reduction matrix.
 
+The JSON file is a provider footprint: it declares how a provider world leaves
+an identity-shaped imprint in the domain invariant.
+
 It describes the same sections as the documentation matrix:
 
 ```text
@@ -17,6 +20,9 @@ The template describes mapping only.
 
 It does not include provider connection settings, credential storage,
 authentication flow, authorization rules, persistence, or business decisions.
+
+It does not execute the reduction. Mapper code does that. The template only
+names the invariant points.
 
 ## Shape
 
@@ -55,6 +61,9 @@ authentication flow, authorization rules, persistence, or business decisions.
 | `identity` | Mapping to `Identity`. |
 
 Values are provider field names or fixed domain values.
+
+The values do not define authentication behavior. They describe where a mapper
+can find the data required by the invariant.
 
 ## Examples
 
