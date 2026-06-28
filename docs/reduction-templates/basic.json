@@ -1,0 +1,52 @@
+{
+  "template": "basic",
+  "implementation": "BasicAuth",
+  "invariant": "Identity",
+  "rows": [
+    {
+      "section": "Identification",
+      "source": "username",
+      "domain": "Identification.identifier"
+    },
+    {
+      "section": "Identification",
+      "source": "realm",
+      "domain": "Identification.realm"
+    },
+    {
+      "section": "Credential",
+      "literal": "PASSWORD",
+      "domain": "Credential.type"
+    },
+    {
+      "section": "Credential",
+      "source": "password",
+      "domain": "Credential.value"
+    },
+    {
+      "section": "Candidate",
+      "source": "implementation_id",
+      "domain": "IdentityCandidate.implementation_id"
+    },
+    {
+      "section": "Identity",
+      "source": "identity_id",
+      "domain": "Identity.id"
+    },
+    {
+      "section": "Identity",
+      "source": "display_name",
+      "domain": "Identity.display_name"
+    },
+    {
+      "section": "Identity",
+      "source": "email",
+      "domain": "Identity.email"
+    },
+    {
+      "section": "Identity",
+      "source": "roles",
+      "domain": "Identity.roles"
+    }
+  ]
+}

@@ -92,6 +92,7 @@ The implementation details are intentionally kept out of this README.
 - [Architecture](docs/architecture.md)
 - [Architecture verification](docs/architecture-verification.md)
 - [Reduction matrix](docs/reduction-matrix.md)
+- [Reduction template](docs/reduction-template.md)
 - [Domain concepts](docs/domain/index.md)
 - [Capabilities](docs/capabilities/index.md)
 - [Implementation notes](docs/implementations/index.md)
@@ -107,6 +108,7 @@ src/identity_mapper/
 docs/
   architecture.md
   reduction-matrix.md
+  reduction-template.md
   architecture-verification.md
   domain/
   capabilities/

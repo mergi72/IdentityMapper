@@ -7,6 +7,7 @@ identity domain.
 
 - [Architecture](architecture.md)
 - [Reduction matrix](reduction-matrix.md)
+- [Reduction template](reduction-template.md)
 - [Architecture verification](architecture-verification.md)
 - [Domain](domain/index.md)
 - [Capabilities](capabilities/index.md)

@@ -45,3 +45,9 @@ The matrix answers one question:
 > the core model?
 
 For all listed implementations, the answer is yes.
+
+## Template
+
+A reduction template is the same matrix written as JSON rows.
+
+See [Reduction Template](reduction-template.md).
