@@ -4,6 +4,11 @@ IdentityMapper has been tested against multiple identity implementation
 models. Each implementation maps to the same core invariant without changing
 the core domain model or capability contracts.
 
+## Goal
+
+Verify that different identity models can be reduced to the same domain
+invariant.
+
 ## Core Files
 
 The core files are:
@@ -52,10 +57,27 @@ Identity
 | v0.15.0 | Federated Identity | No |
 | v0.16.0 | Guest / Anonymous Identity | No |
 
+## Implementations
+
+- BasicAuth
+- LDAP
+- OAuth
+- JWT / Bearer Token
+- API Key
+- Client Certificate / mTLS
+- Kerberos
+- SAML
+- Windows / AD SID
+- WebAuthn / FIDO2
+- Passkeys
+- MFA
+- Federated Identity
+- Guest / Anonymous Identity
+
 ## Result
 
 The tested implementations cover passwords, tokens, API keys, certificates,
 tickets, assertions, SIDs, WebAuthn credentials, passkeys, multi-factor
 credentials, federated trust mappings, and guest sessions.
 
-The core invariant held across all of them.
+No implementation required a change to the core domain model.

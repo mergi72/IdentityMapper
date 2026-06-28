@@ -5,12 +5,14 @@ identity domain.
 
 ## Documents
 
+- [Architecture](architecture.md)
+- [Reduction matrix](reduction-matrix.md)
 - [Architecture verification](architecture-verification.md)
-- [Reduction matrices](reductions/index.md)
+- [Implementations](implementations/index.md)
 
 ## Rule
 
-A reduction matrix describes the mapping. It does not execute it.
+The reduction matrix describes the mapping. It does not execute it.
 
 ```text
 Implementation Model

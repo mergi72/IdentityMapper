@@ -1,31 +1,31 @@
-# Windows / AD SID Reduction Matrix
+# JWT / Bearer Token Implementation
 
 ## Implementation Model
 
-- `WindowsIdentityRequest`
-- `WindowsIdentityRecord`
+- `JwtRequest`
+- `JwtRecord`
 
 ## Identification
 
 | Implementation field | Domain field |
 | --- | --- |
-| `sid` | `Identification.identifier` |
-| `domain` | `Identification.realm` |
-| `upn` | `Identification.attributes["upn"]` |
+| `subject` | `Identification.identifier` |
+| `issuer` | `Identification.realm` |
+| `audience` | `Identification.attributes["audience"]` |
 
 ## Credential
 
 | Implementation field | Domain field |
 | --- | --- |
-| `logon_proof` | `Credential.value` |
-| `"WINDOWS_LOGON_PROOF"` | `Credential.type` |
+| `bearer_token` | `Credential.value` |
+| `"BEARER_TOKEN"` | `Credential.type` |
 | `metadata` | `Credential.metadata` |
 
 ## Candidate
 
 | Implementation field | Domain field |
 | --- | --- |
-| `sid` | `IdentityCandidate.implementation_id` |
+| `jwt_id` | `IdentityCandidate.implementation_id` |
 | resolved identification | `IdentityCandidate.identification` |
 | `attributes` | `IdentityCandidate.attributes` |
 
@@ -39,3 +39,8 @@
 | `roles` | `Identity.roles` |
 | `claims` | `Identity.claims` |
 | `attributes` | `Identity.attributes` |
+
+## Reduction
+
+JWT / Bearer Token reduces to the identity invariant without requiring a core
+model change.

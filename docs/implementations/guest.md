@@ -1,32 +1,31 @@
-# WebAuthn / FIDO2 Reduction Matrix
+# Guest / Anonymous Identity Implementation
 
 ## Implementation Model
 
-- `WebAuthnRequest`
-- `WebAuthnCredentialRecord`
+- `GuestRequest`
+- `GuestSessionRecord`
 
 ## Identification
 
 | Implementation field | Domain field |
 | --- | --- |
-| `credential_id` | `Identification.identifier` |
-| `relying_party_id` | `Identification.realm` |
-| `user_handle` | `Identification.attributes["user_handle"]` |
-| `challenge` | `Identification.attributes["challenge"]` |
+| `session_id` | `Identification.identifier` |
+| `realm` or `"guest"` | `Identification.realm` |
+| `"guest"` | `Identification.attributes["kind"]` |
 
 ## Credential
 
 | Implementation field | Domain field |
 | --- | --- |
-| `assertion` | `Credential.value` |
-| `"WEBAUTHN_ASSERTION"` | `Credential.type` |
+| `session_token` | `Credential.value` |
+| `"GUEST_SESSION"` | `Credential.type` |
 | `metadata` | `Credential.metadata` |
 
 ## Candidate
 
 | Implementation field | Domain field |
 | --- | --- |
-| `credential_id` | `IdentityCandidate.implementation_id` |
+| `session_id` | `IdentityCandidate.implementation_id` |
 | resolved identification | `IdentityCandidate.identification` |
 | `attributes` | `IdentityCandidate.attributes` |
 
@@ -36,7 +35,11 @@
 | --- | --- |
 | `identity_id` | `Identity.id` |
 | `display_name` | `Identity.display_name` |
-| `email` | `Identity.email` |
 | `roles` | `Identity.roles` |
 | `claims` | `Identity.claims` |
 | `attributes` | `Identity.attributes` |
+
+## Reduction
+
+Guest / Anonymous Identity reduces to the identity invariant without requiring
+a core model change.

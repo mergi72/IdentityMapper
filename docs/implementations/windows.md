@@ -1,31 +1,31 @@
-# API Key Reduction Matrix
+# Windows / AD SID Implementation
 
 ## Implementation Model
 
-- `ApiKeyRequest`
-- `ApiKeyRecord`
+- `WindowsIdentityRequest`
+- `WindowsIdentityRecord`
 
 ## Identification
 
 | Implementation field | Domain field |
 | --- | --- |
-| `key_id` | `Identification.identifier` |
-| configured realm | `Identification.realm` |
-| `client_id` | `Identification.attributes["client_id"]` |
+| `sid` | `Identification.identifier` |
+| `domain` | `Identification.realm` |
+| `upn` | `Identification.attributes["upn"]` |
 
 ## Credential
 
 | Implementation field | Domain field |
 | --- | --- |
-| `api_key` | `Credential.value` |
-| `"API_KEY"` | `Credential.type` |
+| `logon_proof` | `Credential.value` |
+| `"WINDOWS_LOGON_PROOF"` | `Credential.type` |
 | `metadata` | `Credential.metadata` |
 
 ## Candidate
 
 | Implementation field | Domain field |
 | --- | --- |
-| `key_id` | `IdentityCandidate.implementation_id` |
+| `sid` | `IdentityCandidate.implementation_id` |
 | resolved identification | `IdentityCandidate.identification` |
 | `attributes` | `IdentityCandidate.attributes` |
 
@@ -39,3 +39,8 @@
 | `roles` | `Identity.roles` |
 | `claims` | `Identity.claims` |
 | `attributes` | `Identity.attributes` |
+
+## Reduction
+
+Windows / AD SID reduces to the identity invariant without requiring a core
+model change.

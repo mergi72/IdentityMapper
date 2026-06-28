@@ -1,32 +1,32 @@
-# Passkeys Reduction Matrix
+# WebAuthn / FIDO2 Implementation
 
 ## Implementation Model
 
-- `PasskeyRequest`
-- `PasskeyRecord`
+- `WebAuthnRequest`
+- `WebAuthnCredentialRecord`
 
 ## Identification
 
 | Implementation field | Domain field |
 | --- | --- |
-| `passkey_id` | `Identification.identifier` |
+| `credential_id` | `Identification.identifier` |
 | `relying_party_id` | `Identification.realm` |
 | `user_handle` | `Identification.attributes["user_handle"]` |
-| `device_name` | `Identification.attributes["device_name"]` |
+| `challenge` | `Identification.attributes["challenge"]` |
 
 ## Credential
 
 | Implementation field | Domain field |
 | --- | --- |
 | `assertion` | `Credential.value` |
-| `"PASSKEY_ASSERTION"` | `Credential.type` |
+| `"WEBAUTHN_ASSERTION"` | `Credential.type` |
 | `metadata` | `Credential.metadata` |
 
 ## Candidate
 
 | Implementation field | Domain field |
 | --- | --- |
-| `passkey_id` | `IdentityCandidate.implementation_id` |
+| `credential_id` | `IdentityCandidate.implementation_id` |
 | resolved identification | `IdentityCandidate.identification` |
 | `attributes` | `IdentityCandidate.attributes` |
 
@@ -40,3 +40,8 @@
 | `roles` | `Identity.roles` |
 | `claims` | `Identity.claims` |
 | `attributes` | `Identity.attributes` |
+
+## Reduction
+
+WebAuthn / FIDO2 reduces to the identity invariant without requiring a core
+model change.

@@ -54,30 +54,7 @@ The pattern can be summarized as:
 5. Capabilities extend the invariant.
 6. Implementations never communicate directly.
 
-## Why
-
-Without a domain invariant, every implementation must know every other
-implementation.
-
-```text
-implementation A <-> implementation B
-implementation A <-> implementation C
-implementation B <-> implementation C
-...
-```
-
-N implementations require N x (N - 1) direct mappings.
-
-With a domain invariant, every implementation maps only once.
-
-```text
-implementation A --+
-implementation B --+--> Domain Invariant
-implementation C --+
-...
-```
-
-N implementations require N mappings.
+## Quick Example
 
 ```text
 Identification
@@ -103,121 +80,19 @@ Authenticate
 Identity
 ```
 
-`Identification` is not `Identity`.
-
-```text
-Identification
---------------
-identifier = "subject"
-
-Credential
-----------
-type = "opaque"
-value = "..."
-
-Example credential types include `PASSWORD`, `TOKEN`, `CERTIFICATE`, and
-`OPAQUE`. They are examples, not a fixed enum.
-
-Authenticate
-------------
-verification
-
-Identity
---------
-id = "42"
-display_name = "Example Subject"
-roles = [...]
-claims = {...}
-attributes = {...}
-```
-
-Most authentication systems can be described as two internal operations:
-
-```text
-Authenticate
-    |
-    +-- ResolveIdentity(identification)
-    |
-    +-- VerifyCredential(candidate, credential)
-```
-
-`Authenticate` is the orchestration. `ResolveIdentity` finds the identity
-candidate. `VerifyCredential` proves that the credential belongs to that
-candidate. Only then does the system produce a verified `Identity`.
-
-An `IdentityCandidate` is not the domain invariant. It represents an
-implementation candidate found during resolution:
-
-```text
-IdentityCandidate
------------------
-implementation_id = "candidate-42"
-identification = Identification(...)
-attributes = {...}
-```
-
-The verified `Identity.id` is the domain identifier. The candidate's
-`implementation_id` is allowed to remain implementation-shaped.
-
-Incorrect:
-
-```text
-implementation A -> implementation B
-```
-
-Correct:
-
-```text
-implementation A -> Identity -> implementation B
-```
-
-This keeps implementation details isolated and lets all integrations communicate
-through a stable domain invariant.
+`Identification` is not `Identity`. Identification selects a candidate.
+Credential verifies the candidate. Only successful authentication produces an
+`Identity`.
 
 ## Documentation
 
 The implementation details are intentionally kept out of this README.
 
 - [Documentation index](docs/index.md)
+- [Architecture](docs/architecture.md)
 - [Architecture verification](docs/architecture-verification.md)
-- [Reduction matrices](docs/reductions/index.md)
-
-## Project Scope
-
-IdentityMapper focuses on identity:
-
-- defining `Identification` as the claim used to select an identity candidate
-- defining `Credential` as the material used to verify that claim
-- defining `Identity` as the verified domain result
-- making authentication explicit as identification plus verification
-- keeping identity capabilities independent from implementation details
-
-## Project Shape
-
-```text
-project:
-  IdentityMapper
-
-pattern:
-  Invariant Mapping Pattern
-
-core invariant:
-  Identity
-
-identification:
-  Identification
-
-candidate:
-  IdentityCandidate
-
-credential:
-  Credential
-
-capabilities:
-  Authenticate
-  ResolveIdentity
-  VerifyCredential
-```
+- [Reduction matrix](docs/reduction-matrix.md)
+- [Implementation notes](docs/implementations/index.md)
 
 ## Status
 

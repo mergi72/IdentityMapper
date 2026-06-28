@@ -1,31 +1,32 @@
-# JWT / Bearer Token Reduction Matrix
+# Passkeys Implementation
 
 ## Implementation Model
 
-- `JwtRequest`
-- `JwtRecord`
+- `PasskeyRequest`
+- `PasskeyRecord`
 
 ## Identification
 
 | Implementation field | Domain field |
 | --- | --- |
-| `subject` | `Identification.identifier` |
-| `issuer` | `Identification.realm` |
-| `audience` | `Identification.attributes["audience"]` |
+| `passkey_id` | `Identification.identifier` |
+| `relying_party_id` | `Identification.realm` |
+| `user_handle` | `Identification.attributes["user_handle"]` |
+| `device_name` | `Identification.attributes["device_name"]` |
 
 ## Credential
 
 | Implementation field | Domain field |
 | --- | --- |
-| `bearer_token` | `Credential.value` |
-| `"BEARER_TOKEN"` | `Credential.type` |
+| `assertion` | `Credential.value` |
+| `"PASSKEY_ASSERTION"` | `Credential.type` |
 | `metadata` | `Credential.metadata` |
 
 ## Candidate
 
 | Implementation field | Domain field |
 | --- | --- |
-| `jwt_id` | `IdentityCandidate.implementation_id` |
+| `passkey_id` | `IdentityCandidate.implementation_id` |
 | resolved identification | `IdentityCandidate.identification` |
 | `attributes` | `IdentityCandidate.attributes` |
 
@@ -39,3 +40,8 @@
 | `roles` | `Identity.roles` |
 | `claims` | `Identity.claims` |
 | `attributes` | `Identity.attributes` |
+
+## Reduction
+
+Passkeys reduce to the identity invariant without requiring a core model
+change.

@@ -1,4 +1,4 @@
-# OAuth Reduction Matrix
+# OAuth Implementation
 
 ## Implementation Model
 
@@ -39,3 +39,7 @@
 | `scopes` | `Identity.roles` |
 | `claims` | `Identity.claims` |
 | `attributes` | `Identity.attributes` |
+
+## Reduction
+
+OAuth reduces to the identity invariant without requiring a core model change.

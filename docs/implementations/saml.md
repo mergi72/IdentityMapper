@@ -1,31 +1,32 @@
-# MFA Reduction Matrix
+# SAML Implementation
 
 ## Implementation Model
 
-- `MfaRequest`
-- `MfaFactor`
-- `MfaRecord`
+- `SamlRequest`
+- `SamlAssertionRecord`
 
 ## Identification
 
 | Implementation field | Domain field |
 | --- | --- |
-| `identifier` | `Identification.identifier` |
-| `realm` | `Identification.realm` |
+| `name_id` | `Identification.identifier` |
+| `issuer` | `Identification.realm` |
+| `audience` | `Identification.attributes["audience"]` |
+| `session_index` | `Identification.attributes["session_index"]` |
 
 ## Credential
 
 | Implementation field | Domain field |
 | --- | --- |
-| encoded `factors` | `Credential.value` |
-| `"MFA_FACTORS"` | `Credential.type` |
-| `metadata` + `factor_count` | `Credential.metadata` |
+| `assertion` | `Credential.value` |
+| `"SAML_ASSERTION"` | `Credential.type` |
+| `metadata` | `Credential.metadata` |
 
 ## Candidate
 
 | Implementation field | Domain field |
 | --- | --- |
-| `implementation_id` | `IdentityCandidate.implementation_id` |
+| `assertion_id` | `IdentityCandidate.implementation_id` |
 | resolved identification | `IdentityCandidate.identification` |
 | `attributes` | `IdentityCandidate.attributes` |
 
@@ -39,3 +40,7 @@
 | `roles` | `Identity.roles` |
 | `claims` | `Identity.claims` |
 | `attributes` | `Identity.attributes` |
+
+## Reduction
+
+SAML reduces to the identity invariant without requiring a core model change.

@@ -1,32 +1,33 @@
-# SAML Reduction Matrix
+# Client Certificate / mTLS Implementation
 
 ## Implementation Model
 
-- `SamlRequest`
-- `SamlAssertionRecord`
+- `ClientCertificateRequest`
+- `ClientCertificateRecord`
 
 ## Identification
 
 | Implementation field | Domain field |
 | --- | --- |
-| `name_id` | `Identification.identifier` |
-| `issuer` | `Identification.realm` |
-| `audience` | `Identification.attributes["audience"]` |
-| `session_index` | `Identification.attributes["session_index"]` |
+| `fingerprint` | `Identification.identifier` |
+| configured realm | `Identification.realm` |
+| `subject` | `Identification.attributes["subject"]` |
+| `issuer` | `Identification.attributes["issuer"]` |
+| `serial_number` | `Identification.attributes["serial_number"]` |
 
 ## Credential
 
 | Implementation field | Domain field |
 | --- | --- |
-| `assertion` | `Credential.value` |
-| `"SAML_ASSERTION"` | `Credential.type` |
+| `proof` | `Credential.value` |
+| `"CERTIFICATE_PROOF"` | `Credential.type` |
 | `metadata` | `Credential.metadata` |
 
 ## Candidate
 
 | Implementation field | Domain field |
 | --- | --- |
-| `assertion_id` | `IdentityCandidate.implementation_id` |
+| `fingerprint` | `IdentityCandidate.implementation_id` |
 | resolved identification | `IdentityCandidate.identification` |
 | `attributes` | `IdentityCandidate.attributes` |
 
@@ -40,3 +41,8 @@
 | `roles` | `Identity.roles` |
 | `claims` | `Identity.claims` |
 | `attributes` | `Identity.attributes` |
+
+## Reduction
+
+Client Certificate / mTLS reduces to the identity invariant without requiring a
+core model change.

@@ -1,31 +1,30 @@
-# Kerberos Reduction Matrix
+# BasicAuth Implementation
 
 ## Implementation Model
 
-- `KerberosRequest`
-- `KerberosPrincipalRecord`
+- `BasicAuthenticationRequest`
+- `BasicUserRecord`
 
 ## Identification
 
 | Implementation field | Domain field |
 | --- | --- |
-| `principal` | `Identification.identifier` |
+| `username` | `Identification.identifier` |
 | `realm` | `Identification.realm` |
-| `service` | `Identification.attributes["service"]` |
 
 ## Credential
 
 | Implementation field | Domain field |
 | --- | --- |
-| `ticket` | `Credential.value` |
-| `"KERBEROS_TICKET"` | `Credential.type` |
+| `password` | `Credential.value` |
+| `"PASSWORD"` | `Credential.type` |
 | `metadata` | `Credential.metadata` |
 
 ## Candidate
 
 | Implementation field | Domain field |
 | --- | --- |
-| `principal` | `IdentityCandidate.implementation_id` |
+| `implementation_id` | `IdentityCandidate.implementation_id` |
 | resolved identification | `IdentityCandidate.identification` |
 | `attributes` | `IdentityCandidate.attributes` |
 
@@ -39,3 +38,8 @@
 | `roles` | `Identity.roles` |
 | `claims` | `Identity.claims` |
 | `attributes` | `Identity.attributes` |
+
+## Reduction
+
+BasicAuth reduces to the identity invariant without requiring a core model
+change.

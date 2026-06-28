@@ -1,15 +1,15 @@
-# BasicAuth Reduction Matrix
+# LDAP Implementation
 
 ## Implementation Model
 
-- `BasicAuthenticationRequest`
-- `BasicUserRecord`
+- `LdapBindRequest`
+- `LdapEntry`
 
 ## Identification
 
 | Implementation field | Domain field |
 | --- | --- |
-| `username` | `Identification.identifier` |
+| `uid` | `Identification.identifier` |
 | `realm` | `Identification.realm` |
 
 ## Credential
@@ -24,7 +24,7 @@
 
 | Implementation field | Domain field |
 | --- | --- |
-| `implementation_id` | `IdentityCandidate.implementation_id` |
+| `dn` | `IdentityCandidate.implementation_id` |
 | resolved identification | `IdentityCandidate.identification` |
 | `attributes` | `IdentityCandidate.attributes` |
 
@@ -33,8 +33,12 @@
 | Implementation field | Domain field |
 | --- | --- |
 | `identity_id` | `Identity.id` |
-| `display_name` | `Identity.display_name` |
-| `email` | `Identity.email` |
-| `roles` | `Identity.roles` |
+| `cn` | `Identity.display_name` |
+| `mail` | `Identity.email` |
+| `groups` | `Identity.roles` |
 | `claims` | `Identity.claims` |
 | `attributes` | `Identity.attributes` |
+
+## Reduction
+
+LDAP reduces to the identity invariant without requiring a core model change.

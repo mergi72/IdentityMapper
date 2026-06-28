@@ -1,31 +1,31 @@
-# Guest / Anonymous Identity Reduction Matrix
+# API Key Implementation
 
 ## Implementation Model
 
-- `GuestRequest`
-- `GuestSessionRecord`
+- `ApiKeyRequest`
+- `ApiKeyRecord`
 
 ## Identification
 
 | Implementation field | Domain field |
 | --- | --- |
-| `session_id` | `Identification.identifier` |
-| `realm` or `"guest"` | `Identification.realm` |
-| `"guest"` | `Identification.attributes["kind"]` |
+| `key_id` | `Identification.identifier` |
+| configured realm | `Identification.realm` |
+| `client_id` | `Identification.attributes["client_id"]` |
 
 ## Credential
 
 | Implementation field | Domain field |
 | --- | --- |
-| `session_token` | `Credential.value` |
-| `"GUEST_SESSION"` | `Credential.type` |
+| `api_key` | `Credential.value` |
+| `"API_KEY"` | `Credential.type` |
 | `metadata` | `Credential.metadata` |
 
 ## Candidate
 
 | Implementation field | Domain field |
 | --- | --- |
-| `session_id` | `IdentityCandidate.implementation_id` |
+| `key_id` | `IdentityCandidate.implementation_id` |
 | resolved identification | `IdentityCandidate.identification` |
 | `attributes` | `IdentityCandidate.attributes` |
 
@@ -35,6 +35,11 @@
 | --- | --- |
 | `identity_id` | `Identity.id` |
 | `display_name` | `Identity.display_name` |
+| `email` | `Identity.email` |
 | `roles` | `Identity.roles` |
 | `claims` | `Identity.claims` |
 | `attributes` | `Identity.attributes` |
+
+## Reduction
+
+API Key reduces to the identity invariant without requiring a core model change.
