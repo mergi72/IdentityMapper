@@ -17,7 +17,7 @@ from identity_mapper.providers.basic import (
 )
 from identity_mapper_service.app import DEFAULT_MAX_REQUEST_BODY_BYTES, serve
 from identity_mapper_service.registry import ProviderRegistry
-from identity_mapper_service.request_log import RequestLog
+from identity_mapper_service.request_log import CapabilityInvocationLog
 from identity_mapper_service.service import IdentityMapperHostService
 
 
@@ -241,7 +241,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         registry = build_demo_registry() if args.demo_basic else ProviderRegistry()
         request_log = (
-            RequestLog(audit_log, max_entries=audit_log_max_entries)
+            CapabilityInvocationLog(audit_log, max_entries=audit_log_max_entries)
             if audit_log_enabled
             else None
         )

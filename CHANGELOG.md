@@ -2,6 +2,15 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.27.1
+
+Capability invocation log naming patch.
+
+- Renamed the primary Host Service audit writer from `RequestLog` to `CapabilityInvocationLog`.
+- Kept `RequestLog` as a compatibility alias.
+- Updated Host Service wiring and tests to use the current capability invocation terminology.
+- Tests: 266 passed.
+
 ## v0.27.0
 
 Capability Invocation Log checkpoint.

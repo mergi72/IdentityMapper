@@ -13,7 +13,7 @@ from identity_mapper.capability_protocol import (
     VerifyCredentialResponse,
 )
 from identity_mapper_service.registry import ProviderRegistry, UnknownProviderError
-from identity_mapper_service.request_log import RequestLog
+from identity_mapper_service.request_log import CapabilityInvocationLog
 from identity_mapper_service.responses import (
     AuditResponse,
     HealthResponse,
@@ -27,7 +27,7 @@ class IdentityMapperHostService:
     def __init__(
         self,
         registry: ProviderRegistry,
-        request_log: RequestLog | None = None,
+        request_log: CapabilityInvocationLog | None = None,
     ) -> None:
         self._registry = registry
         self._request_log = request_log

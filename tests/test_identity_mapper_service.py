@@ -24,7 +24,7 @@ from identity_mapper.domain import Credential, Identification
 from identity_mapper_service.__main__ import HostServiceConfig, load_config, main
 from identity_mapper_service.app import create_server
 from identity_mapper_service.registry import ProviderRegistry, UnknownProviderError
-from identity_mapper_service.request_log import RequestLog
+from identity_mapper_service.request_log import CapabilityInvocationLog
 from identity_mapper_service.responses import (
     AuditResponse,
     HealthResponse,
@@ -41,7 +41,7 @@ from identity_mapper_service.schemas import (
 from identity_mapper_service.service import IdentityMapperHostService
 
 
-def make_service(request_log: RequestLog | None = None) -> IdentityMapperHostService:
+def make_service(request_log: CapabilityInvocationLog | None = None) -> IdentityMapperHostService:
     registry = ProviderRegistry()
     store = InMemoryBasicUserStore(
         [
@@ -467,7 +467,7 @@ def test_service_can_run_without_audit_log(tmp_path) -> None:
 
 
 def test_service_writes_authenticate_log_without_credential_value(tmp_path) -> None:
-    request_log = RequestLog(tmp_path / "authenticate.log")
+    request_log = CapabilityInvocationLog(tmp_path / "authenticate.log")
     service = make_service(request_log)
     request = AuthenticateRequest(
         provider="basic",
@@ -496,7 +496,7 @@ def test_service_writes_authenticate_log_without_credential_value(tmp_path) -> N
 
 
 def test_service_logs_selected_provider_for_implicit_authentication(tmp_path) -> None:
-    request_log = RequestLog(tmp_path / "authenticate.log")
+    request_log = CapabilityInvocationLog(tmp_path / "authenticate.log")
     service = make_service(request_log)
     request = AuthenticateRequest(
         identification=valid_identification(),
@@ -513,7 +513,7 @@ def test_service_logs_selected_provider_for_implicit_authentication(tmp_path) ->
 
 
 def test_service_logs_auto_when_no_provider_accepts_request(tmp_path) -> None:
-    request_log = RequestLog(tmp_path / "authenticate.log")
+    request_log = CapabilityInvocationLog(tmp_path / "authenticate.log")
     service = make_service(request_log)
     request = AuthenticateRequest(
         identification=valid_identification(),
@@ -530,7 +530,7 @@ def test_service_logs_auto_when_no_provider_accepts_request(tmp_path) -> None:
 
 
 def test_request_log_trims_to_max_entries(tmp_path) -> None:
-    request_log = RequestLog(tmp_path / "authenticate.log", max_entries=2)
+    request_log = CapabilityInvocationLog(tmp_path / "authenticate.log", max_entries=2)
 
     for index in range(3):
         request_log.append_authenticate(
@@ -549,7 +549,7 @@ def test_request_log_trims_to_max_entries(tmp_path) -> None:
 
 
 def test_service_logs_resolve_and_verify_invocations(tmp_path) -> None:
-    request_log = RequestLog(tmp_path / "audit.log")
+    request_log = CapabilityInvocationLog(tmp_path / "audit.log")
     service = make_service(request_log)
 
     candidate = service.resolve_identity_request(
@@ -575,7 +575,7 @@ def test_service_logs_resolve_and_verify_invocations(tmp_path) -> None:
 
 
 def test_service_writes_authenticate_log_with_local_timezone(tmp_path) -> None:
-    request_log = RequestLog(tmp_path / "authenticate.log")
+    request_log = CapabilityInvocationLog(tmp_path / "authenticate.log")
     service = make_service(request_log)
 
     response = service.authenticate_request(valid_authenticate_request())
@@ -762,7 +762,7 @@ def test_http_host_rejects_invalid_verify_credential() -> None:
 
 
 def test_http_host_audit_logs_all_capabilities(tmp_path) -> None:
-    service = make_service(RequestLog(tmp_path / "audit.log"))
+    service = make_service(CapabilityInvocationLog(tmp_path / "audit.log"))
     server = create_server("127.0.0.1", 0, service)
     host, port = server.server_address
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -860,7 +860,7 @@ def test_http_host_uses_neutral_server_header() -> None:
 
 
 def test_http_host_exposes_authenticate_logs(tmp_path) -> None:
-    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    service = make_service(CapabilityInvocationLog(tmp_path / "authenticate.log"))
     server = create_server("127.0.0.1", 0, service)
     host, port = server.server_address
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -897,7 +897,7 @@ def test_http_host_exposes_authenticate_logs(tmp_path) -> None:
 
 
 def test_http_host_shows_latest_authenticate_log_first(tmp_path) -> None:
-    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    service = make_service(CapabilityInvocationLog(tmp_path / "authenticate.log"))
     server = create_server("127.0.0.1", 0, service)
     host, port = server.server_address
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -924,7 +924,7 @@ def test_http_host_shows_latest_authenticate_log_first(tmp_path) -> None:
 
 
 def test_http_host_refreshes_authenticate_logs_with_html_meta(tmp_path) -> None:
-    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    service = make_service(CapabilityInvocationLog(tmp_path / "authenticate.log"))
     server = create_server("127.0.0.1", 0, service)
     host, port = server.server_address
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -950,7 +950,7 @@ def test_http_host_refreshes_authenticate_logs_with_html_meta(tmp_path) -> None:
 
 
 def test_http_host_exposes_authenticate_logs_as_json(tmp_path) -> None:
-    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    service = make_service(CapabilityInvocationLog(tmp_path / "authenticate.log"))
     server = create_server("127.0.0.1", 0, service)
     host, port = server.server_address
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -985,7 +985,7 @@ def test_http_host_exposes_authenticate_logs_as_json(tmp_path) -> None:
 
 
 def test_http_host_exposes_authenticate_logs_as_text(tmp_path) -> None:
-    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    service = make_service(CapabilityInvocationLog(tmp_path / "authenticate.log"))
     server = create_server("127.0.0.1", 0, service)
     host, port = server.server_address
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -1023,7 +1023,7 @@ def test_http_host_exposes_authenticate_logs_as_text(tmp_path) -> None:
 
 
 def test_http_host_exposes_audit_alias(tmp_path) -> None:
-    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    service = make_service(CapabilityInvocationLog(tmp_path / "authenticate.log"))
     server = create_server("127.0.0.1", 0, service)
     host, port = server.server_address
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -1056,7 +1056,7 @@ def test_http_host_exposes_audit_alias(tmp_path) -> None:
 
 
 def test_cli_lists_providers(tmp_path, capsys) -> None:
-    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    service = make_service(CapabilityInvocationLog(tmp_path / "authenticate.log"))
     server = create_server("127.0.0.1", 0, service)
     host, port = server.server_address
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -1073,7 +1073,7 @@ def test_cli_lists_providers(tmp_path, capsys) -> None:
 
 
 def test_cli_prints_logs(tmp_path, capsys) -> None:
-    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    service = make_service(CapabilityInvocationLog(tmp_path / "authenticate.log"))
     server = create_server("127.0.0.1", 0, service)
     host, port = server.server_address
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -1105,7 +1105,7 @@ def test_cli_prints_logs(tmp_path, capsys) -> None:
 
 
 def test_cli_authenticates(tmp_path, capsys) -> None:
-    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    service = make_service(CapabilityInvocationLog(tmp_path / "authenticate.log"))
     server = create_server("127.0.0.1", 0, service)
     host, port = server.server_address
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -1140,7 +1140,7 @@ def test_cli_authenticates(tmp_path, capsys) -> None:
 
 
 def test_cli_authenticate_can_defer_provider_selection(tmp_path, capsys) -> None:
-    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    service = make_service(CapabilityInvocationLog(tmp_path / "authenticate.log"))
     server = create_server("127.0.0.1", 0, service)
     host, port = server.server_address
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -1173,7 +1173,7 @@ def test_cli_authenticate_can_defer_provider_selection(tmp_path, capsys) -> None
 
 
 def test_cli_authenticate_rejects_invalid_credential(tmp_path, capsys) -> None:
-    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    service = make_service(CapabilityInvocationLog(tmp_path / "authenticate.log"))
     server = create_server("127.0.0.1", 0, service)
     host, port = server.server_address
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -1206,7 +1206,7 @@ def test_cli_authenticate_rejects_invalid_credential(tmp_path, capsys) -> None:
 
 
 def test_cli_authenticate_prints_json(tmp_path, capsys) -> None:
-    service = make_service(RequestLog(tmp_path / "authenticate.log"))
+    service = make_service(CapabilityInvocationLog(tmp_path / "authenticate.log"))
     server = create_server("127.0.0.1", 0, service)
     host, port = server.server_address
     thread = threading.Thread(target=server.serve_forever, daemon=True)
