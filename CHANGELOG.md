@@ -2,6 +2,16 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.28.1
+
+Provider mapping contract checkpoint.
+
+- Added provider x provider identity mapping contract coverage.
+- Verified every source provider can map to every target provider through a verified `Identity`.
+- Verified each provider can map to itself.
+- Verified target mapping is not called when source identity proof is rejected.
+- Tests: 484 passed.
+
 ## v0.28.0
 
 Identity mapping checkpoint.

@@ -3,9 +3,22 @@ from typing import Any, Callable
 
 import pytest
 
-from identity_mapper.capabilities import Authenticate, ResolveIdentity, VerifyCredential
+from identity_mapper.capabilities import (
+    Authenticate,
+    MapIdentity,
+    ResolveIdentity,
+    VerifyCredential,
+)
 from identity_mapper.capability_protocol import AuthenticationRejected
-from identity_mapper.domain import Credential, Identification, Identity, IdentityCandidate
+from identity_mapper.domain import (
+    Credential,
+    Identification,
+    Identity,
+    IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
+)
+from identity_mapper_service.registry import ProviderRegistry
 from identity_mapper.providers.api_key import (
     ApiKeyAuthenticator,
     ApiKeyCredentialVerifier,
@@ -844,6 +857,55 @@ def contract_ids(contract: ProviderCapabilityContract) -> str:
     return contract.name
 
 
+class ContractTargetIdentityMapper(MapIdentity):
+    def __init__(self, provider: str) -> None:
+        self.provider = provider
+        self.calls = 0
+
+    def map_identity(
+        self,
+        identity: Identity,
+        target: IdentityTarget,
+    ) -> TargetIdentity | None:
+        self.calls += 1
+        if target.provider != self.provider:
+            return None
+
+        return TargetIdentity(
+            identifier=f"{self.provider}:{identity.id}",
+            target=target,
+            attributes={"source": self.provider},
+        )
+
+
+def registry_with_all_provider_authenticators_and_target_mappers(
+) -> tuple[ProviderRegistry, dict[str, ContractTargetIdentityMapper]]:
+    registry = ProviderRegistry()
+    target_mappers: dict[str, ContractTargetIdentityMapper] = {}
+
+    for contract in CONTRACTS:
+        registry.register_authenticator(
+            contract.name,
+            contract.authenticator_type(contract.store_factory()),
+        )
+        target_mapper = ContractTargetIdentityMapper(contract.name)
+        registry.register_identity_mapper(contract.name, target_mapper)
+        target_mappers[contract.name] = target_mapper
+
+    return registry, target_mappers
+
+
+PROVIDER_MAPPING_CONTRACTS = tuple(
+    pytest.param(
+        source_contract,
+        target_contract,
+        id=f"{source_contract.name}->{target_contract.name}",
+    )
+    for source_contract in CONTRACTS
+    for target_contract in CONTRACTS
+)
+
+
 @pytest.mark.parametrize("contract", CONTRACTS, ids=contract_ids)
 def test_provider_mapper_returns_identity_inputs(
     contract: ProviderCapabilityContract,
@@ -939,3 +1001,63 @@ def test_provider_authenticator_rejects_invalid_credential(
             identification,
             credential,
         )
+
+
+@pytest.mark.parametrize(
+    ("source_contract", "target_contract"),
+    PROVIDER_MAPPING_CONTRACTS,
+)
+def test_provider_identity_can_map_to_every_target_provider_through_verified_identity(
+    source_contract: ProviderCapabilityContract,
+    target_contract: ProviderCapabilityContract,
+) -> None:
+    registry, target_mappers = registry_with_all_provider_authenticators_and_target_mappers()
+    source_identification, source_credential = (
+        source_contract.mapper_factory().to_domain(source_contract.valid_request)
+    )
+
+    result = registry.map_identity(
+        source_provider=source_contract.name,
+        identification=source_identification,
+        credential=source_credential,
+        target=IdentityTarget(
+            provider=target_contract.name,
+            purpose="contract",
+        ),
+    )
+
+    assert result.source_provider == source_contract.name
+    assert result.target_provider == target_contract.name
+    assert result.identity == source_contract.expected_identity
+    assert result.target_identity == TargetIdentity(
+        identifier=f"{target_contract.name}:{source_contract.expected_identity.id}",
+        target=IdentityTarget(
+            provider=target_contract.name,
+            purpose="contract",
+        ),
+        attributes={"source": target_contract.name},
+    )
+    assert target_mappers[target_contract.name].calls == 1
+
+
+@pytest.mark.parametrize("contract", CONTRACTS, ids=contract_ids)
+def test_provider_identity_mapping_does_not_call_target_without_verified_identity(
+    contract: ProviderCapabilityContract,
+) -> None:
+    registry, target_mappers = registry_with_all_provider_authenticators_and_target_mappers()
+    source_identification, source_credential = (
+        contract.mapper_factory().to_domain(contract.invalid_request)
+    )
+
+    with pytest.raises(AuthenticationRejected):
+        registry.map_identity(
+            source_provider=contract.name,
+            identification=source_identification,
+            credential=source_credential,
+            target=IdentityTarget(
+                provider=contract.name,
+                purpose="self",
+            ),
+        )
+
+    assert target_mappers[contract.name].calls == 0
