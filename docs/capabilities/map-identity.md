@@ -45,3 +45,22 @@ Kerberos proof -> Identity -> AD projection
 ```
 
 `TargetIdentity` is a projection, not proof that a target account exists.
+
+## Verified Target Worlds
+
+The current target projection suite covers:
+
+- Windows / AD
+- LDAP
+- Kerberos
+- JWT
+- SAML
+
+Each target mapper implements only:
+
+```text
+Identity -> TargetIdentity
+```
+
+They do not bind, look up accounts, issue tokens, issue assertions, or verify
+target existence.

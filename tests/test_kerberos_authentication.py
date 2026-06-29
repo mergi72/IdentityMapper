@@ -5,6 +5,8 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
 from identity_mapper.providers.kerberos import (
     InMemoryKerberosPrincipalStore,
@@ -15,6 +17,8 @@ from identity_mapper.providers.kerberos import (
     KerberosMapper,
     KerberosPrincipalRecord,
     KerberosRequest,
+    KerberosTargetIdentityMapper,
+    KerberosTargetProjectionConfig,
 )
 
 
@@ -159,4 +163,61 @@ def test_kerberos_mapper_contains_no_auth_logic() -> None:
             type="KERBEROS_TICKET",
             value="wrong-kerberos-ticket",
         ),
+    )
+
+
+def test_kerberos_target_mapper_projects_identity_to_principal_shape() -> None:
+    identity = Identity(id="subject", roles=("service",))
+    target = IdentityTarget(
+        provider="kerberos",
+        realm="EXAMPLE.ORG",
+        purpose="HTTP/app.example.org",
+    )
+
+    target_identity = KerberosTargetIdentityMapper().map_identity(identity, target)
+
+    assert target_identity == TargetIdentity(
+        identifier="kerberos:subject@EXAMPLE.ORG",
+        target=target,
+        attributes={
+            "principal_candidate": "subject@EXAMPLE.ORG",
+            "realm_hint": "EXAMPLE.ORG",
+            "service_hint": "HTTP/app.example.org",
+            "role_hints": ("service",),
+        },
+    )
+
+
+def test_kerberos_target_mapper_can_use_default_realm() -> None:
+    identity = Identity(id="subject")
+    target = IdentityTarget(provider="kerberos")
+
+    target_identity = KerberosTargetIdentityMapper(
+        KerberosTargetProjectionConfig(default_realm="EXAMPLE.ORG")
+    ).map_identity(identity, target)
+
+    assert target_identity is not None
+    assert target_identity.attributes["principal_candidate"] == "subject@EXAMPLE.ORG"
+
+
+def test_kerberos_target_mapper_does_not_confirm_principal_existence() -> None:
+    identity = Identity(id="missing-principal")
+    target = IdentityTarget(provider="kerberos", realm="EXAMPLE.ORG")
+
+    target_identity = KerberosTargetIdentityMapper().map_identity(identity, target)
+
+    assert target_identity is not None
+    assert (
+        target_identity.attributes["principal_candidate"]
+        == "missing-principal@EXAMPLE.ORG"
+    )
+
+
+def test_kerberos_target_mapper_ignores_non_kerberos_target() -> None:
+    assert (
+        KerberosTargetIdentityMapper().map_identity(
+            Identity(id="subject"),
+            IdentityTarget(provider="ldap"),
+        )
+        is None
     )

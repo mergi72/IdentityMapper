@@ -11,6 +11,15 @@ class SamlConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class SamlTargetProjectionConfig:
+    """Configuration for projecting an Identity into a SAML target world."""
+
+    provider: str = "saml"
+    default_issuer: str | None = None
+    default_audience: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class SamlRequest:
     """Implementation model for a SAML authentication request."""
 

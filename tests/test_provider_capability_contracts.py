@@ -72,6 +72,7 @@ from identity_mapper.providers.jwt import (
     JwtMapper,
     JwtRecord,
     JwtRequest,
+    JwtTargetIdentityMapper,
 )
 from identity_mapper.providers.kerberos import (
     InMemoryKerberosPrincipalStore,
@@ -81,6 +82,7 @@ from identity_mapper.providers.kerberos import (
     KerberosMapper,
     KerberosPrincipalRecord,
     KerberosRequest,
+    KerberosTargetIdentityMapper,
 )
 from identity_mapper.providers.ldap import (
     InMemoryLdapDirectory,
@@ -90,6 +92,7 @@ from identity_mapper.providers.ldap import (
     LdapCredentialVerifier,
     LdapEntry,
     LdapIdentityResolver,
+    LdapTargetIdentityMapper,
 )
 from identity_mapper.providers.mfa import (
     InMemoryMfaStore,
@@ -127,6 +130,7 @@ from identity_mapper.providers.saml import (
     SamlIdentityResolver,
     SamlMapper,
     SamlRequest,
+    SamlTargetIdentityMapper,
 )
 from identity_mapper.providers.webauthn import (
     InMemoryWebAuthnCredentialStore,
@@ -162,6 +166,15 @@ class ProviderCapabilityContract:
     missing_identification: Identification
     expected_candidate: IdentityCandidate
     expected_identity: Identity
+
+
+@dataclass(frozen=True, slots=True)
+class TargetProjectionContract:
+    name: str
+    mapper_factory: Callable[[], MapIdentity]
+    target: IdentityTarget
+    required_attributes: tuple[str, ...]
+    forbidden_attributes: tuple[str, ...] = ()
 
 
 def basic_contract() -> ProviderCapabilityContract:
@@ -907,6 +920,79 @@ PROVIDER_MAPPING_CONTRACTS = tuple(
 )
 
 
+TARGET_PROJECTION_CONTRACTS = (
+    TargetProjectionContract(
+        name="ad",
+        mapper_factory=WindowsAdTargetIdentityMapper,
+        target=IdentityTarget(
+            provider="ad",
+            realm="corp.local",
+            purpose="bind_identity",
+        ),
+        required_attributes=(
+            "upn_candidate",
+            "sam_account_name_candidate",
+        ),
+        forbidden_attributes=("account_verified",),
+    ),
+    TargetProjectionContract(
+        name="ldap",
+        mapper_factory=LdapTargetIdentityMapper,
+        target=IdentityTarget(
+            provider="ldap",
+            realm="ou=people,dc=example,dc=org",
+            purpose="bind_identity",
+        ),
+        required_attributes=("uid_candidate", "dn_candidate"),
+        forbidden_attributes=("entry_verified",),
+    ),
+    TargetProjectionContract(
+        name="kerberos",
+        mapper_factory=KerberosTargetIdentityMapper,
+        target=IdentityTarget(
+            provider="kerberos",
+            realm="EXAMPLE.ORG",
+            purpose="HTTP/app.example.org",
+        ),
+        required_attributes=("principal_candidate",),
+        forbidden_attributes=("principal_verified",),
+    ),
+    TargetProjectionContract(
+        name="jwt",
+        mapper_factory=JwtTargetIdentityMapper,
+        target=IdentityTarget(
+            provider="jwt",
+            realm="issuer",
+            purpose="api",
+        ),
+        required_attributes=("subject_candidate",),
+        forbidden_attributes=("token", "token_verified"),
+    ),
+    TargetProjectionContract(
+        name="saml",
+        mapper_factory=SamlTargetIdentityMapper,
+        target=IdentityTarget(
+            provider="saml",
+            realm="idp",
+            purpose="sp",
+        ),
+        required_attributes=("name_id_candidate",),
+        forbidden_attributes=("assertion", "assertion_verified"),
+    ),
+)
+
+
+SOURCE_TO_REAL_TARGET_MAPPING_CONTRACTS = tuple(
+    pytest.param(
+        source_contract,
+        target_contract,
+        id=f"{source_contract.name}->{target_contract.name}",
+    )
+    for source_contract in CONTRACTS
+    for target_contract in TARGET_PROJECTION_CONTRACTS
+)
+
+
 @pytest.mark.parametrize("contract", CONTRACTS, ids=contract_ids)
 def test_provider_mapper_returns_identity_inputs(
     contract: ProviderCapabilityContract,
@@ -1102,3 +1188,45 @@ def test_provider_identity_can_map_to_windows_ad_projection_through_verified_ide
     assert result.target_identity.attributes["upn_candidate"]
     assert result.target_identity.attributes["sam_account_name_candidate"]
     assert "account_verified" not in result.target_identity.attributes
+
+
+@pytest.mark.parametrize(
+    ("source_contract", "target_contract"),
+    SOURCE_TO_REAL_TARGET_MAPPING_CONTRACTS,
+)
+def test_provider_identity_can_map_to_real_target_projection_through_verified_identity(
+    source_contract: ProviderCapabilityContract,
+    target_contract: TargetProjectionContract,
+) -> None:
+    registry = ProviderRegistry()
+    registry.register_authenticator(
+        source_contract.name,
+        source_contract.authenticator_type(source_contract.store_factory()),
+    )
+    registry.register_identity_mapper(
+        target_contract.name,
+        target_contract.mapper_factory(),
+    )
+    source_identification, source_credential = (
+        source_contract.mapper_factory().to_domain(source_contract.valid_request)
+    )
+
+    result = registry.map_identity(
+        source_provider=source_contract.name,
+        identification=source_identification,
+        credential=source_credential,
+        target=target_contract.target,
+    )
+
+    assert result.source_provider == source_contract.name
+    assert result.target_provider == target_contract.name
+    assert result.identity == source_contract.expected_identity
+    assert result.target_identity is not None
+    assert result.target_identity.target == target_contract.target
+    assert result.target_identity.identifier.startswith(f"{target_contract.name}:")
+
+    for attribute in target_contract.required_attributes:
+        assert result.target_identity.attributes[attribute]
+
+    for attribute in target_contract.forbidden_attributes:
+        assert attribute not in result.target_identity.attributes

@@ -11,6 +11,14 @@ class KerberosConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class KerberosTargetProjectionConfig:
+    """Configuration for projecting an Identity into a Kerberos target world."""
+
+    provider: str = "kerberos"
+    default_realm: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class KerberosRequest:
     """Implementation model for a Kerberos authentication request."""
 

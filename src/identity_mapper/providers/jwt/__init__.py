@@ -5,11 +5,13 @@ from identity_mapper.providers.jwt.capabilities import (
     JwtAuthenticator,
     JwtCredentialVerifier,
     JwtIdentityResolver,
+    JwtTargetIdentityMapper,
 )
 from identity_mapper.providers.jwt.domain import (
     JwtConfig,
     JwtRecord,
     JwtRequest,
+    JwtTargetProjectionConfig,
 )
 from identity_mapper.providers.jwt.mapper import (
     JwtCandidateMapper,
@@ -32,4 +34,6 @@ __all__ = [
     "JwtRecord",
     "JwtRequest",
     "JwtResolution",
+    "JwtTargetIdentityMapper",
+    "JwtTargetProjectionConfig",
 ]

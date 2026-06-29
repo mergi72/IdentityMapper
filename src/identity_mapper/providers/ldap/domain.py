@@ -11,6 +11,14 @@ class LdapConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class LdapTargetProjectionConfig:
+    """Configuration for projecting an Identity into an LDAP target world."""
+
+    provider: str = "ldap"
+    default_base_dn: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class LdapBindRequest:
     """Implementation model for an LDAP bind request."""
 

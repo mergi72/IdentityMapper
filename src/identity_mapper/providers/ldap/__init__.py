@@ -5,8 +5,14 @@ from identity_mapper.providers.ldap.capabilities import (
     LdapAuthenticator,
     LdapCredentialVerifier,
     LdapIdentityResolver,
+    LdapTargetIdentityMapper,
 )
-from identity_mapper.providers.ldap.domain import LdapBindRequest, LdapConfig, LdapEntry
+from identity_mapper.providers.ldap.domain import (
+    LdapBindRequest,
+    LdapConfig,
+    LdapEntry,
+    LdapTargetProjectionConfig,
+)
 from identity_mapper.providers.ldap.mapper import (
     LdapBindMapper,
     LdapEntryCandidateMapper,
@@ -28,4 +34,6 @@ __all__ = [
     "LdapEntryIdentityMapper",
     "LdapEntryResolution",
     "LdapIdentityResolver",
+    "LdapTargetIdentityMapper",
+    "LdapTargetProjectionConfig",
 ]

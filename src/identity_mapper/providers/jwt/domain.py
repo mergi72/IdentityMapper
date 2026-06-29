@@ -11,6 +11,15 @@ class JwtConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class JwtTargetProjectionConfig:
+    """Configuration for projecting an Identity into a JWT target world."""
+
+    provider: str = "jwt"
+    default_issuer: str | None = None
+    default_audience: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class JwtRequest:
     """Implementation model for a JWT / Bearer Token authentication request."""
 

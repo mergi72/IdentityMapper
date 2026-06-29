@@ -5,6 +5,8 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
 from identity_mapper.providers.saml import (
     InMemorySamlAssertionStore,
@@ -15,6 +17,8 @@ from identity_mapper.providers.saml import (
     SamlIdentityResolver,
     SamlMapper,
     SamlRequest,
+    SamlTargetIdentityMapper,
+    SamlTargetProjectionConfig,
 )
 
 
@@ -150,4 +154,64 @@ def test_saml_mapper_contains_no_auth_logic() -> None:
     assert unknown == (
         Identification(identifier="missing@example.org"),
         Credential(type="SAML_ASSERTION", value="wrong-saml-assertion"),
+    )
+
+
+def test_saml_target_mapper_projects_identity_to_saml_shape() -> None:
+    identity = Identity(
+        id="subject",
+        email="subject@example.org",
+        roles=("employee",),
+        claims={"department": "engineering"},
+        attributes={"source": "kerberos"},
+    )
+    target = IdentityTarget(provider="saml", realm="idp", purpose="sp")
+
+    target_identity = SamlTargetIdentityMapper().map_identity(identity, target)
+
+    assert target_identity == TargetIdentity(
+        identifier="saml:subject@example.org",
+        target=target,
+        attributes={
+            "name_id_candidate": "subject@example.org",
+            "issuer_hint": "idp",
+            "audience_hint": "sp",
+            "attribute_hints": {"source": "kerberos"},
+            "claim_hints": {"department": "engineering"},
+            "role_hints": ("employee",),
+        },
+    )
+
+
+def test_saml_target_mapper_can_use_default_issuer_and_audience() -> None:
+    identity = Identity(id="subject")
+    target = IdentityTarget(provider="saml")
+
+    target_identity = SamlTargetIdentityMapper(
+        SamlTargetProjectionConfig(default_issuer="idp", default_audience="sp")
+    ).map_identity(identity, target)
+
+    assert target_identity is not None
+    assert target_identity.attributes["issuer_hint"] == "idp"
+    assert target_identity.attributes["audience_hint"] == "sp"
+
+
+def test_saml_target_mapper_does_not_issue_or_verify_assertion() -> None:
+    identity = Identity(id="missing-assertion")
+    target = IdentityTarget(provider="saml", realm="idp")
+
+    target_identity = SamlTargetIdentityMapper().map_identity(identity, target)
+
+    assert target_identity is not None
+    assert target_identity.attributes["name_id_candidate"] == "missing-assertion"
+    assert "assertion" not in target_identity.attributes
+
+
+def test_saml_target_mapper_ignores_non_saml_target() -> None:
+    assert (
+        SamlTargetIdentityMapper().map_identity(
+            Identity(id="subject"),
+            IdentityTarget(provider="jwt"),
+        )
+        is None
     )

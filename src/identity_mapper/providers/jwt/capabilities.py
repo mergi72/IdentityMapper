@@ -4,6 +4,7 @@ from identity_mapper.capability_protocol import AuthenticationRejected
 
 from identity_mapper.capabilities import (
     Authenticate,
+    MapIdentity,
     ResolveIdentity,
     VerifyCredential,
 )
@@ -12,8 +13,10 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
-from identity_mapper.providers.jwt.domain import JwtConfig
+from identity_mapper.providers.jwt.domain import JwtConfig, JwtTargetProjectionConfig
 from identity_mapper.providers.jwt.mapper import (
     JwtCandidateMapper,
     JwtIdentityMapper,
@@ -111,3 +114,41 @@ class JwtAuthenticator(Authenticate):
             raise JwtAuthenticationError("unknown identity")
 
         return self._identity_mapper.to_domain(token)
+
+
+class JwtTargetIdentityMapper(MapIdentity):
+    """Projects a verified Identity into a JWT target identity shape."""
+
+    def __init__(
+        self,
+        config: JwtTargetProjectionConfig | None = None,
+    ) -> None:
+        self._config = config or JwtTargetProjectionConfig()
+
+    def map_identity(
+        self,
+        identity: Identity,
+        target: IdentityTarget,
+    ) -> TargetIdentity | None:
+        if target.provider != self._config.provider:
+            return None
+
+        issuer = target.realm or self._config.default_issuer
+        audience = target.purpose or self._config.default_audience
+        subject_candidate = identity.id
+        return TargetIdentity(
+            identifier=f"{target.provider}:{subject_candidate}",
+            target=target,
+            attributes={
+                key: value
+                for key, value in {
+                    "subject_candidate": subject_candidate,
+                    "issuer_hint": issuer,
+                    "audience_hint": audience,
+                    "email_hint": identity.email,
+                    "claim_hints": dict(identity.claims),
+                    "role_hints": tuple(identity.roles),
+                }.items()
+                if value is not None
+            },
+        )

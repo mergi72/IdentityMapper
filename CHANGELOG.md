@@ -2,6 +2,21 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.30.0
+
+Target projection verification checkpoint.
+
+- Added LDAP, Kerberos, JWT, and SAML target projection mappers.
+- Kept all target mappers projection-only: no lookup, bind, token issuance,
+  assertion issuance, network call, or target existence confirmation.
+- Exported the new target projection mappers from their provider packages.
+- Added provider tests for each new target projection.
+- Added contract coverage proving every included source provider can map
+  through canonical `Identity` to Windows / AD, LDAP, Kerberos, JWT, and SAML
+  target projections.
+- Documented the verified target projection suite.
+- Tests: 589 passed.
+
 ## v0.29.1
 
 Canonical identity documentation patch.

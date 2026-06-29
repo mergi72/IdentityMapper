@@ -5,6 +5,8 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
 from identity_mapper.providers.ldap import (
     InMemoryLdapDirectory,
@@ -15,6 +17,8 @@ from identity_mapper.providers.ldap import (
     LdapCredentialVerifier,
     LdapEntry,
     LdapIdentityResolver,
+    LdapTargetIdentityMapper,
+    LdapTargetProjectionConfig,
 )
 
 
@@ -150,4 +154,63 @@ def test_ldap_mapper_contains_no_auth_logic() -> None:
     assert unknown == (
         Identification(identifier="missing"),
         Credential(type="PASSWORD", value="wrong"),
+    )
+
+
+def test_ldap_target_mapper_projects_identity_to_ldap_shape() -> None:
+    identity = Identity(
+        id="subject@example.org",
+        display_name="Example Subject",
+        email="subject@example.org",
+        roles=("readers",),
+    )
+    target = IdentityTarget(provider="ldap", realm="ou=people,dc=example,dc=org")
+
+    target_identity = LdapTargetIdentityMapper().map_identity(identity, target)
+
+    assert target_identity == TargetIdentity(
+        identifier="ldap:uid=subject,ou=people,dc=example,dc=org",
+        target=target,
+        attributes={
+            "uid_candidate": "subject",
+            "dn_candidate": "uid=subject,ou=people,dc=example,dc=org",
+            "cn_hint": "Example Subject",
+            "mail_hint": "subject@example.org",
+            "group_hints": ("readers",),
+        },
+    )
+
+
+def test_ldap_target_mapper_can_use_default_base_dn() -> None:
+    identity = Identity(id="subject")
+    target = IdentityTarget(provider="ldap")
+
+    target_identity = LdapTargetIdentityMapper(
+        LdapTargetProjectionConfig(default_base_dn="ou=people,dc=example,dc=org")
+    ).map_identity(identity, target)
+
+    assert target_identity is not None
+    assert (
+        target_identity.attributes["dn_candidate"]
+        == "uid=subject,ou=people,dc=example,dc=org"
+    )
+
+
+def test_ldap_target_mapper_does_not_confirm_entry_existence() -> None:
+    identity = Identity(id="missing-user")
+    target = IdentityTarget(provider="ldap", realm="ou=people,dc=example,dc=org")
+
+    target_identity = LdapTargetIdentityMapper().map_identity(identity, target)
+
+    assert target_identity is not None
+    assert target_identity.attributes["uid_candidate"] == "missing-user"
+
+
+def test_ldap_target_mapper_ignores_non_ldap_target() -> None:
+    assert (
+        LdapTargetIdentityMapper().map_identity(
+            Identity(id="subject"),
+            IdentityTarget(provider="ad"),
+        )
+        is None
     )

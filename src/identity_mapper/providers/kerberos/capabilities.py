@@ -4,6 +4,7 @@ from identity_mapper.capability_protocol import AuthenticationRejected
 
 from identity_mapper.capabilities import (
     Authenticate,
+    MapIdentity,
     ResolveIdentity,
     VerifyCredential,
 )
@@ -12,8 +13,13 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
-from identity_mapper.providers.kerberos.domain import KerberosConfig
+from identity_mapper.providers.kerberos.domain import (
+    KerberosConfig,
+    KerberosTargetProjectionConfig,
+)
 from identity_mapper.providers.kerberos.mapper import (
     KerberosCandidateMapper,
     KerberosIdentityMapper,
@@ -113,3 +119,45 @@ class KerberosAuthenticator(Authenticate):
             raise KerberosAuthenticationError("unknown identity")
 
         return self._identity_mapper.to_domain(principal)
+
+
+class KerberosTargetIdentityMapper(MapIdentity):
+    """Projects a verified Identity into a Kerberos target identity shape."""
+
+    def __init__(
+        self,
+        config: KerberosTargetProjectionConfig | None = None,
+    ) -> None:
+        self._config = config or KerberosTargetProjectionConfig()
+
+    def map_identity(
+        self,
+        identity: Identity,
+        target: IdentityTarget,
+    ) -> TargetIdentity | None:
+        if target.provider != self._config.provider:
+            return None
+
+        realm = target.realm or self._config.default_realm
+        principal_candidate = self._principal_candidate(identity, realm)
+        return TargetIdentity(
+            identifier=f"{target.provider}:{principal_candidate}",
+            target=target,
+            attributes={
+                key: value
+                for key, value in {
+                    "principal_candidate": principal_candidate,
+                    "realm_hint": realm,
+                    "service_hint": target.purpose,
+                    "role_hints": tuple(identity.roles),
+                }.items()
+                if value is not None
+            },
+        )
+
+    def _principal_candidate(self, identity: Identity, realm: str | None) -> str:
+        if "@" in identity.id:
+            return identity.id
+        if realm:
+            return f"{identity.id}@{realm}"
+        return identity.id

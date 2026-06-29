@@ -4,6 +4,7 @@ from identity_mapper.capability_protocol import AuthenticationRejected
 
 from identity_mapper.capabilities import (
     Authenticate,
+    MapIdentity,
     ResolveIdentity,
     VerifyCredential,
 )
@@ -12,8 +13,10 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
-from identity_mapper.providers.saml.domain import SamlConfig
+from identity_mapper.providers.saml.domain import SamlConfig, SamlTargetProjectionConfig
 from identity_mapper.providers.saml.mapper import (
     SamlCandidateMapper,
     SamlIdentityMapper,
@@ -115,3 +118,41 @@ class SamlAuthenticator(Authenticate):
             raise SamlAuthenticationError("unknown identity")
 
         return self._identity_mapper.to_domain(assertion)
+
+
+class SamlTargetIdentityMapper(MapIdentity):
+    """Projects a verified Identity into a SAML target identity shape."""
+
+    def __init__(
+        self,
+        config: SamlTargetProjectionConfig | None = None,
+    ) -> None:
+        self._config = config or SamlTargetProjectionConfig()
+
+    def map_identity(
+        self,
+        identity: Identity,
+        target: IdentityTarget,
+    ) -> TargetIdentity | None:
+        if target.provider != self._config.provider:
+            return None
+
+        issuer = target.realm or self._config.default_issuer
+        audience = target.purpose or self._config.default_audience
+        name_id_candidate = identity.email or identity.id
+        return TargetIdentity(
+            identifier=f"{target.provider}:{name_id_candidate}",
+            target=target,
+            attributes={
+                key: value
+                for key, value in {
+                    "name_id_candidate": name_id_candidate,
+                    "issuer_hint": issuer,
+                    "audience_hint": audience,
+                    "attribute_hints": dict(identity.attributes),
+                    "claim_hints": dict(identity.claims),
+                    "role_hints": tuple(identity.roles),
+                }.items()
+                if value is not None
+            },
+        )

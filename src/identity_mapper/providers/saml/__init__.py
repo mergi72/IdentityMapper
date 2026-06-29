@@ -5,11 +5,13 @@ from identity_mapper.providers.saml.capabilities import (
     SamlAuthenticator,
     SamlCredentialVerifier,
     SamlIdentityResolver,
+    SamlTargetIdentityMapper,
 )
 from identity_mapper.providers.saml.domain import (
     SamlAssertionRecord,
     SamlConfig,
     SamlRequest,
+    SamlTargetProjectionConfig,
 )
 from identity_mapper.providers.saml.mapper import (
     SamlCandidateMapper,
@@ -32,4 +34,6 @@ __all__ = [
     "SamlMapper",
     "SamlRequest",
     "SamlResolution",
+    "SamlTargetIdentityMapper",
+    "SamlTargetProjectionConfig",
 ]

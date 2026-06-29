@@ -4,6 +4,7 @@ from identity_mapper.capability_protocol import AuthenticationRejected
 
 from identity_mapper.capabilities import (
     Authenticate,
+    MapIdentity,
     ResolveIdentity,
     VerifyCredential,
 )
@@ -12,8 +13,10 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
-from identity_mapper.providers.ldap.domain import LdapConfig
+from identity_mapper.providers.ldap.domain import LdapConfig, LdapTargetProjectionConfig
 from identity_mapper.providers.ldap.mapper import (
     LdapEntryCandidateMapper,
     LdapEntryIdentityMapper,
@@ -111,3 +114,45 @@ class LdapAuthenticator(Authenticate):
             raise LdapAuthenticationError("unknown identity")
 
         return self._identity_mapper.to_domain(entry)
+
+
+class LdapTargetIdentityMapper(MapIdentity):
+    """Projects a verified Identity into an LDAP target identity shape."""
+
+    def __init__(
+        self,
+        config: LdapTargetProjectionConfig | None = None,
+    ) -> None:
+        self._config = config or LdapTargetProjectionConfig()
+
+    def map_identity(
+        self,
+        identity: Identity,
+        target: IdentityTarget,
+    ) -> TargetIdentity | None:
+        if target.provider != self._config.provider:
+            return None
+
+        uid_candidate = identity.id.split("@", 1)[0].split("\\")[-1]
+        base_dn = target.realm or self._config.default_base_dn
+        dn_candidate = self._dn_candidate(uid_candidate, base_dn)
+        return TargetIdentity(
+            identifier=f"{target.provider}:{dn_candidate}",
+            target=target,
+            attributes={
+                key: value
+                for key, value in {
+                    "uid_candidate": uid_candidate,
+                    "dn_candidate": dn_candidate,
+                    "cn_hint": identity.display_name,
+                    "mail_hint": identity.email,
+                    "group_hints": tuple(identity.roles),
+                }.items()
+                if value is not None
+            },
+        )
+
+    def _dn_candidate(self, uid: str, base_dn: str | None) -> str:
+        if base_dn:
+            return f"uid={uid},{base_dn}"
+        return f"uid={uid}"

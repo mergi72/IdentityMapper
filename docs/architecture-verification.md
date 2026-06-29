@@ -53,6 +53,8 @@ The test suite verifies:
   including mapping to itself
 - the Windows / AD target mapper produces an AD projection without bind, lookup,
   network calls, service accounts, or account existence confirmation
+- every source provider can map through `Identity` to the real target
+  projection mappers for Windows / AD, LDAP, Kerberos, JWT, and SAML
 
 This is an architectural test. It does not prove that a concrete external
 system is integrated correctly. It proves that every provider implementation in
@@ -101,6 +103,7 @@ Identity
 | v0.28.0 | MapIdentity capability | No |
 | v0.28.1 | Provider-to-provider mapping contracts | No |
 | v0.29.0 | Windows / AD target projection | No |
+| v0.30.0 | LDAP, Kerberos, JWT, and SAML target projections | No |
 
 ## Verified Providers
 
@@ -142,6 +145,14 @@ included target provider through a verified `Identity`.
 Version `v0.29.0` adds the first concrete target mapper: a projection from
 canonical `Identity` to a Windows / AD target shape. The target projection does
 not perform AD lookup or account verification.
+
+The next target verification step adds concrete target projection mappers for
+LDAP, Kerberos, JWT, and SAML. Together with Windows / AD, the suite verifies
+that every included source provider can project through canonical `Identity`
+into each of these target worlds.
+
+These target projections do not perform network calls, bind operations, token
+issuance, assertion issuance, account lookup, or target existence confirmation.
 
 ## Conclusion
 

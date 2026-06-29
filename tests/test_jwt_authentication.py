@@ -5,6 +5,8 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
 from identity_mapper.providers.jwt import (
     InMemoryJwtStore,
@@ -15,6 +17,8 @@ from identity_mapper.providers.jwt import (
     JwtMapper,
     JwtRecord,
     JwtRequest,
+    JwtTargetIdentityMapper,
+    JwtTargetProjectionConfig,
 )
 
 
@@ -148,4 +152,63 @@ def test_jwt_mapper_contains_no_auth_logic() -> None:
     assert unknown == (
         Identification(identifier="missing"),
         Credential(type="BEARER_TOKEN", value="wrong-bearer-token"),
+    )
+
+
+def test_jwt_target_mapper_projects_identity_to_jwt_shape() -> None:
+    identity = Identity(
+        id="subject",
+        email="subject@example.org",
+        roles=("read", "write"),
+        claims={"scope": "read write"},
+    )
+    target = IdentityTarget(provider="jwt", realm="issuer", purpose="api")
+
+    target_identity = JwtTargetIdentityMapper().map_identity(identity, target)
+
+    assert target_identity == TargetIdentity(
+        identifier="jwt:subject",
+        target=target,
+        attributes={
+            "subject_candidate": "subject",
+            "issuer_hint": "issuer",
+            "audience_hint": "api",
+            "email_hint": "subject@example.org",
+            "claim_hints": {"scope": "read write"},
+            "role_hints": ("read", "write"),
+        },
+    )
+
+
+def test_jwt_target_mapper_can_use_default_issuer_and_audience() -> None:
+    identity = Identity(id="subject")
+    target = IdentityTarget(provider="jwt")
+
+    target_identity = JwtTargetIdentityMapper(
+        JwtTargetProjectionConfig(default_issuer="issuer", default_audience="api")
+    ).map_identity(identity, target)
+
+    assert target_identity is not None
+    assert target_identity.attributes["issuer_hint"] == "issuer"
+    assert target_identity.attributes["audience_hint"] == "api"
+
+
+def test_jwt_target_mapper_does_not_issue_or_verify_token() -> None:
+    identity = Identity(id="missing-token")
+    target = IdentityTarget(provider="jwt", realm="issuer")
+
+    target_identity = JwtTargetIdentityMapper().map_identity(identity, target)
+
+    assert target_identity is not None
+    assert target_identity.attributes["subject_candidate"] == "missing-token"
+    assert "token" not in target_identity.attributes
+
+
+def test_jwt_target_mapper_ignores_non_jwt_target() -> None:
+    assert (
+        JwtTargetIdentityMapper().map_identity(
+            Identity(id="subject"),
+            IdentityTarget(provider="saml"),
+        )
+        is None
     )

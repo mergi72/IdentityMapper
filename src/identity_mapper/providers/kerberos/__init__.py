@@ -5,11 +5,13 @@ from identity_mapper.providers.kerberos.capabilities import (
     KerberosAuthenticator,
     KerberosCredentialVerifier,
     KerberosIdentityResolver,
+    KerberosTargetIdentityMapper,
 )
 from identity_mapper.providers.kerberos.domain import (
     KerberosConfig,
     KerberosPrincipalRecord,
     KerberosRequest,
+    KerberosTargetProjectionConfig,
 )
 from identity_mapper.providers.kerberos.mapper import (
     KerberosCandidateMapper,
@@ -32,4 +34,6 @@ __all__ = [
     "KerberosPrincipalRecord",
     "KerberosRequest",
     "KerberosResolution",
+    "KerberosTargetIdentityMapper",
+    "KerberosTargetProjectionConfig",
 ]
