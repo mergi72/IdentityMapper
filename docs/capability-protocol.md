@@ -89,6 +89,36 @@ VerifyCredentialResponse
   error
 ```
 
+## Map Identity
+
+```text
+MapIdentityRequest
+  source_identification
+  source_credential
+  source_provider optional
+  target
+```
+
+```text
+MapIdentityResponse
+  mapped
+  identity
+  target_identity
+  error
+```
+
+`MapIdentity` first verifies the source proof through the source provider. Only
+after a verified canonical `Identity` exists can a target mapper project it into
+the requested target world.
+
+```text
+source proof -> Identity -> TargetIdentity
+```
+
+The target mapper receives the canonical `Identity`, not the original source
+credential. The target mapper therefore cannot bypass the invariant by talking
+directly to the source provider.
+
 ## Rule
 
 REST, CLI, gRPC, message bus, and other transports should all reduce to the

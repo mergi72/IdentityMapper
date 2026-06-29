@@ -47,6 +47,12 @@ The test suite verifies:
 - host service exposes `Authenticate`, `ResolveIdentity`, and `VerifyCredential`
   through the same request/response boundary
 - host service records capability invocations without logging credential values
+- source identity proof maps to target identity worlds only after producing a
+  verified `Identity`
+- every source provider can map to every target provider through `Identity`,
+  including mapping to itself
+- the Windows / AD target mapper produces an AD projection without bind, lookup,
+  network calls, service accounts, or account existence confirmation
 
 This is an architectural test. It does not prove that a concrete external
 system is integrated correctly. It proves that every provider implementation in
@@ -92,6 +98,9 @@ Identity
 | v0.15.0 | Federated Identity | No |
 | v0.16.0 | Guest / Anonymous Identity | No |
 | v0.20.0 | Provider capability contracts | No |
+| v0.28.0 | MapIdentity capability | No |
+| v0.28.1 | Provider-to-provider mapping contracts | No |
+| v0.29.0 | Windows / AD target projection | No |
 
 ## Verified Providers
 
@@ -126,6 +135,13 @@ in code.
 Version `v0.21.0` adds CI for the verified contract suite and Python bytecode
 compilation. Linting and formatting are intentionally deferred until their
 rules are configured and verified against the existing codebase.
+
+Version `v0.28.1` verifies that every included source provider can map to every
+included target provider through a verified `Identity`.
+
+Version `v0.29.0` adds the first concrete target mapper: a projection from
+canonical `Identity` to a Windows / AD target shape. The target projection does
+not perform AD lookup or account verification.
 
 ## Conclusion
 

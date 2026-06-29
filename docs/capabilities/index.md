@@ -7,6 +7,7 @@ binding business logic to a specific implementation.
 ResolveIdentity
 VerifyCredential
 Authenticate
+MapIdentity
 ```
 
 ## Documents
@@ -14,3 +15,4 @@ Authenticate
 - [ResolveIdentity](resolve-identity.md)
 - [VerifyCredential](verify-credential.md)
 - [Authenticate](authenticate.md)
+- [MapIdentity](map-identity.md)

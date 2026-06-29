@@ -16,6 +16,7 @@ identity domain.
 - [Domain](domain/index.md)
 - [Capabilities](capabilities/index.md)
 - [Providers](providers/index.md)
+- [MapIdentity](capabilities/map-identity.md)
 
 ## Rule
 

@@ -2,6 +2,20 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.29.1
+
+Canonical identity documentation patch.
+
+- Documented `Identity` as the canonical representation shared by source
+  providers and target mappers.
+- Documented the source-to-target flow as `source proof -> Identity ->
+  TargetIdentity`.
+- Added docs for `MapIdentity`, `IdentityTarget`, and `TargetIdentity`.
+- Documented `POST /map-identity` in the Host Service docs.
+- Clarified that target mappers receive the verified canonical `Identity`, not
+  source credential values.
+- Tests: 503 passed.
+
 ## v0.29.0
 
 Windows / AD target projection checkpoint.

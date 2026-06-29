@@ -29,6 +29,7 @@ GET  /providers
 POST /authenticate
 POST /resolve-identity
 POST /verify-credential
+POST /map-identity
 GET  /authenticate_logs
 GET  /audit
 ```
@@ -185,6 +186,59 @@ Rejected credential verification is also a normal capability result:
 }
 ```
 
+## Map Identity
+
+`POST /map-identity` is translated into `MapIdentityRequest`.
+
+Request:
+
+```json
+{
+  "source_identification": {
+    "identifier": "subject"
+  },
+  "source_credential": {
+    "type": "PASSWORD",
+    "value": "accepted"
+  },
+  "target": {
+    "provider": "ad",
+    "realm": "corp.local",
+    "purpose": "bind_identity"
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "mapped": true,
+  "identity": {
+    "id": "identity-1",
+    "display_name": "Example Subject"
+  },
+  "target_identity": {
+    "identifier": "ad:identity-1@corp.local",
+    "target": {
+      "provider": "ad",
+      "realm": "corp.local",
+      "purpose": "bind_identity",
+      "attributes": {}
+    },
+    "attributes": {
+      "upn_candidate": "identity-1@corp.local"
+    }
+  },
+  "error": null
+}
+```
+
+The host service verifies the source proof first. The target mapper receives
+only the verified canonical `Identity` and the requested target context.
+
+The target mapper does not receive `source_credential.value`.
+
 ## Audit Log
 
 Every hosted capability request is written to the audit log.
@@ -282,12 +336,13 @@ request.
 The host service receives capability requests, selects a provider, calls a
 capability, and returns capability responses.
 
-The host service currently exposes the three core identity capabilities:
+The host service currently exposes the core identity capabilities:
 
 ```text
 Authenticate
 ResolveIdentity
 VerifyCredential
+MapIdentity
 ```
 
 Host Service surfaces such as health, provider listing, and audit also return

@@ -8,6 +8,9 @@
 IdentityMapper is the reference implementation of the Invariant Mapping Pattern
 for the identity domain.
 
+Identity is the canonical representation shared by all identity providers and
+targets.
+
 ## Project Status
 
 IdentityMapper is a reference architecture under active development.
@@ -41,6 +44,10 @@ to authenticate an identity. It does not perform authentication itself.
 External systems, protocols, products, and APIs have their own implementation
 models. A mapper translates one implementation model into a stable domain model.
 Business logic works with the domain invariant, not with the implementation.
+
+Source providers reduce proof or assertions into the canonical `Identity`
+model. Target mappers project that `Identity` into a target world. Source and
+target implementations never communicate directly.
 
 The Invariant Mapping Pattern is:
 
@@ -106,6 +113,7 @@ The implementation details are intentionally kept out of this README.
 - [Capability protocol](docs/capability-protocol.md)
 - [Host](docs/host.md)
 - [Host service](docs/host-service.md)
+- [MapIdentity](docs/capabilities/map-identity.md)
 - [Reduction matrix](docs/reduction-matrix.md)
 - [Reduction template](docs/reduction-template.md)
 - [Provider footprint](docs/provider-footprint.md)

@@ -39,7 +39,8 @@ in the provider world.
 validate, authenticate, authorize, persist, or decide.
 
 `Domain Invariant` is the stable model that survives implementation changes.
-In this project, the invariant is identity.
+In this project, the invariant is identity. `Identity` is the canonical model
+shared by all source providers and target mappers.
 
 `Capability` describes what can be done with the invariant without coupling
 business logic to a specific implementation.
@@ -56,6 +57,8 @@ capability responses back into transport responses.
 Implementations are never mapped to each other.
 
 Every implementation maps only to the domain invariant.
+
+Source providers and target mappers never communicate directly.
 
 Mappers never contain business logic.
 
@@ -116,3 +119,50 @@ candidate found during resolution.
 
 The verified `Identity.id` is the domain identifier. The candidate's
 `implementation_id` is allowed to remain implementation-shaped.
+
+## Source To Target Flow
+
+IdentityMapper maps between identity worlds only through the canonical
+`Identity` model.
+
+```text
+Source World
+        |
+        | proof / assertion
+        v
+Source Provider Capability
+        |
+        v
+Identity (canonical model)
+        |
+        v
+Target Mapper Capability
+        |
+        v
+TargetIdentity (target projection)
+        |
+        v
+Target World
+```
+
+The source world does not know the target world. The target world does not know
+the source world.
+
+This is not:
+
+```text
+Kerberos -> AD
+```
+
+It is:
+
+```text
+Kerberos proof -> Identity -> AD projection
+```
+
+`TargetIdentity` is not a second source of truth. It is the target-specific
+projection of a verified `Identity`.
+
+The target mapper must not validate, authenticate, authorize, persist, or
+confirm account existence in the target system. It only translates the
+canonical identity into the target shape.

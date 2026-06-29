@@ -7,6 +7,8 @@ Identification
 Credential
 IdentityCandidate
 Identity
+IdentityTarget
+TargetIdentity
 ```
 
 ## Documents
@@ -15,3 +17,5 @@ Identity
 - [Credential](credential.md)
 - [IdentityCandidate](identity-candidate.md)
 - [Identity](identity.md)
+- [IdentityTarget](identity-target.md)
+- [TargetIdentity](target-identity.md)
