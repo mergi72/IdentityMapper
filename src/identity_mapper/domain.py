@@ -39,3 +39,22 @@ class Credential:
     type: str
     value: str = field(repr=False)
     metadata: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class IdentityTarget:
+    """Target identity world requested by an identity mapping operation."""
+
+    provider: str
+    realm: str | None = None
+    purpose: str | None = None
+    attributes: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class TargetIdentity:
+    """Identity projection that is usable in a target identity world."""
+
+    identifier: str
+    target: IdentityTarget
+    attributes: dict[str, Any] = field(default_factory=dict)

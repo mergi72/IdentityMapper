@@ -13,6 +13,8 @@ from identity_mapper_service.schemas import (
     authenticate_response_to_mapping,
     audit_response_to_mapping,
     health_response_to_mapping,
+    map_identity_request_from_mapping,
+    map_identity_response_to_mapping,
     providers_response_to_mapping,
     resolve_identity_request_from_mapping,
     resolve_identity_response_to_mapping,
@@ -106,6 +108,10 @@ def create_handler(
                 self._handle_verify_credential()
                 return
 
+            if self.path == "/map-identity":
+                self._handle_map_identity()
+                return
+
             self._send_error(404, "not_found", "endpoint not found")
 
         def _handle_authenticate(self) -> None:
@@ -114,6 +120,19 @@ def create_handler(
                 request = authenticate_request_from_mapping(payload)
                 response = service.authenticate_request(request)
                 self._send_json(200, authenticate_response_to_mapping(response))
+            except RequestValidationError as exc:
+                self._send_error(400, "bad_request", str(exc))
+            except UnknownProviderError as exc:
+                self._send_error(404, "unknown_provider", str(exc))
+            except JsonRequestError as exc:
+                self._send_error(exc.status_code, exc.error, str(exc))
+
+        def _handle_map_identity(self) -> None:
+            try:
+                payload = self._read_json()
+                request = map_identity_request_from_mapping(payload)
+                response = service.map_identity_request(request)
+                self._send_json(200, map_identity_response_to_mapping(response))
             except RequestValidationError as exc:
                 self._send_error(400, "bad_request", str(exc))
             except UnknownProviderError as exc:
@@ -333,6 +352,7 @@ def create_handler(
                 "timestamp",
                 "capability",
                 "provider",
+                "target_provider",
                 "identifier",
                 "credential_type",
                 "candidate_id",

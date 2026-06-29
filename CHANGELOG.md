@@ -2,6 +2,20 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.28.0
+
+Identity mapping checkpoint.
+
+- Added `IdentityTarget` and `TargetIdentity` domain models for target identity worlds.
+- Added the `MapIdentity` capability.
+- Added `MapIdentityRequest` and `MapIdentityResponse` to the capability protocol.
+- Added Host Service support for mapping source identity proof to target identity context.
+- Added HTTP `POST /map-identity`.
+- Added target provider audit metadata for identity mapping invocations.
+- Enforced that target mapping runs only after source proof produces a verified `Identity`.
+- Added coverage for mapping one source identity proof to another target and to itself.
+- Tests: 274 passed.
+
 ## v0.27.1
 
 Capability invocation log naming patch.

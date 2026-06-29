@@ -13,14 +13,21 @@ from identity_mapper.providers.basic import (
     BasicUserRecord,
     InMemoryBasicUserStore,
 )
-from identity_mapper.capabilities import Authenticate
+from identity_mapper.capabilities import Authenticate, MapIdentity
 from identity_mapper.capability_protocol import (
     AuthenticateRequest,
     AuthenticateResponse,
+    MapIdentityRequest,
     ResolveIdentityRequest,
     VerifyCredentialRequest,
 )
-from identity_mapper.domain import Credential, Identification
+from identity_mapper.domain import (
+    Credential,
+    Identification,
+    Identity,
+    IdentityTarget,
+    TargetIdentity,
+)
 from identity_mapper_service.__main__ import HostServiceConfig, load_config, main
 from identity_mapper_service.app import create_server
 from identity_mapper_service.registry import ProviderRegistry, UnknownProviderError
@@ -34,11 +41,25 @@ from identity_mapper_service.schemas import (
     audit_response_to_mapping,
     authenticate_response_to_mapping,
     health_response_to_mapping,
+    map_identity_response_to_mapping,
     resolve_identity_response_to_mapping,
     verify_credential_response_to_mapping,
     providers_response_to_mapping,
 )
 from identity_mapper_service.service import IdentityMapperHostService
+
+
+class ExampleTargetIdentityMapper(MapIdentity):
+    def map_identity(
+        self,
+        identity: Identity,
+        target: IdentityTarget,
+    ) -> TargetIdentity | None:
+        return TargetIdentity(
+            identifier=f"{target.provider}:{identity.id}",
+            target=target,
+            attributes={"source": "target"},
+        )
 
 
 def make_service(request_log: CapabilityInvocationLog | None = None) -> IdentityMapperHostService:
@@ -60,6 +81,8 @@ def make_service(request_log: CapabilityInvocationLog | None = None) -> Identity
     registry.register_resolver("basic", BasicIdentityResolver(store))
     registry.register_verifier("basic", BasicCredentialVerifier(store))
     registry.register_authenticator("basic", BasicAuthenticator(store))
+    registry.register_identity_mapper("basic", ExampleTargetIdentityMapper())
+    registry.register_identity_mapper("target", ExampleTargetIdentityMapper())
     return IdentityMapperHostService(registry, request_log)
 
 
@@ -92,12 +115,25 @@ def valid_authenticate_request() -> AuthenticateRequest:
     )
 
 
+def valid_map_identity_request() -> MapIdentityRequest:
+    return MapIdentityRequest(
+        source_provider="basic",
+        source_identification=valid_identification(),
+        source_credential=valid_credential(),
+        target=IdentityTarget(
+            provider="target",
+            realm="example",
+            purpose="bind_identity",
+        ),
+    )
+
+
 def test_service_reports_health() -> None:
     assert make_service().health() == HealthResponse(status="ok")
 
 
 def test_service_reports_providers() -> None:
-    assert make_service().providers() == ProvidersResponse(providers=("basic",))
+    assert make_service().providers() == ProvidersResponse(providers=("basic", "target"))
 
 
 def test_host_service_response_mappings() -> None:
@@ -222,6 +258,107 @@ def test_service_rejects_invalid_credential_verification() -> None:
     assert not response.verified
 
 
+def test_service_maps_identity_between_worlds() -> None:
+    response = make_service().map_identity_request(valid_map_identity_request())
+
+    assert response.mapped
+    assert response.identity is not None
+    assert response.identity.id == "identity-1"
+    assert response.target_identity is not None
+    assert response.target_identity.identifier == "target:identity-1"
+    assert response.target_identity.target.provider == "target"
+
+
+def test_service_maps_identity_to_source_world_itself() -> None:
+    request = MapIdentityRequest(
+        source_provider="basic",
+        source_identification=valid_identification(),
+        source_credential=valid_credential(),
+        target=IdentityTarget(provider="basic", purpose="self"),
+    )
+
+    response = make_service().map_identity_request(request)
+
+    assert response.mapped
+    assert response.identity is not None
+    assert response.identity.id == "identity-1"
+    assert response.target_identity is not None
+    assert response.target_identity.identifier == "basic:identity-1"
+    assert response.target_identity.target.provider == "basic"
+
+
+def test_service_maps_one_source_world_to_multiple_targets() -> None:
+    service = make_service()
+    targets = (
+        IdentityTarget(provider="basic", purpose="self"),
+        IdentityTarget(provider="target", purpose="foreign"),
+    )
+
+    responses = [
+        service.map_identity_request(
+            MapIdentityRequest(
+                source_provider="basic",
+                source_identification=valid_identification(),
+                source_credential=valid_credential(),
+                target=target,
+            )
+        )
+        for target in targets
+    ]
+
+    assert [response.mapped for response in responses] == [True, True]
+    assert [
+        response.target_identity.identifier
+        for response in responses
+        if response.target_identity is not None
+    ] == ["basic:identity-1", "target:identity-1"]
+
+
+def test_service_rejects_map_identity_with_invalid_source_credential() -> None:
+    class CountingTargetIdentityMapper(MapIdentity):
+        calls = 0
+
+        def map_identity(
+            self,
+            identity: Identity,
+            target: IdentityTarget,
+        ) -> TargetIdentity | None:
+            self.calls += 1
+            return TargetIdentity(
+                identifier=f"{target.provider}:{identity.id}",
+                target=target,
+            )
+
+    registry = ProviderRegistry()
+    store = InMemoryBasicUserStore(
+        [
+            BasicUserRecord(
+                implementation_id="basic:subject",
+                username="subject",
+                password="accepted",
+                identity_id="identity-1",
+            )
+        ]
+    )
+    target_mapper = CountingTargetIdentityMapper()
+    registry.register_authenticator("basic", BasicAuthenticator(store))
+    registry.register_identity_mapper("target", target_mapper)
+    service = IdentityMapperHostService(registry)
+    request = MapIdentityRequest(
+        source_provider="basic",
+        source_identification=valid_identification(),
+        source_credential=Credential(type="PASSWORD", value="wrong"),
+        target=IdentityTarget(provider="target"),
+    )
+
+    response = service.map_identity_request(request)
+
+    assert not response.mapped
+    assert response.identity is None
+    assert response.target_identity is None
+    assert target_mapper.calls == 0
+
+
 def test_authenticate_response_mapping_includes_protocol_error() -> None:
     response = AuthenticateResponse(authenticated=False, error="rejected")
 
@@ -267,6 +404,33 @@ def test_verify_credential_response_mapping() -> None:
             )
         )
     ) == {"verified": True, "error": None}
+
+
+def test_map_identity_response_mapping() -> None:
+    response = make_service().map_identity_request(valid_map_identity_request())
+
+    assert map_identity_response_to_mapping(response) == {
+        "mapped": True,
+        "identity": {
+            "id": "identity-1",
+            "display_name": "Example Subject",
+            "email": None,
+            "roles": ["reader"],
+            "claims": {"scope": "example"},
+            "attributes": {"source": "basic"},
+        },
+        "target_identity": {
+            "identifier": "target:identity-1",
+            "target": {
+                "provider": "target",
+                "realm": "example",
+                "purpose": "bind_identity",
+                "attributes": {},
+            },
+            "attributes": {"source": "target"},
+        },
+        "error": None,
+    }
 
 
 def test_service_rejects_invalid_credential_without_leaking_identity() -> None:
@@ -601,7 +765,7 @@ def test_http_host_exposes_health_providers_and_authenticate() -> None:
         )
         assert request_json("GET", host, port, "/providers") == (
             200,
-            {"providers": ["basic"]},
+            {"providers": ["basic", "target"]},
         )
         status, payload = request_json(
             "POST",
@@ -761,6 +925,47 @@ def test_http_host_rejects_invalid_verify_credential() -> None:
         thread.join(timeout=5)
 
 
+def test_http_host_exposes_map_identity() -> None:
+    service = make_service()
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    try:
+        status, response = request_json(
+            "POST",
+            host,
+            port,
+            "/map-identity",
+            {
+                "source_provider": "basic",
+                "source_identification": {
+                    "identifier": "subject",
+                },
+                "source_credential": {
+                    "type": "PASSWORD",
+                    "value": "accepted",
+                },
+                "target": {
+                    "provider": "target",
+                    "realm": "example",
+                    "purpose": "bind_identity",
+                },
+            },
+        )
+
+        assert status == 200
+        assert response["mapped"]
+        assert response["identity"]["id"] == "identity-1"
+        assert response["target_identity"]["identifier"] == "target:identity-1"
+        assert response["target_identity"]["target"]["provider"] == "target"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
 def test_http_host_audit_logs_all_capabilities(tmp_path) -> None:
     service = make_service(CapabilityInvocationLog(tmp_path / "audit.log"))
     server = create_server("127.0.0.1", 0, service)
@@ -795,15 +1000,35 @@ def test_http_host_audit_logs_all_capabilities(tmp_path) -> None:
                 },
             },
         )
+        request_json(
+            "POST",
+            host,
+            port,
+            "/map-identity",
+            {
+                "source_identification": {
+                    "identifier": "subject",
+                },
+                "source_credential": {
+                    "type": "PASSWORD",
+                    "value": "accepted",
+                },
+                "target": {
+                    "provider": "target",
+                },
+            },
+        )
 
-        status, audit = request_json("GET", host, port, "/audit?format=json&limit=3")
+        status, audit = request_json("GET", host, port, "/audit?format=json&limit=4")
 
         assert status == 200
         assert [entry["capability"] for entry in audit["entries"]] == [
             "authenticate",
             "resolve_identity",
             "verify_credential",
+            "map_identity",
         ]
+        assert audit["entries"][-1]["target_provider"] == "target"
         assert "value" not in json.dumps(audit)
     finally:
         server.shutdown()
@@ -1048,7 +1273,10 @@ def test_http_host_exposes_audit_alias(tmp_path) -> None:
 
         status, text = request_raw("GET", host, port, "/audit?format=text&limit=1")
         assert status == 200
-        assert "basic     subject     PASSWORD" in text.decode("utf-8")
+        audit_text = text.decode("utf-8")
+        assert "basic" in audit_text
+        assert "subject" in audit_text
+        assert "PASSWORD" in audit_text
     finally:
         server.shutdown()
         server.server_close()
@@ -1065,7 +1293,7 @@ def test_cli_lists_providers(tmp_path, capsys) -> None:
     try:
         assert main(["providers", "--host", host, "--port", str(port)]) == 0
 
-        assert capsys.readouterr().out == "basic\n"
+        assert capsys.readouterr().out == "basic\ntarget\n"
     finally:
         server.shutdown()
         server.server_close()

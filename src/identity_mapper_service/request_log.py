@@ -16,6 +16,7 @@ class CapabilityInvocationLogEntry:
     provider: str
     status: str
     duration_ms: int
+    target_provider: str | None = None
     identifier: str | None = None
     credential_type: str | None = None
     candidate_id: str | None = None
@@ -35,6 +36,8 @@ class CapabilityInvocationLogEntry:
         }
         if self.identifier is not None:
             value["identifier"] = self.identifier
+        if self.target_provider is not None:
+            value["target_provider"] = self.target_provider
         if self.credential_type is not None:
             value["credential_type"] = self.credential_type
         if self.candidate_id is not None:
@@ -69,6 +72,7 @@ class CapabilityInvocationLog:
         provider: str,
         status: str,
         duration_ms: int,
+        target_provider: str | None = None,
         identifier: str | None = None,
         credential_type: str | None = None,
         candidate_id: str | None = None,
@@ -84,6 +88,7 @@ class CapabilityInvocationLog:
             provider=provider,
             status=status,
             duration_ms=duration_ms,
+            target_provider=target_provider,
             identifier=identifier,
             credential_type=credential_type,
             candidate_id=candidate_id,

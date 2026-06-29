@@ -1,5 +1,6 @@
 from identity_mapper.capabilities import (
     Authenticate,
+    MapIdentity,
     ResolveIdentity,
     VerifyCredential,
 )
@@ -9,6 +10,8 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
 
 
@@ -55,6 +58,21 @@ class ExampleCredentialVerifier(VerifyCredential):
         )
 
 
+class ExampleIdentityMapper(MapIdentity):
+    def map_identity(
+        self,
+        identity: Identity,
+        target: IdentityTarget,
+    ) -> TargetIdentity | None:
+        if target.provider != "target":
+            return None
+
+        return TargetIdentity(
+            identifier=f"target:{identity.id}",
+            target=target,
+        )
+
+
 def test_authenticate_returns_verified_identity() -> None:
     identity = ExampleAuthenticator().authenticate(
         Identification(identifier="subject"),
@@ -86,4 +104,16 @@ def test_verify_credential_checks_candidate() -> None:
     assert ExampleCredentialVerifier().verify_credential(
         candidate,
         Credential(type="opaque", value="accepted"),
+    )
+
+
+def test_map_identity_returns_target_identity_projection() -> None:
+    identity = Identity(id="identity-1")
+    target = IdentityTarget(provider="target")
+
+    target_identity = ExampleIdentityMapper().map_identity(identity, target)
+
+    assert target_identity == TargetIdentity(
+        identifier="target:identity-1",
+        target=target,
     )

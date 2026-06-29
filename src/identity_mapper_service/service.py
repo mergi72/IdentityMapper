@@ -7,6 +7,8 @@ from identity_mapper.capability_protocol import (
     AuthenticationRejected,
     AuthenticateRequest,
     AuthenticateResponse,
+    MapIdentityRequest,
+    MapIdentityResponse,
     ResolveIdentityRequest,
     ResolveIdentityResponse,
     VerifyCredentialRequest,
@@ -182,6 +184,63 @@ class IdentityMapperHostService:
         )
         return VerifyCredentialResponse(verified=result.verified)
 
+    def map_identity_request(
+        self,
+        request: MapIdentityRequest,
+    ) -> MapIdentityResponse:
+        request_id = uuid4().hex[:8]
+        started = perf_counter()
+        try:
+            result = self._registry.map_identity(
+                request.source_provider,
+                request.source_identification,
+                request.source_credential,
+                request.target,
+            )
+        except UnknownProviderError:
+            self._log_invocation(
+                capability="map_identity",
+                provider=self._log_provider(request.source_provider),
+                target_provider=request.target.provider,
+                identifier=request.source_identification.identifier,
+                credential_type=request.source_credential.type,
+                status="unknown_provider",
+                duration_ms=self._duration_ms(started),
+                request_id=request_id,
+                error="unknown_provider",
+            )
+            raise
+        except AuthenticationRejected:
+            self._log_invocation(
+                capability="map_identity",
+                provider=self._log_provider(request.source_provider),
+                target_provider=request.target.provider,
+                identifier=request.source_identification.identifier,
+                credential_type=request.source_credential.type,
+                status="rejected",
+                duration_ms=self._duration_ms(started),
+                request_id=request_id,
+            )
+            return MapIdentityResponse(mapped=False)
+
+        mapped = result.target_identity is not None
+        self._log_invocation(
+            capability="map_identity",
+            provider=result.source_provider,
+            target_provider=result.target_provider,
+            identifier=request.source_identification.identifier,
+            credential_type=request.source_credential.type,
+            identity_id=result.identity.id,
+            status="mapped" if mapped else "not_mapped",
+            duration_ms=self._duration_ms(started),
+            request_id=request_id,
+        )
+        return MapIdentityResponse(
+            mapped=mapped,
+            identity=result.identity,
+            target_identity=result.target_identity,
+        )
+
     def _log_invocation(
         self,
         *,
@@ -190,6 +249,7 @@ class IdentityMapperHostService:
         status: str,
         duration_ms: int,
         request_id: str,
+        target_provider: str | None = None,
         identifier: str | None = None,
         credential_type: str | None = None,
         candidate_id: str | None = None,
@@ -205,6 +265,7 @@ class IdentityMapperHostService:
             request_id=request_id,
             capability=capability,
             provider=provider,
+            target_provider=target_provider,
             identifier=identifier,
             credential_type=credential_type,
             status=status,

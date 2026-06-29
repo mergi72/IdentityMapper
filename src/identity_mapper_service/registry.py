@@ -3,12 +3,19 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from identity_mapper.capability_protocol import AuthenticationRejected
-from identity_mapper.capabilities import Authenticate, ResolveIdentity, VerifyCredential
+from identity_mapper.capabilities import (
+    Authenticate,
+    MapIdentity,
+    ResolveIdentity,
+    VerifyCredential,
+)
 from identity_mapper.domain import (
     Credential,
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
 
 
@@ -40,6 +47,16 @@ class ProviderVerificationResult:
     verified: bool
 
 
+@dataclass(frozen=True, slots=True)
+class ProviderIdentityMappingResult:
+    """Identity mapping result with source and target providers."""
+
+    source_provider: str
+    target_provider: str
+    identity: Identity
+    target_identity: TargetIdentity | None
+
+
 class ProviderRegistry:
     """Registry of hosted provider capabilities."""
 
@@ -47,6 +64,7 @@ class ProviderRegistry:
         self._authenticators: dict[str, Authenticate] = {}
         self._resolvers: dict[str, ResolveIdentity] = {}
         self._verifiers: dict[str, VerifyCredential] = {}
+        self._identity_mappers: dict[str, MapIdentity] = {}
 
     def register_authenticator(
         self,
@@ -69,12 +87,20 @@ class ProviderRegistry:
     ) -> None:
         self._verifiers[provider] = verifier
 
+    def register_identity_mapper(
+        self,
+        provider: str,
+        mapper: MapIdentity,
+    ) -> None:
+        self._identity_mappers[provider] = mapper
+
     def providers(self) -> tuple[str, ...]:
         return tuple(
             sorted(
                 set(self._authenticators)
                 | set(self._resolvers)
                 | set(self._verifiers)
+                | set(self._identity_mappers)
             )
         )
 
@@ -104,7 +130,7 @@ class ProviderRegistry:
         identification: Identification,
         credential: Credential,
     ) -> ProviderAuthenticationResult:
-        for provider in self.providers():
+        for provider in sorted(self._authenticators):
             authenticator = self._authenticators[provider]
             try:
                 identity = authenticator.authenticate(identification, credential)
@@ -178,3 +204,27 @@ class ProviderRegistry:
             ):
                 return ProviderVerificationResult(provider=provider, verified=True)
         return ProviderVerificationResult(provider="auto", verified=False)
+
+    def map_identity(
+        self,
+        source_provider: str | None,
+        identification: Identification,
+        credential: Credential,
+        target: IdentityTarget,
+    ) -> ProviderIdentityMappingResult:
+        mapper = self._identity_mappers.get(target.provider)
+        if mapper is None:
+            raise UnknownProviderError(target.provider)
+
+        authentication = self.authenticate(
+            source_provider,
+            identification,
+            credential,
+        )
+
+        return ProviderIdentityMappingResult(
+            source_provider=authentication.provider,
+            target_provider=target.provider,
+            identity=authentication.identity,
+            target_identity=mapper.map_identity(authentication.identity, target),
+        )

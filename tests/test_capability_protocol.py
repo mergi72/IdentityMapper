@@ -6,12 +6,14 @@ from identity_mapper.capability_protocol import (
     AuthenticationRejected,
     AuthenticateRequest,
     AuthenticateResponse,
+    MapIdentityRequest,
+    MapIdentityResponse,
     ResolveIdentityRequest,
     ResolveIdentityResponse,
     VerifyCredentialRequest,
     VerifyCredentialResponse,
 )
-from identity_mapper.domain import Identity, IdentityCandidate
+from identity_mapper.domain import Identity, IdentityCandidate, IdentityTarget, TargetIdentity
 
 
 def test_authenticate_request_carries_domain_inputs() -> None:
@@ -120,3 +122,38 @@ def test_verify_credential_request_can_defer_provider_selection() -> None:
     assert request.provider is None
     assert request.candidate is candidate
     assert request.credential is credential
+
+
+def test_map_identity_request_and_response() -> None:
+    identification = Identification(identifier="subject")
+    credential = Credential(type="KERBEROS_TICKET", value="ticket")
+    target = IdentityTarget(
+        provider="active_directory",
+        realm="corp.example",
+        purpose="bind_identity",
+    )
+    identity = Identity(id="identity-1")
+    target_identity = TargetIdentity(
+        identifier="CORP\\subject",
+        target=target,
+    )
+
+    request = MapIdentityRequest(
+        source_provider="kerberos",
+        source_identification=identification,
+        source_credential=credential,
+        target=target,
+    )
+    response = MapIdentityResponse(
+        mapped=True,
+        identity=identity,
+        target_identity=target_identity,
+    )
+
+    assert request.source_provider == "kerberos"
+    assert request.source_identification is identification
+    assert request.source_credential is credential
+    assert request.target is target
+    assert response.mapped
+    assert response.identity is identity
+    assert response.target_identity is target_identity

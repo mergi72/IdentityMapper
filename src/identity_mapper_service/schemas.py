@@ -8,10 +8,14 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
 from identity_mapper.capability_protocol import (
     AuthenticateRequest,
     AuthenticateResponse,
+    MapIdentityRequest,
+    MapIdentityResponse,
     ResolveIdentityRequest,
     ResolveIdentityResponse,
     VerifyCredentialRequest,
@@ -75,6 +79,18 @@ def verify_credential_request_from_mapping(value: Any) -> VerifyCredentialReques
     )
 
 
+def map_identity_request_from_mapping(value: Any) -> MapIdentityRequest:
+    data = _require_mapping(value, "request")
+    return MapIdentityRequest(
+        source_provider=_optional_non_empty_string(data, "source_provider"),
+        source_identification=identification_from_mapping(
+            data.get("source_identification"),
+        ),
+        source_credential=credential_from_mapping(data.get("source_credential")),
+        target=identity_target_from_mapping(data.get("target")),
+    )
+
+
 def identity_to_mapping(identity: Identity) -> dict[str, Any]:
     return {
         "id": identity.id,
@@ -111,6 +127,33 @@ def identity_candidate_to_mapping(candidate: IdentityCandidate) -> dict[str, Any
     }
 
 
+def identity_target_from_mapping(value: Any) -> IdentityTarget:
+    data = _require_mapping(value, "target")
+    return IdentityTarget(
+        provider=_require_string(data, "provider"),
+        realm=_optional_string(data, "realm"),
+        purpose=_optional_string(data, "purpose"),
+        attributes=_optional_dict(data, "attributes"),
+    )
+
+
+def identity_target_to_mapping(target: IdentityTarget) -> dict[str, Any]:
+    return {
+        "provider": target.provider,
+        "realm": target.realm,
+        "purpose": target.purpose,
+        "attributes": dict(target.attributes),
+    }
+
+
+def target_identity_to_mapping(target_identity: TargetIdentity) -> dict[str, Any]:
+    return {
+        "identifier": target_identity.identifier,
+        "target": identity_target_to_mapping(target_identity.target),
+        "attributes": dict(target_identity.attributes),
+    }
+
+
 def authenticate_response_to_mapping(
     response: AuthenticateResponse,
 ) -> dict[str, Any]:
@@ -143,6 +186,25 @@ def verify_credential_response_to_mapping(
 ) -> dict[str, Any]:
     return {
         "verified": response.verified,
+        "error": response.error,
+    }
+
+
+def map_identity_response_to_mapping(
+    response: MapIdentityResponse,
+) -> dict[str, Any]:
+    return {
+        "mapped": response.mapped,
+        "identity": (
+            identity_to_mapping(response.identity)
+            if response.identity is not None
+            else None
+        ),
+        "target_identity": (
+            target_identity_to_mapping(response.target_identity)
+            if response.target_identity is not None
+            else None
+        ),
         "error": response.error,
     }
 

@@ -5,6 +5,8 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
 
 
@@ -63,10 +65,32 @@ class VerifyCredentialResponse:
     error: str | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class MapIdentityRequest:
+    """Request to map source identity proof into a target identity world."""
+
+    source_identification: Identification
+    source_credential: Credential
+    target: IdentityTarget
+    source_provider: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class MapIdentityResponse:
+    """Response produced by the MapIdentity capability."""
+
+    mapped: bool
+    identity: Identity | None = None
+    target_identity: TargetIdentity | None = None
+    error: str | None = None
+
+
 __all__ = [
     "AuthenticationRejected",
     "AuthenticateRequest",
     "AuthenticateResponse",
+    "MapIdentityRequest",
+    "MapIdentityResponse",
     "ResolveIdentityRequest",
     "ResolveIdentityResponse",
     "VerifyCredentialRequest",

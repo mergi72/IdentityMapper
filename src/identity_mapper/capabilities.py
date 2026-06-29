@@ -5,6 +5,8 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
 
 
@@ -41,3 +43,15 @@ class VerifyCredential(ABC):
         credential: Credential,
     ) -> bool:
         """Return whether the credential verifies the candidate."""
+
+
+class MapIdentity(ABC):
+    """Maps a canonical identity into a target identity world."""
+
+    @abstractmethod
+    def map_identity(
+        self,
+        identity: Identity,
+        target: IdentityTarget,
+    ) -> TargetIdentity | None:
+        """Return a target identity projection, if one can be produced."""
