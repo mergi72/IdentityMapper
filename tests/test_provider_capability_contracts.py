@@ -139,6 +139,7 @@ from identity_mapper.providers.webauthn import (
 )
 from identity_mapper.providers.windows import (
     InMemoryWindowsIdentityStore,
+    WindowsAdTargetIdentityMapper,
     WindowsAuthenticator,
     WindowsCredentialVerifier,
     WindowsIdentityRecord,
@@ -1061,3 +1062,43 @@ def test_provider_identity_mapping_does_not_call_target_without_verified_identit
         )
 
     assert target_mappers[contract.name].calls == 0
+
+
+@pytest.mark.parametrize("source_contract", CONTRACTS, ids=contract_ids)
+def test_provider_identity_can_map_to_windows_ad_projection_through_verified_identity(
+    source_contract: ProviderCapabilityContract,
+) -> None:
+    registry = ProviderRegistry()
+    registry.register_authenticator(
+        source_contract.name,
+        source_contract.authenticator_type(source_contract.store_factory()),
+    )
+    registry.register_identity_mapper("ad", WindowsAdTargetIdentityMapper())
+    source_identification, source_credential = (
+        source_contract.mapper_factory().to_domain(source_contract.valid_request)
+    )
+
+    result = registry.map_identity(
+        source_provider=source_contract.name,
+        identification=source_identification,
+        credential=source_credential,
+        target=IdentityTarget(
+            provider="ad",
+            realm="corp.local",
+            purpose="bind_identity",
+        ),
+    )
+
+    assert result.source_provider == source_contract.name
+    assert result.target_provider == "ad"
+    assert result.identity == source_contract.expected_identity
+    assert result.target_identity is not None
+    assert result.target_identity.identifier.startswith("ad:")
+    assert result.target_identity.target == IdentityTarget(
+        provider="ad",
+        realm="corp.local",
+        purpose="bind_identity",
+    )
+    assert result.target_identity.attributes["upn_candidate"]
+    assert result.target_identity.attributes["sam_account_name_candidate"]
+    assert "account_verified" not in result.target_identity.attributes

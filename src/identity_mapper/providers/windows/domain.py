@@ -36,3 +36,11 @@ class WindowsIdentityRecord:
     roles: tuple[str, ...] = ()
     claims: dict[str, Any] = field(default_factory=dict)
     attributes: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class WindowsAdTargetProjectionConfig:
+    """Configuration for projecting an Identity into a Windows / AD target world."""
+
+    provider: str = "ad"
+    default_realm: str | None = None

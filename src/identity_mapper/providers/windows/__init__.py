@@ -2,11 +2,13 @@
 
 from identity_mapper.providers.windows.capabilities import (
     WindowsAuthenticationError,
+    WindowsAdTargetIdentityMapper,
     WindowsAuthenticator,
     WindowsCredentialVerifier,
     WindowsIdentityResolver,
 )
 from identity_mapper.providers.windows.domain import (
+    WindowsAdTargetProjectionConfig,
     WindowsConfig,
     WindowsIdentityRecord,
     WindowsIdentityRequest,
@@ -22,6 +24,8 @@ from identity_mapper.providers.windows.provider import InMemoryWindowsIdentitySt
 __all__ = [
     "InMemoryWindowsIdentityStore",
     "WindowsAuthenticationError",
+    "WindowsAdTargetIdentityMapper",
+    "WindowsAdTargetProjectionConfig",
     "WindowsAuthenticator",
     "WindowsCandidateMapper",
     "WindowsConfig",

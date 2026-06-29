@@ -5,10 +5,14 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
 from identity_mapper.providers.windows import (
     InMemoryWindowsIdentityStore,
     WindowsAuthenticationError,
+    WindowsAdTargetIdentityMapper,
+    WindowsAdTargetProjectionConfig,
     WindowsAuthenticator,
     WindowsCredentialVerifier,
     WindowsIdentityRecord,
@@ -156,3 +160,84 @@ def test_windows_mapper_contains_no_auth_logic() -> None:
             value="wrong-windows-logon-proof",
         ),
     )
+
+
+def test_windows_ad_target_mapper_projects_identity_to_ad_shape() -> None:
+    identity = Identity(
+        id="subject",
+        display_name="Example Subject",
+        email="subject@corp.local",
+        roles=("employees", "readers"),
+        attributes={"source": "kerberos"},
+    )
+    target = IdentityTarget(
+        provider="ad",
+        realm="corp.local",
+        purpose="bind_identity",
+    )
+
+    target_identity = WindowsAdTargetIdentityMapper().map_identity(identity, target)
+
+    assert target_identity == TargetIdentity(
+        identifier="ad:subject@corp.local",
+        target=target,
+        attributes={
+            "upn_candidate": "subject@corp.local",
+            "sam_account_name_candidate": "subject",
+            "mail_hint": "subject@corp.local",
+            "group_hints": ("employees", "readers"),
+        },
+    )
+
+
+def test_windows_ad_target_mapper_uses_realm_when_email_is_missing() -> None:
+    identity = Identity(id="subject", roles=("employees",))
+    target = IdentityTarget(provider="ad", realm="corp.local")
+
+    target_identity = WindowsAdTargetIdentityMapper().map_identity(identity, target)
+
+    assert target_identity == TargetIdentity(
+        identifier="ad:subject@corp.local",
+        target=target,
+        attributes={
+            "upn_candidate": "subject@corp.local",
+            "sam_account_name_candidate": "subject",
+            "group_hints": ("employees",),
+        },
+    )
+
+
+def test_windows_ad_target_mapper_can_use_default_realm() -> None:
+    identity = Identity(id="subject")
+    target = IdentityTarget(provider="ad")
+
+    target_identity = WindowsAdTargetIdentityMapper(
+        WindowsAdTargetProjectionConfig(default_realm="corp.local")
+    ).map_identity(identity, target)
+
+    assert target_identity == TargetIdentity(
+        identifier="ad:subject@corp.local",
+        target=target,
+        attributes={
+            "upn_candidate": "subject@corp.local",
+            "sam_account_name_candidate": "subject",
+            "group_hints": (),
+        },
+    )
+
+
+def test_windows_ad_target_mapper_does_not_confirm_account_existence() -> None:
+    identity = Identity(id="missing-user")
+    target = IdentityTarget(provider="ad", realm="corp.local")
+
+    target_identity = WindowsAdTargetIdentityMapper().map_identity(identity, target)
+
+    assert target_identity is not None
+    assert target_identity.attributes["upn_candidate"] == "missing-user@corp.local"
+
+
+def test_windows_ad_target_mapper_ignores_non_ad_target() -> None:
+    identity = Identity(id="subject")
+    target = IdentityTarget(provider="ldap")
+
+    assert WindowsAdTargetIdentityMapper().map_identity(identity, target) is None

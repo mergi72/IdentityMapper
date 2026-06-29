@@ -4,6 +4,7 @@ from identity_mapper.capability_protocol import AuthenticationRejected
 
 from identity_mapper.capabilities import (
     Authenticate,
+    MapIdentity,
     ResolveIdentity,
     VerifyCredential,
 )
@@ -12,8 +13,13 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
-from identity_mapper.providers.windows.domain import WindowsConfig
+from identity_mapper.providers.windows.domain import (
+    WindowsAdTargetProjectionConfig,
+    WindowsConfig,
+)
 from identity_mapper.providers.windows.mapper import (
     WindowsCandidateMapper,
     WindowsIdentityMapper,
@@ -111,3 +117,50 @@ class WindowsAuthenticator(Authenticate):
             raise WindowsAuthenticationError("unknown identity")
 
         return self._identity_mapper.to_domain(identity)
+
+
+class WindowsAdTargetIdentityMapper(MapIdentity):
+    """Projects a verified Identity into a Windows / AD target identity shape."""
+
+    def __init__(
+        self,
+        config: WindowsAdTargetProjectionConfig | None = None,
+    ) -> None:
+        self._config = config or WindowsAdTargetProjectionConfig()
+
+    def map_identity(
+        self,
+        identity: Identity,
+        target: IdentityTarget,
+    ) -> TargetIdentity | None:
+        if target.provider != self._config.provider:
+            return None
+
+        realm = target.realm or self._config.default_realm
+        upn_candidate = self._upn_candidate(identity, realm)
+        sam_account_name_candidate = self._sam_account_name_candidate(identity)
+        group_hints = tuple(identity.roles)
+        return TargetIdentity(
+            identifier=f"{target.provider}:{upn_candidate}",
+            target=target,
+            attributes={
+                key: value
+                for key, value in {
+                    "upn_candidate": upn_candidate,
+                    "sam_account_name_candidate": sam_account_name_candidate,
+                    "mail_hint": identity.email,
+                    "group_hints": group_hints,
+                }.items()
+                if value is not None
+            },
+        )
+
+    def _upn_candidate(self, identity: Identity, realm: str | None) -> str:
+        if identity.email:
+            return identity.email
+        if realm:
+            return f"{identity.id}@{realm}"
+        return identity.id
+
+    def _sam_account_name_candidate(self, identity: Identity) -> str:
+        return identity.id.split("@", 1)[0].split("\\")[-1]

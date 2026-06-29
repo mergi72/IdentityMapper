@@ -2,6 +2,17 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.29.0
+
+Windows / AD target projection checkpoint.
+
+- Added `WindowsAdTargetIdentityMapper` for projecting a verified `Identity` into an AD target shape.
+- Added `WindowsAdTargetProjectionConfig`.
+- Added AD projection attributes: `upn_candidate`, `sam_account_name_candidate`, `mail_hint`, and `group_hints`.
+- Verified every existing source provider can map through `Identity` to the Windows / AD target projection.
+- Kept the mapper projection-only: no AD bind, no LDAP lookup, no network call, no service account, and no account existence confirmation.
+- Tests: 503 passed.
+
 ## v0.28.1
 
 Provider mapping contract checkpoint.
