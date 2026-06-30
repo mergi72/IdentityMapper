@@ -1080,6 +1080,93 @@ SOURCE_TO_REAL_TARGET_MAPPING_CONTRACTS = tuple(
 )
 
 
+SIMPLE_BASIC_SOURCE_TARGET_PROJECTION_CONTRACTS = tuple(
+    pytest.param(
+        target_contract,
+        id=f"basic->{target_contract.name}",
+    )
+    for target_contract in TARGET_PROJECTION_CONTRACTS
+    if target_contract.name in {"basic", "api_key", "guest"}
+)
+
+
+def target_projection_contract(name: str) -> TargetProjectionContract:
+    return next(
+        target_contract
+        for target_contract in TARGET_PROJECTION_CONTRACTS
+        if target_contract.name == name
+    )
+
+
+SIMPLE_CROSS_SOURCE_TARGET_PROJECTION_CONTRACTS = (
+    pytest.param(
+        api_key_contract,
+        target_projection_contract("basic"),
+        id="api_key->basic",
+    ),
+    pytest.param(
+        api_key_contract,
+        target_projection_contract("windows"),
+        id="api_key->windows",
+    ),
+    pytest.param(
+        guest_contract,
+        target_projection_contract("api_key"),
+        id="guest->api_key",
+    ),
+)
+
+
+def test_real_target_projection_matrix_covers_every_source_and_target_mapper() -> None:
+    expected_source_names = {contract.name for contract in CONTRACTS}
+    expected_target_names = {contract.name for contract in TARGET_PROJECTION_CONTRACTS}
+    matrix_pairs = {
+        (parameter.values[0].name, parameter.values[1].name)
+        for parameter in SOURCE_TO_REAL_TARGET_MAPPING_CONTRACTS
+    }
+
+    assert len(SOURCE_TO_REAL_TARGET_MAPPING_CONTRACTS) == (
+        len(CONTRACTS) * len(TARGET_PROJECTION_CONTRACTS)
+    )
+    assert {source for source, _ in matrix_pairs} == expected_source_names
+    assert {target for _, target in matrix_pairs} == expected_target_names
+    assert matrix_pairs == {
+        (source, target)
+        for source in expected_source_names
+        for target in expected_target_names
+    }
+
+
+def assert_source_can_project_to_target(
+    source_contract: ProviderCapabilityContract,
+    target_contract: TargetProjectionContract,
+) -> None:
+    source_identification, source_credential = (
+        source_contract.mapper_factory().to_domain(source_contract.valid_request)
+    )
+    identity = source_contract.authenticator_type(
+        source_contract.store_factory()
+    ).authenticate(
+        source_identification,
+        source_credential,
+    )
+    target_identity = target_contract.mapper_factory().map_identity(
+        identity,
+        target_contract.target,
+    )
+
+    assert identity == source_contract.expected_identity
+    assert target_identity is not None
+    assert target_identity.target == target_contract.target
+    assert target_identity.identifier.startswith(f"{target_contract.name}:")
+
+    for attribute in target_contract.required_attributes:
+        assert target_identity.attributes[attribute]
+
+    for attribute in target_contract.forbidden_attributes:
+        assert attribute not in target_identity.attributes
+
+
 @pytest.mark.parametrize("contract", CONTRACTS, ids=contract_ids)
 def test_provider_mapper_returns_identity_inputs(
     contract: ProviderCapabilityContract,
@@ -1285,35 +1372,25 @@ def test_provider_identity_can_map_to_real_target_projection_through_verified_id
     source_contract: ProviderCapabilityContract,
     target_contract: TargetProjectionContract,
 ) -> None:
-    registry = ProviderRegistry()
-    registry.register_authenticator(
-        source_contract.name,
-        source_contract.authenticator_type(source_contract.store_factory()),
-    )
-    registry.register_identity_mapper(
-        target_contract.name,
-        target_contract.mapper_factory(),
-    )
-    source_identification, source_credential = (
-        source_contract.mapper_factory().to_domain(source_contract.valid_request)
-    )
+    assert_source_can_project_to_target(source_contract, target_contract)
 
-    result = registry.map_identity(
-        source_provider=source_contract.name,
-        identification=source_identification,
-        credential=source_credential,
-        target=target_contract.target,
-    )
 
-    assert result.source_provider == source_contract.name
-    assert result.target_mapper == target_contract.name
-    assert result.identity == source_contract.expected_identity
-    assert result.target_identity is not None
-    assert result.target_identity.target == target_contract.target
-    assert result.target_identity.identifier.startswith(f"{target_contract.name}:")
+@pytest.mark.parametrize(
+    "target_contract",
+    SIMPLE_BASIC_SOURCE_TARGET_PROJECTION_CONTRACTS,
+)
+def test_basic_source_proof_projects_to_simple_target_mappers_through_canonical_identity(
+    target_contract: TargetProjectionContract,
+) -> None:
+    assert_source_can_project_to_target(basic_contract(), target_contract)
 
-    for attribute in target_contract.required_attributes:
-        assert result.target_identity.attributes[attribute]
 
-    for attribute in target_contract.forbidden_attributes:
-        assert attribute not in result.target_identity.attributes
+@pytest.mark.parametrize(
+    ("source_contract_factory", "target_contract"),
+    SIMPLE_CROSS_SOURCE_TARGET_PROJECTION_CONTRACTS,
+)
+def test_simple_source_proofs_project_to_foreign_target_mappers_through_canonical_identity(
+    source_contract_factory: Callable[[], ProviderCapabilityContract],
+    target_contract: TargetProjectionContract,
+) -> None:
+    assert_source_can_project_to_target(source_contract_factory(), target_contract)

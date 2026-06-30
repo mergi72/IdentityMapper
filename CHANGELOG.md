@@ -2,6 +2,18 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.31.2
+
+All-to-all projection verification patch.
+
+- Added an explicit all-to-all projection coverage guard for every source
+  provider and every target identity mapper.
+- Refactored projection tests around `assert_source_can_project_to_target()`.
+- Verified the direct boundary: source provider produces canonical `Identity`;
+  target mapper projects only that `Identity` and target request.
+- Documented the all-to-all projection guarantee in architecture verification.
+- Tests: 723 passed.
+
 ## v0.31.1
 
 Target mapper terminology patch.

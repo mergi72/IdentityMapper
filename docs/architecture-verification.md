@@ -55,6 +55,9 @@ The test suite verifies:
   network calls, service accounts, or account existence confirmation
 - every source provider can map through `Identity` to the real target
   projection mappers for every provider world in this repository
+- all-to-all projection tests verify that every source provider can produce a
+  canonical `Identity` and every target mapper can project that `Identity`
+  without knowing the source provider
 
 This is an architectural test. It does not prove that a concrete external
 system is integrated correctly. It proves that every provider implementation in
@@ -156,6 +159,16 @@ Version `v0.31.0` completes the same target projection pattern
 for the full provider set in this repository: BasicAuth, OAuth, API Key,
 Client Certificate / mTLS, WebAuthn / FIDO2, Passkeys, MFA, Federated Identity,
 and Guest / Anonymous Identity.
+
+The all-to-all projection suite verifies the boundary directly:
+
+```text
+Source Provider -> canonical Identity -> Target Identity Mapper
+```
+
+The target mapper receives only the canonical `Identity` and target request. It
+does not receive the source provider result, source credential, or source
+implementation model.
 
 These target projections do not perform network calls, bind operations, token
 issuance, assertion issuance, session issuance, account lookup, credential
