@@ -2,6 +2,21 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.32.0
+
+IdentityMapper Protocol design principles checkpoint.
+
+- Added `docs/identitymapper-protocol.md`.
+- Documented IdentityMapper as a protocol for translating identity proofs into
+  canonical `Identity` and projecting that identity into target worlds.
+- Documented the source/target boundary:
+  `Source Provider -> canonical Identity -> Target Identity Mapper`.
+- Clarified that IdentityMapper is not a formal standard, credential manager,
+  identity store, session manager, authorization engine, or target system
+  client.
+- Linked the protocol document from the README and documentation index.
+- Tests: 723 passed.
+
 ## v0.31.2
 
 All-to-all projection verification patch.

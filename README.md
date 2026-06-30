@@ -111,6 +111,7 @@ The implementation details are intentionally kept out of this README.
 - [Architecture](docs/architecture.md)
 - [Architecture verification](docs/architecture-verification.md)
 - [Capability protocol](docs/capability-protocol.md)
+- [IdentityMapper protocol](docs/identitymapper-protocol.md)
 - [Host](docs/host.md)
 - [Host service](docs/host-service.md)
 - [MapIdentity](docs/capabilities/map-identity.md)
@@ -152,6 +153,7 @@ config/
 
 docs/
   architecture.md
+  identitymapper-protocol.md
   provider-footprint.md
   host.md
   host-service.md
