@@ -4,6 +4,7 @@ from identity_mapper.capability_protocol import AuthenticationRejected
 
 from identity_mapper.capabilities import (
     Authenticate,
+    MapIdentity,
     ResolveIdentity,
     VerifyCredential,
 )
@@ -12,8 +13,10 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
-from identity_mapper.providers.oauth.domain import OAuthConfig
+from identity_mapper.providers.oauth.domain import OAuthConfig, OAuthTargetProjectionConfig
 from identity_mapper.providers.oauth.mapper import (
     OAuthTokenCandidateMapper,
     OAuthTokenIdentityMapper,
@@ -111,3 +114,41 @@ class OAuthAuthenticator(Authenticate):
             raise OAuthAuthenticationError("unknown identity")
 
         return self._identity_mapper.to_domain(token)
+
+
+class OAuthTargetIdentityMapper(MapIdentity):
+    """Projects a verified Identity into an OAuth target identity shape."""
+
+    def __init__(
+        self,
+        config: OAuthTargetProjectionConfig | None = None,
+    ) -> None:
+        self._config = config or OAuthTargetProjectionConfig()
+
+    def map_identity(
+        self,
+        identity: Identity,
+        target: IdentityTarget,
+    ) -> TargetIdentity | None:
+        if target.provider != self._config.provider:
+            return None
+
+        issuer = target.realm or self._config.default_issuer
+        audience = target.purpose or self._config.default_audience
+        subject_candidate = identity.id
+        return TargetIdentity(
+            identifier=f"{target.provider}:{subject_candidate}",
+            target=target,
+            attributes={
+                key: value
+                for key, value in {
+                    "subject_candidate": subject_candidate,
+                    "issuer_hint": issuer,
+                    "audience_hint": audience,
+                    "scope_hints": tuple(identity.roles),
+                    "claim_hints": dict(identity.claims),
+                    "mail_hint": identity.email,
+                }.items()
+                if value is not None
+            },
+        )

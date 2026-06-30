@@ -5,11 +5,13 @@ from identity_mapper.providers.api_key.capabilities import (
     ApiKeyAuthenticator,
     ApiKeyCredentialVerifier,
     ApiKeyIdentityResolver,
+    ApiKeyTargetIdentityMapper,
 )
 from identity_mapper.providers.api_key.domain import (
     ApiKeyConfig,
     ApiKeyRecord,
     ApiKeyRequest,
+    ApiKeyTargetProjectionConfig,
 )
 from identity_mapper.providers.api_key.mapper import (
     ApiKeyCandidateMapper,
@@ -31,5 +33,7 @@ __all__ = [
     "ApiKeyRecord",
     "ApiKeyRequest",
     "ApiKeyResolution",
+    "ApiKeyTargetIdentityMapper",
+    "ApiKeyTargetProjectionConfig",
     "InMemoryApiKeyStore",
 ]

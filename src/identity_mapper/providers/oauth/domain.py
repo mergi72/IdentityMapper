@@ -11,6 +11,15 @@ class OAuthConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class OAuthTargetProjectionConfig:
+    """Configuration for projecting an Identity into an OAuth target world."""
+
+    provider: str = "oauth"
+    default_issuer: str | None = None
+    default_audience: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class OAuthTokenRequest:
     """Implementation model for an OAuth token authentication request."""
 

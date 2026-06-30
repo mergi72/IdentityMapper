@@ -11,6 +11,14 @@ class GuestConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class GuestTargetProjectionConfig:
+    """Configuration for projecting an Identity into a Guest target world."""
+
+    provider: str = "guest"
+    default_realm: str | None = "guest"
+
+
+@dataclass(frozen=True, slots=True)
 class GuestRequest:
     """Implementation model for a guest identity request."""
 

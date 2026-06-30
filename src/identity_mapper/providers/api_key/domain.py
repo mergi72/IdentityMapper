@@ -11,6 +11,14 @@ class ApiKeyConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class ApiKeyTargetProjectionConfig:
+    """Configuration for projecting an Identity into an API Key target world."""
+
+    provider: str = "api_key"
+    default_client_id: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class ApiKeyRequest:
     """Implementation model for an API key authentication request."""
 

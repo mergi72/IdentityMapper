@@ -11,6 +11,14 @@ class ClientCertificateConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class ClientCertificateTargetProjectionConfig:
+    """Configuration for projecting an Identity into a certificate target world."""
+
+    provider: str = "certificate"
+    default_issuer: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class ClientCertificateRequest:
     """Implementation model for a client certificate authentication request."""
 

@@ -5,11 +5,13 @@ from identity_mapper.providers.passkeys.capabilities import (
     PasskeyAuthenticator,
     PasskeyCredentialVerifier,
     PasskeyIdentityResolver,
+    PasskeyTargetIdentityMapper,
 )
 from identity_mapper.providers.passkeys.domain import (
     PasskeyConfig,
     PasskeyRecord,
     PasskeyRequest,
+    PasskeyTargetProjectionConfig,
 )
 from identity_mapper.providers.passkeys.mapper import (
     PasskeyCandidateMapper,
@@ -32,4 +34,6 @@ __all__ = [
     "PasskeyRecord",
     "PasskeyRequest",
     "PasskeyResolution",
+    "PasskeyTargetIdentityMapper",
+    "PasskeyTargetProjectionConfig",
 ]

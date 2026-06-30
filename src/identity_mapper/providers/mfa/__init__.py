@@ -5,12 +5,14 @@ from identity_mapper.providers.mfa.capabilities import (
     MfaAuthenticator,
     MfaCredentialVerifier,
     MfaIdentityResolver,
+    MfaTargetIdentityMapper,
 )
 from identity_mapper.providers.mfa.domain import (
     MfaConfig,
     MfaFactor,
     MfaRecord,
     MfaRequest,
+    MfaTargetProjectionConfig,
 )
 from identity_mapper.providers.mfa.mapper import (
     MfaCandidateMapper,
@@ -34,4 +36,6 @@ __all__ = [
     "MfaRecord",
     "MfaRequest",
     "MfaResolution",
+    "MfaTargetIdentityMapper",
+    "MfaTargetProjectionConfig",
 ]

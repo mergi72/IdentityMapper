@@ -2,6 +2,23 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.31.0
+
+Full provider target projection checkpoint.
+
+- Added target projection mappers for the remaining provider worlds in this
+  repository: BasicAuth, API Key, Client Certificate / mTLS, OAuth, WebAuthn /
+  FIDO2, Passkeys, MFA, Federated Identity, and Guest / Anonymous Identity.
+- Kept every target mapper projection-only: no credential values, no token
+  values, no session tokens, no assertion values, no proof values, no runtime
+  connection objects, and no target existence confirmation.
+- Exported the new target projection mappers from their provider packages.
+- Expanded the provider capability contract suite to verify every included
+  source provider can map through canonical `Identity` to every included target
+  provider projection.
+- Documented the full verified target projection suite.
+- Tests: 715 passed.
+
 ## v0.30.0
 
 Target projection verification checkpoint.

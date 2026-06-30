@@ -4,6 +4,7 @@ from identity_mapper.capability_protocol import AuthenticationRejected
 
 from identity_mapper.capabilities import (
     Authenticate,
+    MapIdentity,
     ResolveIdentity,
     VerifyCredential,
 )
@@ -12,8 +13,10 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
-from identity_mapper.providers.guest.domain import GuestConfig
+from identity_mapper.providers.guest.domain import GuestConfig, GuestTargetProjectionConfig
 from identity_mapper.providers.guest.mapper import (
     GuestCandidateMapper,
     GuestIdentityMapper,
@@ -111,3 +114,38 @@ class GuestAuthenticator(Authenticate):
             raise GuestAuthenticationError("unknown identity")
 
         return self._identity_mapper.to_domain(session)
+
+
+class GuestTargetIdentityMapper(MapIdentity):
+    """Projects a verified Identity into a Guest target identity shape."""
+
+    def __init__(
+        self,
+        config: GuestTargetProjectionConfig | None = None,
+    ) -> None:
+        self._config = config or GuestTargetProjectionConfig()
+
+    def map_identity(
+        self,
+        identity: Identity,
+        target: IdentityTarget,
+    ) -> TargetIdentity | None:
+        if target.provider != self._config.provider:
+            return None
+
+        realm = target.realm or self._config.default_realm
+        session_identity_candidate = identity.id
+        return TargetIdentity(
+            identifier=f"{target.provider}:{session_identity_candidate}",
+            target=target,
+            attributes={
+                key: value
+                for key, value in {
+                    "session_identity_candidate": session_identity_candidate,
+                    "realm_hint": realm,
+                    "anonymous_hint": identity.claims.get("anonymous"),
+                    "role_hints": tuple(identity.roles),
+                }.items()
+                if value is not None
+            },
+        )

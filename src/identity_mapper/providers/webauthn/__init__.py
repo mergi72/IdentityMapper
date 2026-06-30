@@ -5,11 +5,13 @@ from identity_mapper.providers.webauthn.capabilities import (
     WebAuthnAuthenticator,
     WebAuthnCredentialVerifier,
     WebAuthnIdentityResolver,
+    WebAuthnTargetIdentityMapper,
 )
 from identity_mapper.providers.webauthn.domain import (
     WebAuthnConfig,
     WebAuthnCredentialRecord,
     WebAuthnRequest,
+    WebAuthnTargetProjectionConfig,
 )
 from identity_mapper.providers.webauthn.mapper import (
     WebAuthnCandidateMapper,
@@ -32,4 +34,6 @@ __all__ = [
     "WebAuthnMapper",
     "WebAuthnRequest",
     "WebAuthnResolution",
+    "WebAuthnTargetIdentityMapper",
+    "WebAuthnTargetProjectionConfig",
 ]

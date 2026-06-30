@@ -4,6 +4,7 @@ from identity_mapper.capability_protocol import AuthenticationRejected
 
 from identity_mapper.capabilities import (
     Authenticate,
+    MapIdentity,
     ResolveIdentity,
     VerifyCredential,
 )
@@ -12,8 +13,13 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
-from identity_mapper.providers.passkeys.domain import PasskeyConfig
+from identity_mapper.providers.passkeys.domain import (
+    PasskeyConfig,
+    PasskeyTargetProjectionConfig,
+)
 from identity_mapper.providers.passkeys.mapper import (
     PasskeyCandidateMapper,
     PasskeyIdentityMapper,
@@ -111,3 +117,39 @@ class PasskeyAuthenticator(Authenticate):
             raise PasskeyAuthenticationError("unknown identity")
 
         return self._identity_mapper.to_domain(passkey)
+
+
+class PasskeyTargetIdentityMapper(MapIdentity):
+    """Projects a verified Identity into a Passkeys target identity shape."""
+
+    def __init__(
+        self,
+        config: PasskeyTargetProjectionConfig | None = None,
+    ) -> None:
+        self._config = config or PasskeyTargetProjectionConfig()
+
+    def map_identity(
+        self,
+        identity: Identity,
+        target: IdentityTarget,
+    ) -> TargetIdentity | None:
+        if target.provider != self._config.provider:
+            return None
+
+        relying_party_id = target.realm or self._config.default_relying_party_id
+        user_handle_candidate = identity.id
+        return TargetIdentity(
+            identifier=f"{target.provider}:{user_handle_candidate}",
+            target=target,
+            attributes={
+                key: value
+                for key, value in {
+                    "user_handle_candidate": user_handle_candidate,
+                    "relying_party_id_hint": relying_party_id,
+                    "display_name_hint": identity.display_name,
+                    "mail_hint": identity.email,
+                    "role_hints": tuple(identity.roles),
+                }.items()
+                if value is not None
+            },
+        )

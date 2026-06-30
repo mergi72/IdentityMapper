@@ -6,6 +6,7 @@ from identity_mapper.capability_protocol import AuthenticationRejected
 
 from identity_mapper.capabilities import (
     Authenticate,
+    MapIdentity,
     ResolveIdentity,
     VerifyCredential,
 )
@@ -14,8 +15,10 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
-from identity_mapper.providers.mfa.domain import MfaConfig
+from identity_mapper.providers.mfa.domain import MfaConfig, MfaTargetProjectionConfig
 from identity_mapper.providers.mfa.mapper import (
     MfaCandidateMapper,
     MfaIdentityMapper,
@@ -147,3 +150,40 @@ class MfaAuthenticator(Authenticate):
             raise MfaAuthenticationError("unknown identity")
 
         return self._identity_mapper.to_domain(record)
+
+
+class MfaTargetIdentityMapper(MapIdentity):
+    """Projects a verified Identity into an MFA target identity shape."""
+
+    def __init__(
+        self,
+        config: MfaTargetProjectionConfig | None = None,
+    ) -> None:
+        self._config = config or MfaTargetProjectionConfig()
+
+    def map_identity(
+        self,
+        identity: Identity,
+        target: IdentityTarget,
+    ) -> TargetIdentity | None:
+        if target.provider != self._config.provider:
+            return None
+
+        realm = target.realm or self._config.default_realm
+        factor_policy_hint = target.purpose
+        return TargetIdentity(
+            identifier=f"{target.provider}:{identity.id}",
+            target=target,
+            attributes={
+                key: value
+                for key, value in {
+                    "identifier_candidate": identity.id,
+                    "realm_hint": realm,
+                    "factor_policy_hint": factor_policy_hint,
+                    "role_hints": tuple(identity.roles),
+                    "claim_hints": dict(identity.claims),
+                    "mail_hint": identity.email,
+                }.items()
+                if value is not None
+            },
+        )

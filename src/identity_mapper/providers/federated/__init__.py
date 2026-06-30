@@ -5,11 +5,13 @@ from identity_mapper.providers.federated.capabilities import (
     FederatedAuthenticator,
     FederatedCredentialVerifier,
     FederatedIdentityResolver,
+    FederatedTargetIdentityMapper,
 )
 from identity_mapper.providers.federated.domain import (
     FederatedConfig,
     FederatedIdentityRecord,
     FederatedRequest,
+    FederatedTargetProjectionConfig,
 )
 from identity_mapper.providers.federated.mapper import (
     FederatedCandidateMapper,
@@ -31,5 +33,7 @@ __all__ = [
     "FederatedMapper",
     "FederatedRequest",
     "FederatedResolution",
+    "FederatedTargetIdentityMapper",
+    "FederatedTargetProjectionConfig",
     "InMemoryFederatedIdentityStore",
 ]

@@ -5,9 +5,11 @@ from identity_mapper.providers.oauth.capabilities import (
     OAuthAuthenticator,
     OAuthCredentialVerifier,
     OAuthIdentityResolver,
+    OAuthTargetIdentityMapper,
 )
 from identity_mapper.providers.oauth.domain import (
     OAuthConfig,
+    OAuthTargetProjectionConfig,
     OAuthTokenRecord,
     OAuthTokenRequest,
 )
@@ -26,6 +28,8 @@ __all__ = [
     "OAuthConfig",
     "OAuthCredentialVerifier",
     "OAuthIdentityResolver",
+    "OAuthTargetIdentityMapper",
+    "OAuthTargetProjectionConfig",
     "OAuthTokenCandidateMapper",
     "OAuthTokenIdentityMapper",
     "OAuthTokenMapper",

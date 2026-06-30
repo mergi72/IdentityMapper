@@ -11,6 +11,14 @@ class BasicAuthConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class BasicTargetProjectionConfig:
+    """Configuration for projecting an Identity into a Basic Auth target world."""
+
+    provider: str = "basic"
+    default_realm: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class BasicUserRecord:
     """Implementation model for a basic-auth user record."""
 

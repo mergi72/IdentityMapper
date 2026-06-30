@@ -11,6 +11,14 @@ class WebAuthnConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class WebAuthnTargetProjectionConfig:
+    """Configuration for projecting an Identity into a WebAuthn target world."""
+
+    provider: str = "webauthn"
+    default_relying_party_id: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class WebAuthnRequest:
     """Implementation model for a WebAuthn authentication request."""
 

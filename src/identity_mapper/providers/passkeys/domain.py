@@ -11,6 +11,14 @@ class PasskeyConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class PasskeyTargetProjectionConfig:
+    """Configuration for projecting an Identity into a Passkeys target world."""
+
+    provider: str = "passkeys"
+    default_relying_party_id: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class PasskeyRequest:
     """Implementation model for a passkey authentication request."""
 

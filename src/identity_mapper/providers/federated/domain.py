@@ -11,6 +11,15 @@ class FederatedConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class FederatedTargetProjectionConfig:
+    """Configuration for projecting an Identity into a Federated target world."""
+
+    provider: str = "federated"
+    default_issuer: str | None = None
+    default_audience: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class FederatedRequest:
     """Implementation model for a federated identity request."""
 

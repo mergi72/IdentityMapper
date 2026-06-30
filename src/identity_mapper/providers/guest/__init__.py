@@ -5,11 +5,13 @@ from identity_mapper.providers.guest.capabilities import (
     GuestAuthenticator,
     GuestCredentialVerifier,
     GuestIdentityResolver,
+    GuestTargetIdentityMapper,
 )
 from identity_mapper.providers.guest.domain import (
     GuestConfig,
     GuestRequest,
     GuestSessionRecord,
+    GuestTargetProjectionConfig,
 )
 from identity_mapper.providers.guest.mapper import (
     GuestCandidateMapper,
@@ -31,5 +33,7 @@ __all__ = [
     "GuestRequest",
     "GuestResolution",
     "GuestSessionRecord",
+    "GuestTargetIdentityMapper",
+    "GuestTargetProjectionConfig",
     "InMemoryGuestSessionStore",
 ]

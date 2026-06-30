@@ -4,6 +4,7 @@ from identity_mapper.capability_protocol import AuthenticationRejected
 
 from identity_mapper.capabilities import (
     Authenticate,
+    MapIdentity,
     ResolveIdentity,
     VerifyCredential,
 )
@@ -12,8 +13,13 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
-from identity_mapper.providers.federated.domain import FederatedConfig
+from identity_mapper.providers.federated.domain import (
+    FederatedConfig,
+    FederatedTargetProjectionConfig,
+)
 from identity_mapper.providers.federated.mapper import (
     FederatedCandidateMapper,
     FederatedIdentityMapper,
@@ -123,3 +129,41 @@ class FederatedAuthenticator(Authenticate):
             raise FederatedAuthenticationError("unknown identity")
 
         return self._identity_mapper.to_domain(record)
+
+
+class FederatedTargetIdentityMapper(MapIdentity):
+    """Projects a verified Identity into a Federated target identity shape."""
+
+    def __init__(
+        self,
+        config: FederatedTargetProjectionConfig | None = None,
+    ) -> None:
+        self._config = config or FederatedTargetProjectionConfig()
+
+    def map_identity(
+        self,
+        identity: Identity,
+        target: IdentityTarget,
+    ) -> TargetIdentity | None:
+        if target.provider != self._config.provider:
+            return None
+
+        issuer = target.realm or self._config.default_issuer
+        audience = target.purpose or self._config.default_audience
+        external_subject_candidate = identity.email or identity.id
+        return TargetIdentity(
+            identifier=f"{target.provider}:{external_subject_candidate}",
+            target=target,
+            attributes={
+                key: value
+                for key, value in {
+                    "external_subject_candidate": external_subject_candidate,
+                    "issuer_hint": issuer,
+                    "audience_hint": audience,
+                    "claim_hints": dict(identity.claims),
+                    "role_hints": tuple(identity.roles),
+                    "mail_hint": identity.email,
+                }.items()
+                if value is not None
+            },
+        )

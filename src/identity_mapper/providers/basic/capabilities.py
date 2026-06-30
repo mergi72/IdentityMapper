@@ -4,6 +4,7 @@ from identity_mapper.capability_protocol import AuthenticationRejected
 
 from identity_mapper.capabilities import (
     Authenticate,
+    MapIdentity,
     ResolveIdentity,
     VerifyCredential,
 )
@@ -12,8 +13,13 @@ from identity_mapper.domain import (
     Identification,
     Identity,
     IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
 )
-from identity_mapper.providers.basic.domain import BasicAuthConfig
+from identity_mapper.providers.basic.domain import (
+    BasicAuthConfig,
+    BasicTargetProjectionConfig,
+)
 from identity_mapper.providers.basic.mapper import (
     BasicUserCandidateMapper,
     BasicUserIdentityMapper,
@@ -111,3 +117,39 @@ class BasicAuthenticator(Authenticate):
             raise BasicAuthenticationError("unknown identity")
 
         return self._identity_mapper.to_domain(user)
+
+
+class BasicTargetIdentityMapper(MapIdentity):
+    """Projects a verified Identity into a Basic Auth target identity shape."""
+
+    def __init__(
+        self,
+        config: BasicTargetProjectionConfig | None = None,
+    ) -> None:
+        self._config = config or BasicTargetProjectionConfig()
+
+    def map_identity(
+        self,
+        identity: Identity,
+        target: IdentityTarget,
+    ) -> TargetIdentity | None:
+        if target.provider != self._config.provider:
+            return None
+
+        realm = target.realm or self._config.default_realm
+        username_candidate = identity.id.split("@", 1)[0].split("\\")[-1]
+        return TargetIdentity(
+            identifier=f"{target.provider}:{username_candidate}",
+            target=target,
+            attributes={
+                key: value
+                for key, value in {
+                    "username_candidate": username_candidate,
+                    "realm_hint": realm,
+                    "display_name_hint": identity.display_name,
+                    "mail_hint": identity.email,
+                    "role_hints": tuple(identity.roles),
+                }.items()
+                if value is not None
+            },
+        )

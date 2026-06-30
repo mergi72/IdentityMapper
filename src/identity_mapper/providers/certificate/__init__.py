@@ -5,11 +5,13 @@ from identity_mapper.providers.certificate.capabilities import (
     ClientCertificateAuthenticator,
     ClientCertificateCredentialVerifier,
     ClientCertificateIdentityResolver,
+    ClientCertificateTargetIdentityMapper,
 )
 from identity_mapper.providers.certificate.domain import (
     ClientCertificateConfig,
     ClientCertificateRecord,
     ClientCertificateRequest,
+    ClientCertificateTargetProjectionConfig,
 )
 from identity_mapper.providers.certificate.mapper import (
     ClientCertificateCandidateMapper,
@@ -31,5 +33,7 @@ __all__ = [
     "ClientCertificateRecord",
     "ClientCertificateRequest",
     "ClientCertificateResolution",
+    "ClientCertificateTargetIdentityMapper",
+    "ClientCertificateTargetProjectionConfig",
     "InMemoryClientCertificateStore",
 ]

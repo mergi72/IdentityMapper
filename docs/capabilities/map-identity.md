@@ -50,11 +50,20 @@ Kerberos proof -> Identity -> AD projection
 
 The current target projection suite covers:
 
+- BasicAuth
 - Windows / AD
+- API Key
+- Client Certificate / mTLS
+- Federated Identity
+- Guest / Anonymous Identity
 - LDAP
 - Kerberos
+- MFA
+- OAuth
+- Passkeys
 - JWT
 - SAML
+- WebAuthn / FIDO2
 
 Each target mapper implements only:
 
@@ -63,4 +72,5 @@ Identity -> TargetIdentity
 ```
 
 They do not bind, look up accounts, issue tokens, issue assertions, or verify
-target existence.
+target existence. They also do not store credential values, create sessions, or
+return runtime connection objects.

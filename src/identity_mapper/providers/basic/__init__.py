@@ -5,8 +5,13 @@ from identity_mapper.providers.basic.capabilities import (
     BasicAuthenticator,
     BasicCredentialVerifier,
     BasicIdentityResolver,
+    BasicTargetIdentityMapper,
 )
-from identity_mapper.providers.basic.domain import BasicAuthConfig, BasicUserRecord
+from identity_mapper.providers.basic.domain import (
+    BasicAuthConfig,
+    BasicTargetProjectionConfig,
+    BasicUserRecord,
+)
 from identity_mapper.providers.basic.mapper import (
     BasicAuthenticationMapper,
     BasicAuthenticationRequest,
@@ -24,6 +29,8 @@ __all__ = [
     "BasicAuthenticator",
     "BasicCredentialVerifier",
     "BasicIdentityResolver",
+    "BasicTargetIdentityMapper",
+    "BasicTargetProjectionConfig",
     "BasicUserCandidateMapper",
     "BasicUserIdentityMapper",
     "BasicUserRecord",

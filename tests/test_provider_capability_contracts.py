@@ -26,6 +26,7 @@ from identity_mapper.providers.api_key import (
     ApiKeyMapper,
     ApiKeyRecord,
     ApiKeyRequest,
+    ApiKeyTargetIdentityMapper,
     InMemoryApiKeyStore,
 )
 from identity_mapper.providers.basic import (
@@ -34,6 +35,7 @@ from identity_mapper.providers.basic import (
     BasicAuthenticator,
     BasicCredentialVerifier,
     BasicIdentityResolver,
+    BasicTargetIdentityMapper,
     BasicUserRecord,
     InMemoryBasicUserStore,
 )
@@ -44,6 +46,7 @@ from identity_mapper.providers.certificate import (
     ClientCertificateMapper,
     ClientCertificateRecord,
     ClientCertificateRequest,
+    ClientCertificateTargetIdentityMapper,
     InMemoryClientCertificateStore,
 )
 from identity_mapper.providers.federated import (
@@ -53,6 +56,7 @@ from identity_mapper.providers.federated import (
     FederatedIdentityResolver,
     FederatedMapper,
     FederatedRequest,
+    FederatedTargetIdentityMapper,
     InMemoryFederatedIdentityStore,
 )
 from identity_mapper.providers.guest import (
@@ -62,6 +66,7 @@ from identity_mapper.providers.guest import (
     GuestMapper,
     GuestRequest,
     GuestSessionRecord,
+    GuestTargetIdentityMapper,
     InMemoryGuestSessionStore,
 )
 from identity_mapper.providers.jwt import (
@@ -103,12 +108,14 @@ from identity_mapper.providers.mfa import (
     MfaMapper,
     MfaRecord,
     MfaRequest,
+    MfaTargetIdentityMapper,
 )
 from identity_mapper.providers.oauth import (
     InMemoryOAuthTokenStore,
     OAuthAuthenticator,
     OAuthCredentialVerifier,
     OAuthIdentityResolver,
+    OAuthTargetIdentityMapper,
     OAuthTokenMapper,
     OAuthTokenRecord,
     OAuthTokenRequest,
@@ -121,6 +128,7 @@ from identity_mapper.providers.passkeys import (
     PasskeyMapper,
     PasskeyRecord,
     PasskeyRequest,
+    PasskeyTargetIdentityMapper,
 )
 from identity_mapper.providers.saml import (
     InMemorySamlAssertionStore,
@@ -140,10 +148,12 @@ from identity_mapper.providers.webauthn import (
     WebAuthnIdentityResolver,
     WebAuthnMapper,
     WebAuthnRequest,
+    WebAuthnTargetIdentityMapper,
 )
 from identity_mapper.providers.windows import (
     InMemoryWindowsIdentityStore,
     WindowsAdTargetIdentityMapper,
+    WindowsAdTargetProjectionConfig,
     WindowsAuthenticator,
     WindowsCredentialVerifier,
     WindowsIdentityRecord,
@@ -922,10 +932,19 @@ PROVIDER_MAPPING_CONTRACTS = tuple(
 
 TARGET_PROJECTION_CONTRACTS = (
     TargetProjectionContract(
-        name="ad",
-        mapper_factory=WindowsAdTargetIdentityMapper,
+        name="basic",
+        mapper_factory=BasicTargetIdentityMapper,
+        target=IdentityTarget(provider="basic", realm="local"),
+        required_attributes=("username_candidate",),
+        forbidden_attributes=("password", "credential"),
+    ),
+    TargetProjectionContract(
+        name="windows",
+        mapper_factory=lambda: WindowsAdTargetIdentityMapper(
+            WindowsAdTargetProjectionConfig(provider="windows")
+        ),
         target=IdentityTarget(
-            provider="ad",
+            provider="windows",
             realm="corp.local",
             purpose="bind_identity",
         ),
@@ -934,6 +953,38 @@ TARGET_PROJECTION_CONTRACTS = (
             "sam_account_name_candidate",
         ),
         forbidden_attributes=("account_verified",),
+    ),
+    TargetProjectionContract(
+        name="api_key",
+        mapper_factory=ApiKeyTargetIdentityMapper,
+        target=IdentityTarget(provider="api_key", realm="client"),
+        required_attributes=("key_id_candidate",),
+        forbidden_attributes=("api_key", "credential"),
+    ),
+    TargetProjectionContract(
+        name="certificate",
+        mapper_factory=ClientCertificateTargetIdentityMapper,
+        target=IdentityTarget(provider="certificate", realm="ca"),
+        required_attributes=("subject_candidate",),
+        forbidden_attributes=("proof", "private_key", "credential"),
+    ),
+    TargetProjectionContract(
+        name="federated",
+        mapper_factory=FederatedTargetIdentityMapper,
+        target=IdentityTarget(
+            provider="federated",
+            realm="issuer",
+            purpose="audience",
+        ),
+        required_attributes=("external_subject_candidate",),
+        forbidden_attributes=("assertion", "credential"),
+    ),
+    TargetProjectionContract(
+        name="guest",
+        mapper_factory=GuestTargetIdentityMapper,
+        target=IdentityTarget(provider="guest", realm="guest"),
+        required_attributes=("session_identity_candidate",),
+        forbidden_attributes=("session_token", "credential"),
     ),
     TargetProjectionContract(
         name="ldap",
@@ -958,6 +1009,35 @@ TARGET_PROJECTION_CONTRACTS = (
         forbidden_attributes=("principal_verified",),
     ),
     TargetProjectionContract(
+        name="mfa",
+        mapper_factory=MfaTargetIdentityMapper,
+        target=IdentityTarget(
+            provider="mfa",
+            realm="mfa",
+            purpose="strong",
+        ),
+        required_attributes=("identifier_candidate",),
+        forbidden_attributes=("factor_values", "credential"),
+    ),
+    TargetProjectionContract(
+        name="oauth",
+        mapper_factory=OAuthTargetIdentityMapper,
+        target=IdentityTarget(
+            provider="oauth",
+            realm="issuer",
+            purpose="api",
+        ),
+        required_attributes=("subject_candidate",),
+        forbidden_attributes=("access_token", "token", "credential"),
+    ),
+    TargetProjectionContract(
+        name="passkeys",
+        mapper_factory=PasskeyTargetIdentityMapper,
+        target=IdentityTarget(provider="passkeys", realm="example.org"),
+        required_attributes=("user_handle_candidate",),
+        forbidden_attributes=("assertion", "credential"),
+    ),
+    TargetProjectionContract(
         name="jwt",
         mapper_factory=JwtTargetIdentityMapper,
         target=IdentityTarget(
@@ -978,6 +1058,13 @@ TARGET_PROJECTION_CONTRACTS = (
         ),
         required_attributes=("name_id_candidate",),
         forbidden_attributes=("assertion", "assertion_verified"),
+    ),
+    TargetProjectionContract(
+        name="webauthn",
+        mapper_factory=WebAuthnTargetIdentityMapper,
+        target=IdentityTarget(provider="webauthn", realm="example.org"),
+        required_attributes=("user_handle_candidate",),
+        forbidden_attributes=("assertion", "challenge", "credential"),
     ),
 )
 

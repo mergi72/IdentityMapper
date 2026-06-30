@@ -11,6 +11,14 @@ class MfaConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class MfaTargetProjectionConfig:
+    """Configuration for projecting an Identity into an MFA target world."""
+
+    provider: str = "mfa"
+    default_realm: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class MfaFactor:
     """Implementation model for one MFA factor."""
 
