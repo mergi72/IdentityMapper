@@ -49,7 +49,7 @@ The test suite verifies:
 - host service records capability invocations without logging credential values
 - source identity proof maps to target identity worlds only after producing a
   verified `Identity`
-- every source provider can map to every target provider through `Identity`,
+- every source provider can map to every target mapper through `Identity`,
   including mapping to itself
 - the Windows / AD target mapper produces an AD projection without bind, lookup,
   network calls, service accounts, or account existence confirmation
@@ -141,7 +141,7 @@ compilation. Linting and formatting are intentionally deferred until their
 rules are configured and verified against the existing codebase.
 
 Version `v0.28.1` verifies that every included source provider can map to every
-included target provider through a verified `Identity`.
+included target mapper through a verified `Identity`.
 
 Version `v0.29.0` adds the first concrete target mapper: a projection from
 canonical `Identity` to a Windows / AD target shape. The target projection does

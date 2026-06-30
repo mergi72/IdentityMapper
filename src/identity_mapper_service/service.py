@@ -14,7 +14,11 @@ from identity_mapper.capability_protocol import (
     VerifyCredentialRequest,
     VerifyCredentialResponse,
 )
-from identity_mapper_service.registry import ProviderRegistry, UnknownProviderError
+from identity_mapper_service.registry import (
+    ProviderRegistry,
+    UnknownProviderError,
+    UnknownTargetMapperError,
+)
 from identity_mapper_service.request_log import CapabilityInvocationLog
 from identity_mapper_service.responses import (
     AuditResponse,
@@ -197,11 +201,24 @@ class IdentityMapperHostService:
                 request.source_credential,
                 request.target,
             )
+        except UnknownTargetMapperError:
+            self._log_invocation(
+                capability="map_identity",
+                provider=self._log_provider(request.source_provider),
+                target_mapper=request.target.provider,
+                identifier=request.source_identification.identifier,
+                credential_type=request.source_credential.type,
+                status="unknown_target_mapper",
+                duration_ms=self._duration_ms(started),
+                request_id=request_id,
+                error="unknown_target_mapper",
+            )
+            raise
         except UnknownProviderError:
             self._log_invocation(
                 capability="map_identity",
                 provider=self._log_provider(request.source_provider),
-                target_provider=request.target.provider,
+                target_mapper=request.target.provider,
                 identifier=request.source_identification.identifier,
                 credential_type=request.source_credential.type,
                 status="unknown_provider",
@@ -214,7 +231,7 @@ class IdentityMapperHostService:
             self._log_invocation(
                 capability="map_identity",
                 provider=self._log_provider(request.source_provider),
-                target_provider=request.target.provider,
+                target_mapper=request.target.provider,
                 identifier=request.source_identification.identifier,
                 credential_type=request.source_credential.type,
                 status="rejected",
@@ -227,7 +244,7 @@ class IdentityMapperHostService:
         self._log_invocation(
             capability="map_identity",
             provider=result.source_provider,
-            target_provider=result.target_provider,
+            target_mapper=result.target_mapper,
             identifier=request.source_identification.identifier,
             credential_type=request.source_credential.type,
             identity_id=result.identity.id,
@@ -249,7 +266,7 @@ class IdentityMapperHostService:
         status: str,
         duration_ms: int,
         request_id: str,
-        target_provider: str | None = None,
+        target_mapper: str | None = None,
         identifier: str | None = None,
         credential_type: str | None = None,
         candidate_id: str | None = None,
@@ -265,7 +282,7 @@ class IdentityMapperHostService:
             request_id=request_id,
             capability=capability,
             provider=provider,
-            target_provider=target_provider,
+            target_mapper=target_mapper,
             identifier=identifier,
             credential_type=credential_type,
             status=status,

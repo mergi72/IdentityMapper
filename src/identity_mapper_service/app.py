@@ -6,7 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 from typing import Any
 
-from identity_mapper_service.registry import UnknownProviderError
+from identity_mapper_service.registry import UnknownProviderError, UnknownTargetMapperError
 from identity_mapper_service.schemas import (
     RequestValidationError,
     authenticate_request_from_mapping,
@@ -125,7 +125,12 @@ def create_handler(
             except UnknownProviderError as exc:
                 self._send_error(404, "unknown_provider", str(exc))
             except JsonRequestError as exc:
-                self._send_error(exc.status_code, exc.error, str(exc))
+                self._send_error(
+                    exc.status_code,
+                    exc.error,
+                    str(exc),
+                    close_connection=exc.status_code == 413,
+                )
 
         def _handle_map_identity(self) -> None:
             try:
@@ -135,10 +140,17 @@ def create_handler(
                 self._send_json(200, map_identity_response_to_mapping(response))
             except RequestValidationError as exc:
                 self._send_error(400, "bad_request", str(exc))
+            except UnknownTargetMapperError as exc:
+                self._send_error(404, "unknown_target_mapper", str(exc))
             except UnknownProviderError as exc:
                 self._send_error(404, "unknown_provider", str(exc))
             except JsonRequestError as exc:
-                self._send_error(exc.status_code, exc.error, str(exc))
+                self._send_error(
+                    exc.status_code,
+                    exc.error,
+                    str(exc),
+                    close_connection=exc.status_code == 413,
+                )
 
         def _handle_resolve_identity(self) -> None:
             try:
@@ -151,7 +163,12 @@ def create_handler(
             except UnknownProviderError as exc:
                 self._send_error(404, "unknown_provider", str(exc))
             except JsonRequestError as exc:
-                self._send_error(exc.status_code, exc.error, str(exc))
+                self._send_error(
+                    exc.status_code,
+                    exc.error,
+                    str(exc),
+                    close_connection=exc.status_code == 413,
+                )
 
         def _handle_verify_credential(self) -> None:
             try:
@@ -164,7 +181,12 @@ def create_handler(
             except UnknownProviderError as exc:
                 self._send_error(404, "unknown_provider", str(exc))
             except JsonRequestError as exc:
-                self._send_error(exc.status_code, exc.error, str(exc))
+                self._send_error(
+                    exc.status_code,
+                    exc.error,
+                    str(exc),
+                    close_connection=exc.status_code == 413,
+                )
 
         def _read_json(self) -> dict[str, Any]:
             try:
@@ -209,15 +231,24 @@ def create_handler(
                 raise RequestValidationError("format must be html, json, or text")
             return value
 
-        def _send_json(self, status_code: int, payload: dict[str, Any]) -> None:
+        def _send_json(
+            self,
+            status_code: int,
+            payload: dict[str, Any],
+            *,
+            close_connection: bool = False,
+        ) -> None:
             body = (json.dumps(payload, sort_keys=True) + "\r\n").encode("utf-8")
-            self._send_response(status_code, body)
+            headers = {"Connection": "close"} if close_connection else None
+            self._send_response(status_code, body, headers=headers)
 
         def _send_error(
             self,
             status_code: int,
             error: str,
             message: str,
+            *,
+            close_connection: bool = False,
         ) -> None:
             self._send_json(
                 status_code,
@@ -225,6 +256,7 @@ def create_handler(
                     "error": error,
                     "message": message,
                 },
+                close_connection=close_connection,
             )
 
         def _send_audit_logs(self, query: str) -> None:
@@ -352,7 +384,7 @@ def create_handler(
                 "timestamp",
                 "capability",
                 "provider",
-                "target_provider",
+                "target_mapper",
                 "identifier",
                 "credential_type",
                 "candidate_id",

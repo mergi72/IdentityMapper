@@ -23,6 +23,10 @@ class UnknownProviderError(ValueError):
     """Raised when a requested provider is not registered."""
 
 
+class UnknownTargetMapperError(ValueError):
+    """Raised when a requested target mapper is not registered."""
+
+
 @dataclass(frozen=True, slots=True)
 class ProviderAuthenticationResult:
     """Authentication result with the provider that accepted the request."""
@@ -48,11 +52,11 @@ class ProviderVerificationResult:
 
 
 @dataclass(frozen=True, slots=True)
-class ProviderIdentityMappingResult:
-    """Identity mapping result with source and target providers."""
+class IdentityMappingResult:
+    """Identity mapping result with the source provider and target mapper."""
 
     source_provider: str
-    target_provider: str
+    target_mapper: str
     identity: Identity
     target_identity: TargetIdentity | None
 
@@ -89,10 +93,10 @@ class ProviderRegistry:
 
     def register_identity_mapper(
         self,
-        provider: str,
+        target_mapper: str,
         mapper: MapIdentity,
     ) -> None:
-        self._identity_mappers[provider] = mapper
+        self._identity_mappers[target_mapper] = mapper
 
     def providers(self) -> tuple[str, ...]:
         return tuple(
@@ -211,10 +215,11 @@ class ProviderRegistry:
         identification: Identification,
         credential: Credential,
         target: IdentityTarget,
-    ) -> ProviderIdentityMappingResult:
-        mapper = self._identity_mappers.get(target.provider)
+    ) -> IdentityMappingResult:
+        target_mapper = target.provider
+        mapper = self._identity_mappers.get(target_mapper)
         if mapper is None:
-            raise UnknownProviderError(target.provider)
+            raise UnknownTargetMapperError(target_mapper)
 
         authentication = self.authenticate(
             source_provider,
@@ -222,9 +227,9 @@ class ProviderRegistry:
             credential,
         )
 
-        return ProviderIdentityMappingResult(
+        return IdentityMappingResult(
             source_provider=authentication.provider,
-            target_provider=target.provider,
+            target_mapper=target_mapper,
             identity=authentication.identity,
             target_identity=mapper.map_identity(authentication.identity, target),
         )

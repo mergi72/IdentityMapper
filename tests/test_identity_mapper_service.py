@@ -30,7 +30,11 @@ from identity_mapper.domain import (
 )
 from identity_mapper_service.__main__ import HostServiceConfig, load_config, main
 from identity_mapper_service.app import create_server
-from identity_mapper_service.registry import ProviderRegistry, UnknownProviderError
+from identity_mapper_service.registry import (
+    ProviderRegistry,
+    UnknownProviderError,
+    UnknownTargetMapperError,
+)
 from identity_mapper_service.request_log import CapabilityInvocationLog
 from identity_mapper_service.responses import (
     AuditResponse,
@@ -357,6 +361,18 @@ def test_service_rejects_map_identity_with_invalid_source_credential() -> None:
     assert response.identity is None
     assert response.target_identity is None
     assert target_mapper.calls == 0
+
+
+def test_service_rejects_unknown_target_mapper() -> None:
+    request = MapIdentityRequest(
+        source_provider="basic",
+        source_identification=valid_identification(),
+        source_credential=valid_credential(),
+        target=IdentityTarget(provider="missing-target"),
+    )
+
+    with pytest.raises(UnknownTargetMapperError):
+        make_service().map_identity_request(request)
 
 
 def test_authenticate_response_mapping_includes_protocol_error() -> None:
@@ -1028,7 +1044,7 @@ def test_http_host_audit_logs_all_capabilities(tmp_path) -> None:
             "verify_credential",
             "map_identity",
         ]
-        assert audit["entries"][-1]["target_provider"] == "target"
+        assert audit["entries"][-1]["target_mapper"] == "target"
         assert "value" not in json.dumps(audit)
     finally:
         server.shutdown()

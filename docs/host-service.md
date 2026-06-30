@@ -13,10 +13,11 @@ Windows Service / Linux daemon
 HTTP API / local API
         |
         v
-Provider Registry
+Capability Registry
         |
-        v
-Provider Capability
+        +-- Source Provider Capability
+        |
+        +-- Target Mapper Capability
 ```
 
 ## Endpoints
@@ -60,8 +61,8 @@ Request:
 }
 ```
 
-`provider` is optional. If it is omitted, the host service asks the provider
-registry to select the first provider that accepts the request:
+`provider` is optional. If it is omitted, the host service asks the capability
+registry to select the first source provider that accepts the request:
 
 ```json
 {

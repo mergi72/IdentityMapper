@@ -1181,7 +1181,7 @@ def test_provider_authenticator_rejects_invalid_credential(
     ("source_contract", "target_contract"),
     PROVIDER_MAPPING_CONTRACTS,
 )
-def test_provider_identity_can_map_to_every_target_provider_through_verified_identity(
+def test_provider_identity_can_map_to_every_target_mapper_through_verified_identity(
     source_contract: ProviderCapabilityContract,
     target_contract: ProviderCapabilityContract,
 ) -> None:
@@ -1201,7 +1201,7 @@ def test_provider_identity_can_map_to_every_target_provider_through_verified_ide
     )
 
     assert result.source_provider == source_contract.name
-    assert result.target_provider == target_contract.name
+    assert result.target_mapper == target_contract.name
     assert result.identity == source_contract.expected_identity
     assert result.target_identity == TargetIdentity(
         identifier=f"{target_contract.name}:{source_contract.expected_identity.id}",
@@ -1263,7 +1263,7 @@ def test_provider_identity_can_map_to_windows_ad_projection_through_verified_ide
     )
 
     assert result.source_provider == source_contract.name
-    assert result.target_provider == "ad"
+    assert result.target_mapper == "ad"
     assert result.identity == source_contract.expected_identity
     assert result.target_identity is not None
     assert result.target_identity.identifier.startswith("ad:")
@@ -1306,7 +1306,7 @@ def test_provider_identity_can_map_to_real_target_projection_through_verified_id
     )
 
     assert result.source_provider == source_contract.name
-    assert result.target_provider == target_contract.name
+    assert result.target_mapper == target_contract.name
     assert result.identity == source_contract.expected_identity
     assert result.target_identity is not None
     assert result.target_identity.target == target_contract.target

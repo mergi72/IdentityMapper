@@ -2,6 +2,18 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.31.1
+
+Target mapper terminology patch.
+
+- Replaced target-side `target_provider` terminology with `target_mapper`.
+- Added `UnknownTargetMapperError` for missing target mapper requests.
+- Kept source-side provider terminology unchanged.
+- Updated audit output to use `target_mapper`.
+- Updated Host Service docs to distinguish source provider capabilities from
+  target mapper capabilities.
+- Tests: 716 passed.
+
 ## v0.31.0
 
 Full provider target projection checkpoint.
