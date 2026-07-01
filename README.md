@@ -141,6 +141,7 @@ The implementation details are intentionally kept out of this README.
 - [Capability protocol](docs/capability-protocol.md)
 - [IdentityMapper protocol](docs/identitymapper-protocol.md)
 - [Implementer's guide](docs/implementers-guide.md)
+- [External implementation experiment](docs/external-implementation-experiment.md)
 - [Compliance badge](docs/compliance-badge.md)
 - [Compatibility matrix](docs/compatibility-matrix.md)
 - [Host](docs/host.md)

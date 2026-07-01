@@ -2,6 +2,27 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.40.0
+
+External implementation experiment checkpoint.
+
+- Added `docs/external-implementation-experiment.md`.
+- Documented a protocol documentation experiment for implementing a minimal
+  compatible source provider, target identity mapper, and target identity
+  resolver without reading the Python reference source code.
+- Defined the allowed documents for the experiment: RFCs, implementer's guide,
+  compliance badge, and compliance suite README.
+- Explicitly forbade reading `src/` and `tests/` during the experiment.
+- Defined the required `FakeToken Source Provider`, `Demo Target Identity
+  Mapper`, and `Demo Target Identity Resolver` flow.
+- Documented required tests, forbidden shortcuts, expected report, and
+  success/fail criteria.
+- Linked the experiment from README and the documentation index.
+- Kept the core domain, capability contracts, runtime behavior, providers, and
+  target mappers unchanged.
+- Tests: 749 passed.
+- Compliance tests: 5 passed.
+
 ## v0.36.1
 
 Implementer's guide documentation patch.
