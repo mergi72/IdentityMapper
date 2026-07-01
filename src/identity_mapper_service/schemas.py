@@ -10,6 +10,7 @@ from identity_mapper.domain import (
     IdentityCandidate,
     IdentityTarget,
     TargetIdentity,
+    TargetIdentityResolution,
 )
 from identity_mapper.capability_protocol import (
     AuthenticateRequest,
@@ -18,6 +19,8 @@ from identity_mapper.capability_protocol import (
     MapIdentityResponse,
     ResolveIdentityRequest,
     ResolveIdentityResponse,
+    ResolveTargetIdentityRequest,
+    ResolveTargetIdentityResponse,
     VerifyCredentialRequest,
     VerifyCredentialResponse,
 )
@@ -91,6 +94,15 @@ def map_identity_request_from_mapping(value: Any) -> MapIdentityRequest:
     )
 
 
+def resolve_target_identity_request_from_mapping(
+    value: Any,
+) -> ResolveTargetIdentityRequest:
+    data = _require_mapping(value, "request")
+    return ResolveTargetIdentityRequest(
+        target_identity=target_identity_from_mapping(data.get("target_identity")),
+    )
+
+
 def identity_to_mapping(identity: Identity) -> dict[str, Any]:
     return {
         "id": identity.id,
@@ -154,6 +166,25 @@ def target_identity_to_mapping(target_identity: TargetIdentity) -> dict[str, Any
     }
 
 
+def target_identity_from_mapping(value: Any) -> TargetIdentity:
+    data = _require_mapping(value, "target_identity")
+    return TargetIdentity(
+        identifier=_require_string(data, "identifier"),
+        target=identity_target_from_mapping(data.get("target")),
+        attributes=_optional_dict(data, "attributes"),
+    )
+
+
+def target_identity_resolution_to_mapping(
+    resolution: TargetIdentityResolution,
+) -> dict[str, Any]:
+    return {
+        "target_identity": target_identity_to_mapping(resolution.target_identity),
+        "exists": resolution.exists,
+        "attributes": dict(resolution.attributes),
+    }
+
+
 def authenticate_response_to_mapping(
     response: AuthenticateResponse,
 ) -> dict[str, Any]:
@@ -203,6 +234,20 @@ def map_identity_response_to_mapping(
         "target_identity": (
             target_identity_to_mapping(response.target_identity)
             if response.target_identity is not None
+            else None
+        ),
+        "error": response.error,
+    }
+
+
+def resolve_target_identity_response_to_mapping(
+    response: ResolveTargetIdentityResponse,
+) -> dict[str, Any]:
+    return {
+        "resolved": response.resolved,
+        "resolution": (
+            target_identity_resolution_to_mapping(response.resolution)
+            if response.resolution is not None
             else None
         ),
         "error": response.error,

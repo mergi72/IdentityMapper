@@ -7,6 +7,7 @@ from identity_mapper.domain import (
     IdentityCandidate,
     IdentityTarget,
     TargetIdentity,
+    TargetIdentityResolution,
 )
 
 
@@ -55,3 +56,14 @@ class MapIdentity(ABC):
         target: IdentityTarget,
     ) -> TargetIdentity | None:
         """Return a target identity projection, if one can be produced."""
+
+
+class ResolveTargetIdentity(ABC):
+    """Looks up a projected target identity in its target identity world."""
+
+    @abstractmethod
+    def resolve_target_identity(
+        self,
+        target_identity: TargetIdentity,
+    ) -> TargetIdentityResolution:
+        """Return the read-only target lookup result."""

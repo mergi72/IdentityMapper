@@ -44,3 +44,15 @@ class WindowsAdTargetProjectionConfig:
 
     provider: str = "ad"
     default_realm: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class WindowsAdTargetAccountRecord:
+    """Read-only Windows / AD account record used by target lookup."""
+
+    sid: str
+    upn: str
+    sam_account_name: str
+    distinguished_name: str | None = None
+    active: bool = True
+    attributes: dict[str, Any] = field(default_factory=dict)

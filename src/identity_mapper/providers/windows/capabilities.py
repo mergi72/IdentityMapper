@@ -6,6 +6,7 @@ from identity_mapper.capabilities import (
     Authenticate,
     MapIdentity,
     ResolveIdentity,
+    ResolveTargetIdentity,
     VerifyCredential,
 )
 from identity_mapper.domain import (
@@ -15,8 +16,10 @@ from identity_mapper.domain import (
     IdentityCandidate,
     IdentityTarget,
     TargetIdentity,
+    TargetIdentityResolution,
 )
 from identity_mapper.providers.windows.domain import (
+    WindowsAdTargetAccountRecord,
     WindowsAdTargetProjectionConfig,
     WindowsConfig,
 )
@@ -25,7 +28,10 @@ from identity_mapper.providers.windows.mapper import (
     WindowsIdentityMapper,
     WindowsResolution,
 )
-from identity_mapper.providers.windows.provider import InMemoryWindowsIdentityStore
+from identity_mapper.providers.windows.provider import (
+    InMemoryWindowsAdTargetDirectory,
+    InMemoryWindowsIdentityStore,
+)
 
 
 class WindowsAuthenticationError(AuthenticationRejected):
@@ -164,3 +170,73 @@ class WindowsAdTargetIdentityMapper(MapIdentity):
 
     def _sam_account_name_candidate(self, identity: Identity) -> str:
         return identity.id.split("@", 1)[0].split("\\")[-1]
+
+
+class WindowsAdTargetIdentityResolver(ResolveTargetIdentity):
+    """Looks up a Windows / AD target identity projection in a target directory."""
+
+    def __init__(
+        self,
+        directory: InMemoryWindowsAdTargetDirectory,
+        config: WindowsAdTargetProjectionConfig | None = None,
+    ) -> None:
+        self._directory = directory
+        self._config = config or WindowsAdTargetProjectionConfig()
+
+    def resolve_target_identity(
+        self,
+        target_identity: TargetIdentity,
+    ) -> TargetIdentityResolution:
+        if target_identity.target.provider != self._config.provider:
+            return TargetIdentityResolution(
+                target_identity=target_identity,
+                exists=False,
+            )
+
+        account = self._find_account(target_identity)
+        if account is None or not account.active:
+            return TargetIdentityResolution(
+                target_identity=target_identity,
+                exists=False,
+            )
+
+        return TargetIdentityResolution(
+            target_identity=target_identity,
+            exists=True,
+            attributes=self._account_attributes(account),
+        )
+
+    def _find_account(
+        self,
+        target_identity: TargetIdentity,
+    ) -> WindowsAdTargetAccountRecord | None:
+        upn = target_identity.attributes.get("upn_candidate")
+        if isinstance(upn, str):
+            account = self._directory.get_by_upn(upn)
+            if account is not None:
+                return account
+
+        sam_account_name = target_identity.attributes.get(
+            "sam_account_name_candidate",
+        )
+        if isinstance(sam_account_name, str):
+            return self._directory.get_by_sam_account_name(sam_account_name)
+
+        return None
+
+    def _account_attributes(
+        self,
+        account: WindowsAdTargetAccountRecord,
+    ) -> dict[str, object]:
+        return {
+            key: value
+            for key, value in {
+                "sid": account.sid,
+                "upn": account.upn,
+                "sam_account_name": account.sam_account_name,
+                "distinguished_name": account.distinguished_name,
+                "active": account.active,
+                **account.attributes,
+            }.items()
+            if value is not None
+        }

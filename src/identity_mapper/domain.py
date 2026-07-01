@@ -58,3 +58,12 @@ class TargetIdentity:
     identifier: str
     target: IdentityTarget
     attributes: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class TargetIdentityResolution:
+    """Read-only lookup result for a target identity projection."""
+
+    target_identity: TargetIdentity
+    exists: bool
+    attributes: dict[str, Any] = field(default_factory=dict)

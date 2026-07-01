@@ -7,6 +7,7 @@ from identity_mapper.domain import (
     IdentityCandidate,
     IdentityTarget,
     TargetIdentity,
+    TargetIdentityResolution,
 )
 
 
@@ -85,6 +86,22 @@ class MapIdentityResponse:
     error: str | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class ResolveTargetIdentityRequest:
+    """Request to look up a target identity projection in its target world."""
+
+    target_identity: TargetIdentity
+
+
+@dataclass(frozen=True, slots=True)
+class ResolveTargetIdentityResponse:
+    """Response produced by the ResolveTargetIdentity capability."""
+
+    resolved: bool
+    resolution: TargetIdentityResolution | None = None
+    error: str | None = None
+
+
 __all__ = [
     "AuthenticationRejected",
     "AuthenticateRequest",
@@ -93,6 +110,8 @@ __all__ = [
     "MapIdentityResponse",
     "ResolveIdentityRequest",
     "ResolveIdentityResponse",
+    "ResolveTargetIdentityRequest",
+    "ResolveTargetIdentityResponse",
     "VerifyCredentialRequest",
     "VerifyCredentialResponse",
 ]

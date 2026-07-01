@@ -22,7 +22,9 @@ class CapabilityInvocationLogEntry:
     candidate_id: str | None = None
     authenticated: bool | None = None
     verified: bool | None = None
+    resolved: bool | None = None
     identity_id: str | None = None
+    target_identity_id: str | None = None
     error: str | None = None
 
     def to_mapping(self) -> dict[str, Any]:
@@ -46,8 +48,12 @@ class CapabilityInvocationLogEntry:
             value["authenticated"] = self.authenticated
         if self.verified is not None:
             value["verified"] = self.verified
+        if self.resolved is not None:
+            value["resolved"] = self.resolved
         if self.identity_id is not None:
             value["identity_id"] = self.identity_id
+        if self.target_identity_id is not None:
+            value["target_identity_id"] = self.target_identity_id
         if self.error is not None:
             value["error"] = self.error
         return value
@@ -78,7 +84,9 @@ class CapabilityInvocationLog:
         candidate_id: str | None = None,
         authenticated: bool | None = None,
         verified: bool | None = None,
+        resolved: bool | None = None,
         identity_id: str | None = None,
+        target_identity_id: str | None = None,
         error: str | None = None,
     ) -> None:
         entry = CapabilityInvocationLogEntry(
@@ -94,7 +102,9 @@ class CapabilityInvocationLog:
             candidate_id=candidate_id,
             authenticated=authenticated,
             verified=verified,
+            resolved=resolved,
             identity_id=identity_id,
+            target_identity_id=target_identity_id,
             error=error,
         )
         self._append(entry.to_mapping())

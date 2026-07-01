@@ -11,6 +11,8 @@ from identity_mapper.capability_protocol import (
     MapIdentityResponse,
     ResolveIdentityRequest,
     ResolveIdentityResponse,
+    ResolveTargetIdentityRequest,
+    ResolveTargetIdentityResponse,
     VerifyCredentialRequest,
     VerifyCredentialResponse,
 )
@@ -18,6 +20,7 @@ from identity_mapper_service.registry import (
     ProviderRegistry,
     UnknownProviderError,
     UnknownTargetMapperError,
+    UnknownTargetResolverError,
 )
 from identity_mapper_service.request_log import CapabilityInvocationLog
 from identity_mapper_service.responses import (
@@ -258,6 +261,46 @@ class IdentityMapperHostService:
             target_identity=result.target_identity,
         )
 
+    def resolve_target_identity_request(
+        self,
+        request: ResolveTargetIdentityRequest,
+    ) -> ResolveTargetIdentityResponse:
+        request_id = uuid4().hex[:8]
+        started = perf_counter()
+        try:
+            result = self._registry.resolve_target_identity(request.target_identity)
+        except UnknownTargetResolverError:
+            self._log_invocation(
+                capability="resolve_target_identity",
+                provider="target",
+                target_mapper=request.target_identity.target.provider,
+                identifier=request.target_identity.identifier,
+                target_identity_id=request.target_identity.identifier,
+                resolved=False,
+                status="unknown_target_resolver",
+                duration_ms=self._duration_ms(started),
+                request_id=request_id,
+                error="unknown_target_resolver",
+            )
+            raise
+
+        resolved = result.resolution.exists
+        self._log_invocation(
+            capability="resolve_target_identity",
+            provider="target",
+            target_mapper=result.target_resolver,
+            identifier=request.target_identity.identifier,
+            target_identity_id=request.target_identity.identifier,
+            resolved=resolved,
+            status="resolved" if resolved else "not_found",
+            duration_ms=self._duration_ms(started),
+            request_id=request_id,
+        )
+        return ResolveTargetIdentityResponse(
+            resolved=resolved,
+            resolution=result.resolution,
+        )
+
     def _log_invocation(
         self,
         *,
@@ -272,7 +315,9 @@ class IdentityMapperHostService:
         candidate_id: str | None = None,
         authenticated: bool | None = None,
         verified: bool | None = None,
+        resolved: bool | None = None,
         identity_id: str | None = None,
+        target_identity_id: str | None = None,
         error: str | None = None,
     ) -> None:
         if self._request_log is None:
@@ -290,7 +335,9 @@ class IdentityMapperHostService:
             candidate_id=candidate_id,
             authenticated=authenticated,
             verified=verified,
+            resolved=resolved,
             identity_id=identity_id,
+            target_identity_id=target_identity_id,
             error=error,
         )
 

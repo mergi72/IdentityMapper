@@ -2,6 +2,26 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.34.0
+
+Target identity lookup checkpoint.
+
+- Added `TargetIdentityResolution` as the read-only result of resolving a
+  projected target identity.
+- Added the `ResolveTargetIdentity` capability and
+  `ResolveTargetIdentityRequest` / `ResolveTargetIdentityResponse` protocol
+  objects.
+- Added `POST /resolve-target-identity` to the Host Service.
+- Added target resolver registration in the Host Service registry.
+- Added a Windows / AD target resolver proof using an in-memory read-only
+  target directory.
+- Kept lookup separate from projection:
+  `Identity -> TargetIdentity -> TargetIdentityResolution`.
+- Kept the checkpoint credential-free on the target side: no bind, no password
+  storage, no credential resolver, and no target login.
+- Extended audit logging with target resolution metadata.
+- Tests: 732 passed.
+
 ## v0.33.0
 
 Demo Host Service target mapper wiring checkpoint.

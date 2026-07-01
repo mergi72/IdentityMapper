@@ -10,10 +10,18 @@ from identity_mapper.capability_protocol import (
     MapIdentityResponse,
     ResolveIdentityRequest,
     ResolveIdentityResponse,
+    ResolveTargetIdentityRequest,
+    ResolveTargetIdentityResponse,
     VerifyCredentialRequest,
     VerifyCredentialResponse,
 )
-from identity_mapper.domain import Identity, IdentityCandidate, IdentityTarget, TargetIdentity
+from identity_mapper.domain import (
+    Identity,
+    IdentityCandidate,
+    IdentityTarget,
+    TargetIdentity,
+    TargetIdentityResolution,
+)
 
 
 def test_authenticate_request_carries_domain_inputs() -> None:
@@ -157,3 +165,26 @@ def test_map_identity_request_and_response() -> None:
     assert response.mapped
     assert response.identity is identity
     assert response.target_identity is target_identity
+
+
+def test_resolve_target_identity_request_and_response() -> None:
+    target = IdentityTarget(provider="windows", realm="corp.local")
+    target_identity = TargetIdentity(
+        identifier="windows:subject@corp.local",
+        target=target,
+    )
+    resolution = TargetIdentityResolution(
+        target_identity=target_identity,
+        exists=True,
+        attributes={"sid": "S-1-5-21-1000-1001"},
+    )
+
+    request = ResolveTargetIdentityRequest(target_identity=target_identity)
+    response = ResolveTargetIdentityResponse(
+        resolved=True,
+        resolution=resolution,
+    )
+
+    assert request.target_identity is target_identity
+    assert response.resolved
+    assert response.resolution is resolution

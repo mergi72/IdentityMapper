@@ -17,7 +17,9 @@ from identity_mapper.providers.basic import (
     InMemoryBasicUserStore,
 )
 from identity_mapper.providers.windows import (
+    InMemoryWindowsAdTargetDirectory,
     WindowsAdTargetIdentityMapper,
+    WindowsAdTargetIdentityResolver,
     WindowsAdTargetProjectionConfig,
 )
 from identity_mapper_service.app import DEFAULT_MAX_REQUEST_BODY_BYTES, serve
@@ -143,6 +145,13 @@ def build_demo_registry() -> ProviderRegistry:
         "windows",
         WindowsAdTargetIdentityMapper(
             WindowsAdTargetProjectionConfig(provider="windows")
+        ),
+    )
+    registry.register_target_resolver(
+        "windows",
+        WindowsAdTargetIdentityResolver(
+            InMemoryWindowsAdTargetDirectory(),
+            WindowsAdTargetProjectionConfig(provider="windows"),
         ),
     )
     return registry

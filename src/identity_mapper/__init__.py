@@ -4,6 +4,7 @@ from identity_mapper.capabilities import (
     Authenticate,
     MapIdentity,
     ResolveIdentity,
+    ResolveTargetIdentity,
     VerifyCredential,
 )
 from identity_mapper.capability_protocol import (
@@ -14,6 +15,8 @@ from identity_mapper.capability_protocol import (
     MapIdentityResponse,
     ResolveIdentityRequest,
     ResolveIdentityResponse,
+    ResolveTargetIdentityRequest,
+    ResolveTargetIdentityResponse,
     VerifyCredentialRequest,
     VerifyCredentialResponse,
 )
@@ -24,6 +27,7 @@ from identity_mapper.domain import (
     IdentityCandidate,
     IdentityTarget,
     TargetIdentity,
+    TargetIdentityResolution,
 )
 from identity_mapper.mapper import Mapper
 from identity_mapper.matrix import ReductionMatrix, ReductionSections
@@ -47,7 +51,11 @@ __all__ = [
     "ResolveIdentity",
     "ResolveIdentityRequest",
     "ResolveIdentityResponse",
+    "ResolveTargetIdentity",
+    "ResolveTargetIdentityRequest",
+    "ResolveTargetIdentityResponse",
     "TargetIdentity",
+    "TargetIdentityResolution",
     "VerifyCredential",
     "VerifyCredentialRequest",
     "VerifyCredentialResponse",

@@ -13,12 +13,13 @@ from identity_mapper.providers.basic import (
     BasicUserRecord,
     InMemoryBasicUserStore,
 )
-from identity_mapper.capabilities import Authenticate, MapIdentity
+from identity_mapper.capabilities import Authenticate, MapIdentity, ResolveTargetIdentity
 from identity_mapper.capability_protocol import (
     AuthenticateRequest,
     AuthenticateResponse,
     MapIdentityRequest,
     ResolveIdentityRequest,
+    ResolveTargetIdentityRequest,
     VerifyCredentialRequest,
 )
 from identity_mapper.domain import (
@@ -27,6 +28,7 @@ from identity_mapper.domain import (
     Identity,
     IdentityTarget,
     TargetIdentity,
+    TargetIdentityResolution,
 )
 from identity_mapper_service.__main__ import (
     HostServiceConfig,
@@ -39,6 +41,7 @@ from identity_mapper_service.registry import (
     ProviderRegistry,
     UnknownProviderError,
     UnknownTargetMapperError,
+    UnknownTargetResolverError,
 )
 from identity_mapper_service.request_log import CapabilityInvocationLog
 from identity_mapper_service.responses import (
@@ -52,6 +55,7 @@ from identity_mapper_service.schemas import (
     health_response_to_mapping,
     map_identity_response_to_mapping,
     resolve_identity_response_to_mapping,
+    resolve_target_identity_response_to_mapping,
     verify_credential_response_to_mapping,
     providers_response_to_mapping,
 )
@@ -68,6 +72,22 @@ class ExampleTargetIdentityMapper(MapIdentity):
             identifier=f"{target.provider}:{identity.id}",
             target=target,
             attributes={"source": "target"},
+        )
+
+
+class ExampleTargetIdentityResolver(ResolveTargetIdentity):
+    def __init__(self, *target_identities: TargetIdentity) -> None:
+        self._known = {target_identity.identifier for target_identity in target_identities}
+
+    def resolve_target_identity(
+        self,
+        target_identity: TargetIdentity,
+    ) -> TargetIdentityResolution:
+        exists = target_identity.identifier in self._known
+        return TargetIdentityResolution(
+            target_identity=target_identity,
+            exists=exists,
+            attributes={"lookup": "memory"} if exists else {},
         )
 
 
@@ -92,6 +112,20 @@ def make_service(request_log: CapabilityInvocationLog | None = None) -> Identity
     registry.register_authenticator("basic", BasicAuthenticator(store))
     registry.register_identity_mapper("basic", ExampleTargetIdentityMapper())
     registry.register_identity_mapper("target", ExampleTargetIdentityMapper())
+    registry.register_target_resolver(
+        "target",
+        ExampleTargetIdentityResolver(
+            TargetIdentity(
+                identifier="target:identity-1",
+                target=IdentityTarget(
+                    provider="target",
+                    realm="example",
+                    purpose="bind_identity",
+                ),
+                attributes={"source": "target"},
+            )
+        ),
+    )
     return IdentityMapperHostService(registry, request_log)
 
 
@@ -380,6 +414,49 @@ def test_service_rejects_unknown_target_mapper() -> None:
         make_service().map_identity_request(request)
 
 
+def test_service_resolves_target_identity_projection() -> None:
+    mapped = make_service().map_identity_request(valid_map_identity_request())
+    assert mapped.target_identity is not None
+
+    response = make_service().resolve_target_identity_request(
+        ResolveTargetIdentityRequest(target_identity=mapped.target_identity)
+    )
+
+    assert response.resolved
+    assert response.resolution is not None
+    assert response.resolution.exists
+    assert response.resolution.target_identity is mapped.target_identity
+    assert response.resolution.attributes == {"lookup": "memory"}
+
+
+def test_service_returns_not_found_for_missing_target_identity() -> None:
+    target_identity = TargetIdentity(
+        identifier="target:missing",
+        target=IdentityTarget(provider="target"),
+    )
+
+    response = make_service().resolve_target_identity_request(
+        ResolveTargetIdentityRequest(target_identity=target_identity)
+    )
+
+    assert not response.resolved
+    assert response.resolution is not None
+    assert not response.resolution.exists
+    assert response.resolution.target_identity is target_identity
+
+
+def test_service_rejects_unknown_target_resolver() -> None:
+    target_identity = TargetIdentity(
+        identifier="missing:identity",
+        target=IdentityTarget(provider="missing"),
+    )
+
+    with pytest.raises(UnknownTargetResolverError):
+        make_service().resolve_target_identity_request(
+            ResolveTargetIdentityRequest(target_identity=target_identity)
+        )
+
+
 def test_authenticate_response_mapping_includes_protocol_error() -> None:
     response = AuthenticateResponse(authenticated=False, error="rejected")
 
@@ -449,6 +526,34 @@ def test_map_identity_response_mapping() -> None:
                 "attributes": {},
             },
             "attributes": {"source": "target"},
+        },
+        "error": None,
+    }
+
+
+def test_resolve_target_identity_response_mapping() -> None:
+    mapped = make_service().map_identity_request(valid_map_identity_request())
+    assert mapped.target_identity is not None
+
+    response = make_service().resolve_target_identity_request(
+        ResolveTargetIdentityRequest(target_identity=mapped.target_identity)
+    )
+
+    assert resolve_target_identity_response_to_mapping(response) == {
+        "resolved": True,
+        "resolution": {
+            "target_identity": {
+                "identifier": "target:identity-1",
+                "target": {
+                    "provider": "target",
+                    "realm": "example",
+                    "purpose": "bind_identity",
+                    "attributes": {},
+                },
+                "attributes": {"source": "target"},
+            },
+            "exists": True,
+            "attributes": {"lookup": "memory"},
         },
         "error": None,
     }
@@ -1018,6 +1123,57 @@ def test_http_host_exposes_map_identity() -> None:
         thread.join(timeout=5)
 
 
+def test_http_host_exposes_resolve_target_identity() -> None:
+    service = make_service()
+    server = create_server("127.0.0.1", 0, service)
+    host, port = server.server_address
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    try:
+        status, mapped = request_json(
+            "POST",
+            host,
+            port,
+            "/map-identity",
+            {
+                "source_provider": "basic",
+                "source_identification": {
+                    "identifier": "subject",
+                },
+                "source_credential": {
+                    "type": "PASSWORD",
+                    "value": "accepted",
+                },
+                "target": {
+                    "provider": "target",
+                    "realm": "example",
+                    "purpose": "bind_identity",
+                },
+            },
+        )
+        assert status == 200
+
+        status, response = request_json(
+            "POST",
+            host,
+            port,
+            "/resolve-target-identity",
+            {
+                "target_identity": mapped["target_identity"],
+            },
+        )
+
+        assert status == 200
+        assert response["resolved"]
+        assert response["resolution"]["exists"]
+        assert response["resolution"]["attributes"] == {"lookup": "memory"}
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
 def test_http_host_audit_logs_all_capabilities(tmp_path) -> None:
     service = make_service(CapabilityInvocationLog(tmp_path / "audit.log"))
     server = create_server("127.0.0.1", 0, service)
@@ -1052,7 +1208,7 @@ def test_http_host_audit_logs_all_capabilities(tmp_path) -> None:
                 },
             },
         )
-        request_json(
+        status, mapped = request_json(
             "POST",
             host,
             port,
@@ -1070,8 +1226,18 @@ def test_http_host_audit_logs_all_capabilities(tmp_path) -> None:
                 },
             },
         )
+        assert status == 200
+        request_json(
+            "POST",
+            host,
+            port,
+            "/resolve-target-identity",
+            {
+                "target_identity": mapped["target_identity"],
+            },
+        )
 
-        status, audit = request_json("GET", host, port, "/audit?format=json&limit=4")
+        status, audit = request_json("GET", host, port, "/audit?format=json&limit=5")
 
         assert status == 200
         assert [entry["capability"] for entry in audit["entries"]] == [
@@ -1079,8 +1245,11 @@ def test_http_host_audit_logs_all_capabilities(tmp_path) -> None:
             "resolve_identity",
             "verify_credential",
             "map_identity",
+            "resolve_target_identity",
         ]
         assert audit["entries"][-1]["target_mapper"] == "target"
+        assert audit["entries"][-1]["resolved"]
+        assert audit["entries"][-1]["target_identity_id"] == "target:identity-1"
         assert "value" not in json.dumps(audit)
     finally:
         server.shutdown()

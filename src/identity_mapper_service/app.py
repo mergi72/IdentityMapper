@@ -6,7 +6,11 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 from typing import Any
 
-from identity_mapper_service.registry import UnknownProviderError, UnknownTargetMapperError
+from identity_mapper_service.registry import (
+    UnknownProviderError,
+    UnknownTargetMapperError,
+    UnknownTargetResolverError,
+)
 from identity_mapper_service.schemas import (
     RequestValidationError,
     authenticate_request_from_mapping,
@@ -18,6 +22,8 @@ from identity_mapper_service.schemas import (
     providers_response_to_mapping,
     resolve_identity_request_from_mapping,
     resolve_identity_response_to_mapping,
+    resolve_target_identity_request_from_mapping,
+    resolve_target_identity_response_to_mapping,
     verify_credential_request_from_mapping,
     verify_credential_response_to_mapping,
 )
@@ -105,6 +111,10 @@ def create_handler(
                 self._handle_resolve_identity()
                 return
 
+            if self.path == "/resolve-target-identity":
+                self._handle_resolve_target_identity()
+                return
+
             if self.path == "/verify-credential":
                 self._handle_verify_credential()
                 return
@@ -163,6 +173,27 @@ def create_handler(
                 self._send_error(400, "bad_request", str(exc))
             except UnknownProviderError as exc:
                 self._send_error(404, "unknown_provider", str(exc))
+            except JsonRequestError as exc:
+                self._send_error(
+                    exc.status_code,
+                    exc.error,
+                    str(exc),
+                    close_connection=exc.status_code == 413,
+                )
+
+        def _handle_resolve_target_identity(self) -> None:
+            try:
+                payload = self._read_json()
+                request = resolve_target_identity_request_from_mapping(payload)
+                response = service.resolve_target_identity_request(request)
+                self._send_json(
+                    200,
+                    resolve_target_identity_response_to_mapping(response),
+                )
+            except RequestValidationError as exc:
+                self._send_error(400, "bad_request", str(exc))
+            except UnknownTargetResolverError as exc:
+                self._send_error(404, "unknown_target_resolver", str(exc))
             except JsonRequestError as exc:
                 self._send_error(
                     exc.status_code,

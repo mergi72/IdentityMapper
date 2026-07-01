@@ -7,11 +7,15 @@ from identity_mapper.domain import (
     IdentityCandidate,
     IdentityTarget,
     TargetIdentity,
+    TargetIdentityResolution,
 )
 from identity_mapper.providers.windows import (
+    InMemoryWindowsAdTargetDirectory,
     InMemoryWindowsIdentityStore,
+    WindowsAdTargetAccountRecord,
     WindowsAuthenticationError,
     WindowsAdTargetIdentityMapper,
+    WindowsAdTargetIdentityResolver,
     WindowsAdTargetProjectionConfig,
     WindowsAuthenticator,
     WindowsCredentialVerifier,
@@ -241,3 +245,63 @@ def test_windows_ad_target_mapper_ignores_non_ad_target() -> None:
     target = IdentityTarget(provider="ldap")
 
     assert WindowsAdTargetIdentityMapper().map_identity(identity, target) is None
+
+
+def test_windows_ad_target_resolver_finds_projected_account() -> None:
+    target = IdentityTarget(provider="ad", realm="corp.local")
+    target_identity = TargetIdentity(
+        identifier="ad:subject@corp.local",
+        target=target,
+        attributes={
+            "upn_candidate": "subject@corp.local",
+            "sam_account_name_candidate": "subject",
+        },
+    )
+    directory = InMemoryWindowsAdTargetDirectory(
+        [
+            WindowsAdTargetAccountRecord(
+                sid="S-1-5-21-1000-1001",
+                upn="subject@corp.local",
+                sam_account_name="subject",
+                distinguished_name="CN=Subject,OU=Users,DC=corp,DC=local",
+                attributes={"source": "ad"},
+            )
+        ]
+    )
+
+    resolution = WindowsAdTargetIdentityResolver(directory).resolve_target_identity(
+        target_identity
+    )
+
+    assert resolution == TargetIdentityResolution(
+        target_identity=target_identity,
+        exists=True,
+        attributes={
+            "sid": "S-1-5-21-1000-1001",
+            "upn": "subject@corp.local",
+            "sam_account_name": "subject",
+            "distinguished_name": "CN=Subject,OU=Users,DC=corp,DC=local",
+            "active": True,
+            "source": "ad",
+        },
+    )
+
+
+def test_windows_ad_target_resolver_returns_not_found_for_missing_account() -> None:
+    target_identity = TargetIdentity(
+        identifier="ad:missing@corp.local",
+        target=IdentityTarget(provider="ad", realm="corp.local"),
+        attributes={
+            "upn_candidate": "missing@corp.local",
+            "sam_account_name_candidate": "missing",
+        },
+    )
+
+    resolution = WindowsAdTargetIdentityResolver(
+        InMemoryWindowsAdTargetDirectory()
+    ).resolve_target_identity(target_identity)
+
+    assert resolution == TargetIdentityResolution(
+        target_identity=target_identity,
+        exists=False,
+    )

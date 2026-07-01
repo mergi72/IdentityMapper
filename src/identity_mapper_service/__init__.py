@@ -4,6 +4,7 @@ from identity_mapper_service.registry import (
     ProviderRegistry,
     UnknownProviderError,
     UnknownTargetMapperError,
+    UnknownTargetResolverError,
 )
 from identity_mapper_service.responses import (
     AuditResponse,
@@ -20,4 +21,5 @@ __all__ = [
     "ProvidersResponse",
     "UnknownProviderError",
     "UnknownTargetMapperError",
+    "UnknownTargetResolverError",
 ]

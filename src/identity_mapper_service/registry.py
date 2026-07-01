@@ -7,6 +7,7 @@ from identity_mapper.capabilities import (
     Authenticate,
     MapIdentity,
     ResolveIdentity,
+    ResolveTargetIdentity,
     VerifyCredential,
 )
 from identity_mapper.domain import (
@@ -16,6 +17,7 @@ from identity_mapper.domain import (
     IdentityCandidate,
     IdentityTarget,
     TargetIdentity,
+    TargetIdentityResolution,
 )
 
 
@@ -25,6 +27,10 @@ class UnknownProviderError(ValueError):
 
 class UnknownTargetMapperError(ValueError):
     """Raised when a requested target mapper is not registered."""
+
+
+class UnknownTargetResolverError(ValueError):
+    """Raised when a requested target resolver is not registered."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,6 +67,14 @@ class IdentityMappingResult:
     target_identity: TargetIdentity | None
 
 
+@dataclass(frozen=True, slots=True)
+class TargetIdentityResolutionResult:
+    """Target identity resolution result with the target resolver."""
+
+    target_resolver: str
+    resolution: TargetIdentityResolution
+
+
 class ProviderRegistry:
     """Registry of hosted provider capabilities."""
 
@@ -69,6 +83,7 @@ class ProviderRegistry:
         self._resolvers: dict[str, ResolveIdentity] = {}
         self._verifiers: dict[str, VerifyCredential] = {}
         self._identity_mappers: dict[str, MapIdentity] = {}
+        self._target_resolvers: dict[str, ResolveTargetIdentity] = {}
 
     def register_authenticator(
         self,
@@ -98,6 +113,13 @@ class ProviderRegistry:
     ) -> None:
         self._identity_mappers[target_mapper] = mapper
 
+    def register_target_resolver(
+        self,
+        target_resolver: str,
+        resolver: ResolveTargetIdentity,
+    ) -> None:
+        self._target_resolvers[target_resolver] = resolver
+
     def providers(self) -> tuple[str, ...]:
         return tuple(
             sorted(
@@ -105,6 +127,7 @@ class ProviderRegistry:
                 | set(self._resolvers)
                 | set(self._verifiers)
                 | set(self._identity_mappers)
+                | set(self._target_resolvers)
             )
         )
 
@@ -232,4 +255,18 @@ class ProviderRegistry:
             target_mapper=target_mapper,
             identity=authentication.identity,
             target_identity=mapper.map_identity(authentication.identity, target),
+        )
+
+    def resolve_target_identity(
+        self,
+        target_identity: TargetIdentity,
+    ) -> TargetIdentityResolutionResult:
+        target_resolver = target_identity.target.provider
+        resolver = self._target_resolvers.get(target_resolver)
+        if resolver is None:
+            raise UnknownTargetResolverError(target_resolver)
+
+        return TargetIdentityResolutionResult(
+            target_resolver=target_resolver,
+            resolution=resolver.resolve_target_identity(target_identity),
         )
