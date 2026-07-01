@@ -5,18 +5,37 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
 
-IdentityMapper is the reference implementation of the Invariant Mapping Pattern
-for the identity domain.
+IdentityMapper is a protocol-oriented reference architecture for identity
+translation.
 
-Identity is the canonical representation shared by all identity providers and
-targets.
+It is not an LDAP wrapper, OAuth wrapper, or authentication server.
+
+It defines a shared boundary between identity worlds:
+
+```text
+Source Provider
+    |
+    v
+canonical Identity
+    |
+    v
+Target Identity Mapper
+```
+
+`Identity` is the canonical representation shared by all source providers and
+target identity mappers.
 
 ## Project Status
 
 IdentityMapper is a reference architecture under active development.
 
-The core architecture has been validated against multiple identity models. The
-provider capability contract is tested across all included providers.
+The core architecture has been validated against multiple identity models.
+
+The reference implementation verifies:
+
+```text
+14 source providers x 14 target identity mappers = 196 projections
+```
 
 ## The IdentityMapper Rule
 
@@ -36,8 +55,9 @@ A mapper does not validate, authenticate, authorize, persist, or decide.
 A mapper is deterministic. The same input always produces the same domain
 model.
 
-IdentityMapper defines the identity domain model and the capabilities required
-to authenticate an identity. It does not perform authentication itself.
+IdentityMapper defines the identity domain model, the capability contracts, and
+the source-to-target identity protocol. It does not perform authentication as a
+service by itself.
 
 ## Core Idea
 
@@ -112,6 +132,7 @@ The implementation details are intentionally kept out of this README.
 - [Architecture verification](docs/architecture-verification.md)
 - [Capability protocol](docs/capability-protocol.md)
 - [IdentityMapper protocol](docs/identitymapper-protocol.md)
+- [Compatibility matrix](docs/compatibility-matrix.md)
 - [Host](docs/host.md)
 - [Host service](docs/host-service.md)
 - [MapIdentity](docs/capabilities/map-identity.md)
@@ -153,6 +174,7 @@ config/
 
 docs/
   architecture.md
+  compatibility-matrix.md
   identitymapper-protocol.md
   provider-footprint.md
   host.md

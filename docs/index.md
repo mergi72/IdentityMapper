@@ -10,6 +10,7 @@ identity domain.
 - [Host service](host-service.md)
 - [Capability protocol](capability-protocol.md)
 - [IdentityMapper protocol](identitymapper-protocol.md)
+- [Compatibility matrix](compatibility-matrix.md)
 - [Reduction matrix](reduction-matrix.md)
 - [Reduction template](reduction-template.md)
 - [Provider footprint](provider-footprint.md)

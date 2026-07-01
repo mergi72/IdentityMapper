@@ -2,6 +2,21 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.32.1
+
+Protocol specification documentation patch.
+
+- Expanded `docs/identitymapper-protocol.md` into `IdentityMapper Protocol 1.0
+  Draft`.
+- Added source provider contract, target mapper contract, mapping rules,
+  compatibility rules, identity invariants, and non-goals.
+- Added `docs/compatibility-matrix.md` with the verified `14 x 14` projection
+  coverage.
+- Updated the README to state the protocol boundary and distinguish
+  IdentityMapper from LDAP wrappers, OAuth wrappers, and authentication
+  servers.
+- Tests: 723 passed.
+
 ## v0.32.0
 
 IdentityMapper Protocol design principles checkpoint.
