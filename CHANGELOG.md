@@ -2,6 +2,24 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.35.0
+
+Local OS user target lookup checkpoint.
+
+- Added the `local_user` target world.
+- Added `LocalUserTargetIdentityMapper` for projecting canonical `Identity`
+  into a local OS user account shape.
+- Added `LocalUserTargetIdentityResolver` for read-only local user lookup.
+- Added `LocalUserAccountDirectory`, which uses the host OS user database on
+  Unix/Linux through `pwd.getpwnam()`.
+- Registered `local_user` mapper and resolver in the `--demo-basic` runtime
+  registry.
+- Added `local_user/matrix.json` as the provider footprint.
+- Extended the source-to-target projection contract matrix with `local_user`.
+- Kept the target lookup credential-free: no password verification, no login,
+  no bind, and no credential storage.
+- Tests: 749 passed.
+
 ## v0.34.0
 
 Target identity lookup checkpoint.

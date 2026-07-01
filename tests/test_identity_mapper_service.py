@@ -735,7 +735,7 @@ def test_service_rejects_invalid_audit_log_max_entries_config(tmp_path) -> None:
         load_config(config_path)
 
 
-def test_demo_registry_registers_basic_and_windows_target_mappers() -> None:
+def test_demo_registry_registers_basic_windows_and_local_user_target_mappers() -> None:
     registry = build_demo_registry()
     identification = Identification(identifier="demo")
     credential = Credential(type="PASSWORD", value="secret")
@@ -756,6 +756,16 @@ def test_demo_registry_registers_basic_and_windows_target_mappers() -> None:
             purpose="bind_identity",
         ),
     )
+    local_user_result = registry.map_identity(
+        source_provider="basic",
+        identification=identification,
+        credential=credential,
+        target=IdentityTarget(
+            provider="local_user",
+            realm="ubuntu",
+            purpose="local_account",
+        ),
+    )
 
     assert basic_result.identity.id == "demo"
     assert basic_result.target_identity is not None
@@ -764,6 +774,10 @@ def test_demo_registry_registers_basic_and_windows_target_mappers() -> None:
     assert windows_result.target_identity is not None
     assert windows_result.target_identity.target.provider == "windows"
     assert windows_result.target_identity.attributes["upn_candidate"]
+    assert local_user_result.identity.id == "demo"
+    assert local_user_result.target_identity is not None
+    assert local_user_result.target_identity.target.provider == "local_user"
+    assert local_user_result.target_identity.attributes["username_candidate"] == "demo"
 
 
 def test_cli_serve_rejects_invalid_max_request_body_override() -> None:

@@ -16,6 +16,11 @@ from identity_mapper.providers.basic import (
     BasicUserRecord,
     InMemoryBasicUserStore,
 )
+from identity_mapper.providers.local_user import (
+    LocalUserAccountDirectory,
+    LocalUserTargetIdentityMapper,
+    LocalUserTargetIdentityResolver,
+)
 from identity_mapper.providers.windows import (
     InMemoryWindowsAdTargetDirectory,
     WindowsAdTargetIdentityMapper,
@@ -141,6 +146,11 @@ def build_demo_registry() -> ProviderRegistry:
     registry.register_verifier("basic", BasicCredentialVerifier(store))
     registry.register_authenticator("basic", BasicAuthenticator(store))
     registry.register_identity_mapper("basic", BasicTargetIdentityMapper())
+    registry.register_identity_mapper("local_user", LocalUserTargetIdentityMapper())
+    registry.register_target_resolver(
+        "local_user",
+        LocalUserTargetIdentityResolver(LocalUserAccountDirectory()),
+    )
     registry.register_identity_mapper(
         "windows",
         WindowsAdTargetIdentityMapper(

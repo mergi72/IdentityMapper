@@ -99,6 +99,7 @@ from identity_mapper.providers.ldap import (
     LdapIdentityResolver,
     LdapTargetIdentityMapper,
 )
+from identity_mapper.providers.local_user import LocalUserTargetIdentityMapper
 from identity_mapper.providers.mfa import (
     InMemoryMfaStore,
     MfaAuthenticator,
@@ -996,6 +997,17 @@ TARGET_PROJECTION_CONTRACTS = (
         ),
         required_attributes=("uid_candidate", "dn_candidate"),
         forbidden_attributes=("entry_verified",),
+    ),
+    TargetProjectionContract(
+        name="local_user",
+        mapper_factory=LocalUserTargetIdentityMapper,
+        target=IdentityTarget(
+            provider="local_user",
+            realm="ubuntu",
+            purpose="local_account",
+        ),
+        required_attributes=("username_candidate",),
+        forbidden_attributes=("password", "credential"),
     ),
     TargetProjectionContract(
         name="kerberos",

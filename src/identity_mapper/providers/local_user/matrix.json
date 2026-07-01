@@ -1,0 +1,27 @@
+{
+  "template": "local_user",
+  "provider": "Local OS User",
+  "invariant": "Identity",
+  "identification": {
+    "identifier": "username",
+    "realm": "host"
+  },
+  "credential": {
+    "type": "NOT_USED_FOR_TARGET_LOOKUP",
+    "value": "not_used",
+    "metadata": "not_used"
+  },
+  "candidate": {
+    "implementation_id": "username",
+    "identification": "resolved identification",
+    "attributes": "attributes"
+  },
+  "identity": {
+    "id": "identity_id",
+    "display_name": "display_name",
+    "email": "email",
+    "roles": "roles",
+    "claims": "claims",
+    "attributes": "attributes"
+  }
+}
