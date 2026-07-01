@@ -2,6 +2,23 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.36.1
+
+Implementer's guide documentation patch.
+
+- Added `docs/implementers-guide.md`.
+- Documented practical guidance for writing compatible implementations without
+  reading the Python source code.
+- Documented implementation expectations for source providers, target identity
+  mappers, and target identity resolvers.
+- Documented credential handling rules, compliance checklist, forbidden
+  shortcuts, and minimal implementation shape.
+- Linked the implementer's guide from README and the documentation index.
+- Kept the core domain, capability contracts, runtime behavior, providers, and
+  target mappers unchanged.
+- Tests: 749 passed.
+- Compliance tests: 5 passed.
+
 ## v0.36.0
 
 Compliance badge documentation checkpoint.

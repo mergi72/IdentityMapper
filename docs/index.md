@@ -10,6 +10,7 @@ identity domain.
 - [Host service](host-service.md)
 - [Capability protocol](capability-protocol.md)
 - [IdentityMapper protocol](identitymapper-protocol.md)
+- [Implementer's guide](implementers-guide.md)
 - [Compliance badge](compliance-badge.md)
 - [RFCs](rfcs/index.md)
 - [RFC 0001: IdentityMapper Protocol](rfcs/0001-identitymapper-protocol.md)
