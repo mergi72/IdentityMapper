@@ -2,6 +2,25 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.36.0
+
+Compliance badge documentation checkpoint.
+
+- Added `docs/compliance-badge.md`.
+- Documented the meaning of the `IdentityMapper Protocol 1.0 Draft compliant`
+  claim.
+- Documented the required compliance statement fields: protocol, compliance,
+  implementation, and suite.
+- Clarified what the badge confirms: protocol boundary conformance.
+- Clarified what the badge does not confirm: production security, deployment
+  trust, hardened hosts, or external identity system readiness.
+- Linked the compliance badge documentation from README and the documentation
+  index.
+- Kept the core domain, capability contracts, runtime behavior, providers, and
+  target mappers unchanged.
+- Tests: 749 passed.
+- Compliance tests: 5 passed.
+
 ## v0.35.3
 
 Protocol versioning RFC patch.

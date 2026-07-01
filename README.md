@@ -140,6 +140,7 @@ The implementation details are intentionally kept out of this README.
 - [Architecture verification](docs/architecture-verification.md)
 - [Capability protocol](docs/capability-protocol.md)
 - [IdentityMapper protocol](docs/identitymapper-protocol.md)
+- [Compliance badge](docs/compliance-badge.md)
 - [Compatibility matrix](docs/compatibility-matrix.md)
 - [Host](docs/host.md)
 - [Host service](docs/host-service.md)
