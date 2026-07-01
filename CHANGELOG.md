@@ -2,6 +2,23 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.35.3
+
+Protocol versioning RFC patch.
+
+- Added `docs/rfcs/0003-protocol-versioning.md`.
+- Documented the separation between `IdentityMapper Protocol 1.0` and the
+  Python reference implementation version.
+- Defined protocol major/minor rules and implementation/document patch
+  semantics.
+- Documented breaking and non-breaking protocol changes.
+- Declared the compliance suite target as `IdentityMapper Protocol 1.0 Draft`.
+- Updated README, documentation index, RFC index, and compliance suite links.
+- Kept the core domain, capability contracts, runtime behavior, providers, and
+  target mappers unchanged.
+- Tests: 749 passed.
+- Compliance tests: 5 passed.
+
 ## v0.35.2
 
 Compliance suite RFC patch.

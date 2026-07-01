@@ -6,6 +6,13 @@ The compliance suite is defined by:
 
 - [RFC 0001: IdentityMapper Protocol](../docs/rfcs/0001-identitymapper-protocol.md)
 - [RFC 0002: IdentityMapper Compliance Suite](../docs/rfcs/0002-compliance-suite.md)
+- [RFC 0003: IdentityMapper Protocol Versioning](../docs/rfcs/0003-protocol-versioning.md)
+
+This suite targets:
+
+```text
+IdentityMapper Protocol 1.0 Draft
+```
 
 The normal project test suite verifies the Python reference implementation:
 

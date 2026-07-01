@@ -5,6 +5,8 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
 
+IdentityMapper is the reference implementation of the IdentityMapper Protocol.
+
 IdentityMapper Protocol defines a canonical identity exchange between
 heterogeneous identity systems. It does not replace authentication or trust. It
 standardizes how verified identity is represented, projected, and resolved
@@ -29,7 +31,8 @@ target identity mappers.
 
 ## Project Status
 
-IdentityMapper is a reference architecture under active development.
+IdentityMapper is a protocol draft and reference implementation under active
+development.
 
 The core architecture has been validated against multiple identity models.
 
@@ -132,6 +135,7 @@ The implementation details are intentionally kept out of this README.
 - [Documentation index](docs/index.md)
 - [RFC 0001: IdentityMapper Protocol](docs/rfcs/0001-identitymapper-protocol.md)
 - [RFC 0002: IdentityMapper Compliance Suite](docs/rfcs/0002-compliance-suite.md)
+- [RFC 0003: IdentityMapper Protocol Versioning](docs/rfcs/0003-protocol-versioning.md)
 - [Architecture](docs/architecture.md)
 - [Architecture verification](docs/architecture-verification.md)
 - [Capability protocol](docs/capability-protocol.md)

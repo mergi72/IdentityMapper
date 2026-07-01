@@ -13,6 +13,7 @@ identity domain.
 - [RFCs](rfcs/index.md)
 - [RFC 0001: IdentityMapper Protocol](rfcs/0001-identitymapper-protocol.md)
 - [RFC 0002: IdentityMapper Compliance Suite](rfcs/0002-compliance-suite.md)
+- [RFC 0003: IdentityMapper Protocol Versioning](rfcs/0003-protocol-versioning.md)
 - [Compatibility matrix](compatibility-matrix.md)
 - [Reduction matrix](reduction-matrix.md)
 - [Reduction template](reduction-template.md)
