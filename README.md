@@ -131,6 +131,7 @@ The implementation details are intentionally kept out of this README.
 
 - [Documentation index](docs/index.md)
 - [RFC 0001: IdentityMapper Protocol](docs/rfcs/0001-identitymapper-protocol.md)
+- [RFC 0002: IdentityMapper Compliance Suite](docs/rfcs/0002-compliance-suite.md)
 - [Architecture](docs/architecture.md)
 - [Architecture verification](docs/architecture-verification.md)
 - [Capability protocol](docs/capability-protocol.md)

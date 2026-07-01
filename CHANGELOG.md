@@ -2,6 +2,21 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.35.2
+
+Compliance suite RFC patch.
+
+- Added `docs/rfcs/0002-compliance-suite.md`.
+- Documented required compliance tests, optional compliance tests, forbidden
+  behavior, expected artifacts, and the relationship to RFC 0001.
+- Expanded `compliance/README.md` with required tests, optional tests, and
+  forbidden behavior.
+- Linked RFC 0002 from README, documentation index, and RFC index.
+- Kept the core domain, capability contracts, runtime behavior, and providers
+  unchanged.
+- Tests: 749 passed.
+- Compliance tests: 5 passed.
+
 ## v0.35.1
 
 Protocol documentation and compliance layout patch.
