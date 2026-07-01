@@ -25,6 +25,10 @@ The provider capability contract is tested in:
 
 - `tests/test_provider_capability_contracts.py`
 
+The protocol compliance entry point is:
+
+- `compliance/`
+
 The automated CI workflow is defined in:
 
 - `.github/workflows/ci.yml`
@@ -159,6 +163,11 @@ Version `v0.31.0` completes the same target projection pattern
 for the full provider set in this repository: BasicAuth, OAuth, API Key,
 Client Certificate / mTLS, WebAuthn / FIDO2, Passkeys, MFA, Federated Identity,
 and Guest / Anonymous Identity.
+
+Version `v0.36.0` introduces RFC 0001 and the initial compliance suite layout.
+It does not add a new capability or change the core domain. The goal is to
+document and verify the protocol boundary independently from concrete provider
+implementations.
 
 The all-to-all projection suite verifies the boundary directly:
 

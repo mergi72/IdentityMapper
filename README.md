@@ -5,8 +5,10 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
 
-IdentityMapper is a protocol-oriented reference architecture for identity
-translation.
+IdentityMapper Protocol defines a canonical identity exchange between
+heterogeneous identity systems. It does not replace authentication or trust. It
+standardizes how verified identity is represented, projected, and resolved
+across different identity worlds.
 
 It is not an LDAP wrapper, OAuth wrapper, or authentication server.
 
@@ -128,6 +130,7 @@ Credential verifies the candidate. Only successful authentication produces an
 The implementation details are intentionally kept out of this README.
 
 - [Documentation index](docs/index.md)
+- [RFC 0001: IdentityMapper Protocol](docs/rfcs/0001-identitymapper-protocol.md)
 - [Architecture](docs/architecture.md)
 - [Architecture verification](docs/architecture-verification.md)
 - [Capability protocol](docs/capability-protocol.md)
@@ -169,10 +172,14 @@ src/identity_mapper_service/
   schemas.py
   service.py
 
+compliance/
+  test_protocol_compliance.py
+
 config/
   config.json
 
 docs/
+  rfcs/
   architecture.md
   compatibility-matrix.md
   identitymapper-protocol.md

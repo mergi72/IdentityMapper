@@ -2,6 +2,21 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.35.1
+
+Protocol documentation and compliance layout patch.
+
+- Added `docs/rfcs/0001-identitymapper-protocol.md`.
+- Added an RFC index under `docs/rfcs/`.
+- Added the initial `compliance/` suite layout.
+- Added transport-neutral compliance tests for:
+  `Source Provider -> Identity -> TargetIdentity -> TargetIdentityResolution`.
+- Updated README and documentation index links.
+- Kept the core domain, capability contracts, runtime behavior, and providers
+  unchanged.
+- Tests: 749 passed.
+- Compliance tests: 5 passed.
+
 ## v0.35.0
 
 Local OS user target lookup checkpoint.
