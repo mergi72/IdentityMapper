@@ -24,6 +24,7 @@ from identity_mapper_service.schemas import (
 from identity_mapper_service.service import IdentityMapperHostService
 
 DEFAULT_MAX_REQUEST_BODY_BYTES = 65536
+MAX_REJECTED_BODY_DRAIN_BYTES = 1048576
 
 
 class JsonRequestError(ValueError):
@@ -198,6 +199,7 @@ def create_handler(
                 ) from exc
 
             if length > max_request_body_bytes:
+                self._drain_rejected_body(length)
                 raise JsonRequestError(
                     "request body is too large",
                     error="payload_too_large",
@@ -214,6 +216,14 @@ def create_handler(
                 raise JsonRequestError("request body must be a JSON object")
 
             return value
+
+        def _drain_rejected_body(self, length: int) -> None:
+            remaining = min(length, MAX_REJECTED_BODY_DRAIN_BYTES)
+            while remaining > 0:
+                chunk = self.rfile.read(min(remaining, 65536))
+                if not chunk:
+                    return
+                remaining -= len(chunk)
 
         def _read_limit(self, query: str) -> int:
             value = parse_qs(query).get("limit", ["100"])[0]

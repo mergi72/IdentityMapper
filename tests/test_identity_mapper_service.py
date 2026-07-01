@@ -28,7 +28,12 @@ from identity_mapper.domain import (
     IdentityTarget,
     TargetIdentity,
 )
-from identity_mapper_service.__main__ import HostServiceConfig, load_config, main
+from identity_mapper_service.__main__ import (
+    HostServiceConfig,
+    build_demo_registry,
+    load_config,
+    main,
+)
 from identity_mapper_service.app import create_server
 from identity_mapper_service.registry import (
     ProviderRegistry,
@@ -623,6 +628,37 @@ def test_service_rejects_invalid_audit_log_max_entries_config(tmp_path) -> None:
 
     with pytest.raises(ValueError, match="audit_log_max_entries"):
         load_config(config_path)
+
+
+def test_demo_registry_registers_basic_and_windows_target_mappers() -> None:
+    registry = build_demo_registry()
+    identification = Identification(identifier="demo")
+    credential = Credential(type="PASSWORD", value="secret")
+
+    basic_result = registry.map_identity(
+        source_provider="basic",
+        identification=identification,
+        credential=credential,
+        target=IdentityTarget(provider="basic", realm="local", purpose="self"),
+    )
+    windows_result = registry.map_identity(
+        source_provider="basic",
+        identification=identification,
+        credential=credential,
+        target=IdentityTarget(
+            provider="windows",
+            realm="corp.local",
+            purpose="bind_identity",
+        ),
+    )
+
+    assert basic_result.identity.id == "demo"
+    assert basic_result.target_identity is not None
+    assert basic_result.target_identity.target.provider == "basic"
+    assert windows_result.identity.id == "demo"
+    assert windows_result.target_identity is not None
+    assert windows_result.target_identity.target.provider == "windows"
+    assert windows_result.target_identity.attributes["upn_candidate"]
 
 
 def test_cli_serve_rejects_invalid_max_request_body_override() -> None:

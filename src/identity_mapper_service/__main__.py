@@ -12,8 +12,13 @@ from identity_mapper.providers.basic import (
     BasicAuthenticator,
     BasicCredentialVerifier,
     BasicIdentityResolver,
+    BasicTargetIdentityMapper,
     BasicUserRecord,
     InMemoryBasicUserStore,
+)
+from identity_mapper.providers.windows import (
+    WindowsAdTargetIdentityMapper,
+    WindowsAdTargetProjectionConfig,
 )
 from identity_mapper_service.app import DEFAULT_MAX_REQUEST_BODY_BYTES, serve
 from identity_mapper_service.registry import ProviderRegistry
@@ -133,6 +138,13 @@ def build_demo_registry() -> ProviderRegistry:
     registry.register_resolver("basic", BasicIdentityResolver(store))
     registry.register_verifier("basic", BasicCredentialVerifier(store))
     registry.register_authenticator("basic", BasicAuthenticator(store))
+    registry.register_identity_mapper("basic", BasicTargetIdentityMapper())
+    registry.register_identity_mapper(
+        "windows",
+        WindowsAdTargetIdentityMapper(
+            WindowsAdTargetProjectionConfig(provider="windows")
+        ),
+    )
     return registry
 
 

@@ -2,6 +2,20 @@
 
 All notable changes to IdentityMapper are documented here.
 
+## v0.33.0
+
+Demo Host Service target mapper wiring checkpoint.
+
+- Registered `basic` and `windows` target identity mappers in the
+  `--demo-basic` runtime registry.
+- Verified the lab flow:
+  `basic proof -> canonical Identity -> basic/windows TargetIdentity`.
+- Kept the fix in runtime demo wiring only; no core domain, capability
+  protocol, provider, or target mapper contract changes were required.
+- Stabilized HTTP `413 payload_too_large` responses on Windows by draining
+  small rejected request bodies before closing the connection.
+- Tests: 724 passed.
+
 ## v0.32.1
 
 Protocol specification documentation patch.
